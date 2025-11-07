@@ -271,7 +271,7 @@ export default function Layout() {
   );
 
   return (
-    <div className="relative min-h-screen bg-essencia-radiance md:flex">
+    <div className="relative min-h-screen bg-essencia-radiance pb-20 md:flex md:pb-0">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -445,42 +445,10 @@ export default function Layout() {
               onClose={handleCloseNotifications}
             />
 
-            <main className="flex-1 overflow-y-auto px-4 pb-10 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">
+            <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">
               <Outlet />
             </main>
 
-            {!!NAV_ITEMS.length && (
-              <nav className="pointer-events-auto md:hidden">
-                <div className="fixed bottom-4 left-1/2 z-20 flex w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 items-center justify-between rounded-2xl border border-[#6c63ff]/25 bg-white/95 px-3 py-2 shadow-xl shadow-[#6c63ff]/10 backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
-                  {NAV_ITEMS.map((item) => {
-                    const isActive =
-                      item.to === "/"
-                        ? location.pathname === "/"
-                        : location.pathname.startsWith(item.to);
-                    const itemColor = isActive
-                      ? "rgb(var(--color-accent-primary))"
-                      : "var(--text-secondary)";
-                    const iconColor = isActive
-                      ? "rgb(var(--color-accent-primary))"
-                      : "var(--text-subtle)";
-                    return (
-                      <NavLink
-                        key={item.to}
-                        to={item.to}
-                        className="flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-semibold transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgba(var(--color-accent-primary),0.25)]"
-                        style={{ color: itemColor }}
-                      >
-                        {React.createElement(item.icon, {
-                          className: "h-5 w-5",
-                          style: { color: iconColor },
-                        })}
-                        <span>{item.shortLabel ?? item.label}</span>
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              </nav>
-            )}
         </div>
 
         <WelcomeModal
@@ -501,6 +469,38 @@ export default function Layout() {
           trialEndsAt={trialEndsAt}
         />
       </div>
+      {(mobileNavItems.length || NAV_ITEMS.length) && (
+        <nav className="pointer-events-auto md:hidden fixed inset-x-0 bottom-0 z-40">
+          <div className="mx-auto flex w-full max-w-xl items-center justify-between rounded-t-3xl border border-[#6c63ff]/20 border-b-0 bg-white/95 px-4 py-3 shadow-[0_-20px_45px_-35px_rgba(108,99,255,0.5)] backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
+            {(mobileNavItems.length ? mobileNavItems : NAV_ITEMS).map((item) => {
+              const isActive =
+                item.to === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(item.to);
+              const itemColor = isActive
+                ? "rgb(var(--color-accent-primary))"
+                : "var(--text-secondary)";
+              const iconColor = isActive
+                ? "rgb(var(--color-accent-primary))"
+                : "var(--text-subtle)";
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className="flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-semibold transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgba(var(--color-accent-primary),0.25)]"
+                  style={{ color: itemColor }}
+                >
+                  {React.createElement(item.icon, {
+                    className: "h-5 w-5",
+                    style: { color: iconColor },
+                  })}
+                  <span>{item.shortLabel ?? item.label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

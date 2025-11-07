@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest);
@@ -162,6 +163,19 @@ export default function LibraryPage() {
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)]">
       <main className="space-y-10">
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 shadow-[0_30px_70px_-60px_rgba(15,10,35,0.8)]">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.7)]">Gestão editorial</p>
+            <h2 className="mt-2 text-xl font-semibold text-[rgb(var(--text-primary))]">Cadastre novos títulos</h2>
+            <p className="text-sm text-[rgb(var(--text-secondary))]">Conecte autores, gêneros e coleções em poucos passos.</p>
+          </div>
+          <Link
+            to="/biblioteca/novo"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[rgb(var(--color-accent-primary))] px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_rgba(0,0,0,0.7)] transition hover:bg-[rgb(var(--color-accent-dark))]"
+          >
+            + Cadastrar título
+          </Link>
+        </section>
         <section>
           <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
             Navegue por estilos

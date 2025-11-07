@@ -16,6 +16,7 @@ import ExpenseCreatePage from "./pages/ExpenseCreate.jsx";
 import RevenueCreatePage from "./pages/RevenueCreate.jsx";
 import InvestmentCreatePage from "./pages/InvestmentCreate.jsx";
 import OvertimeCreatePage from "./pages/OvertimeCreate.jsx";
+import BookCreatePage from "./pages/BookCreate.jsx";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
             <Route path="biblioteca" element={<LibraryPage />} />
+            <Route path="biblioteca/novo" element={<BookCreatePage />} />
             <Route path="leituras" element={<IncomePage />} />
             <Route path="resumos" element={<ExpensesPage />} />
             <Route path="resumos/novo" element={<ExpenseCreatePage />} />
