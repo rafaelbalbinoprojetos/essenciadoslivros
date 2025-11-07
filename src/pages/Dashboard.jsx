@@ -85,9 +85,9 @@ const FEATURED_BOOKS = [
 ];
 
 const DISCOVERY_PILLS = [
-  { id: "classicos", label: "Clássicos que inspiram", to: "/descobertas?tag=classicos" },
-  { id: "ia", label: "Coleções IA para o seu perfil", to: "/descobertas?tag=personalizado" },
-  { id: "audio", label: "Audiobooks para começar agora", to: "/audiobooks" },
+  { id: "classicos", label: "Clássicos que inspiram", to: "/biblioteca" },
+  { id: "ia", label: "Coleções IA para o seu perfil", to: "/biblioteca" },
+  { id: "audio", label: "Audiobooks para começar agora", to: "/biblioteca" },
 ];
 
 export default function DashboardPage() {
@@ -220,7 +220,7 @@ export default function DashboardPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/leituras"
+                to="/biblioteca"
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#6c63ff] via-[#4c3f8f] to-[#b38b59] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#6c63ff]/30 transition hover:from-[#574de3] hover:to-[#9c784f]"
               >
                 Retomar leitura
@@ -289,13 +289,13 @@ export default function DashboardPage() {
               </blockquote>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to={`/leituras?continue=${book.id}`}
+                  to={`/biblioteca#${book.id}`}
                   className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
                 >
                   Continuar leitura
                 </Link>
                 <Link
-                  to={`/resumos?book=${book.id}`}
+                  to={`/biblioteca#${book.id}`}
                   className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
                 >
                   Abrir resumos

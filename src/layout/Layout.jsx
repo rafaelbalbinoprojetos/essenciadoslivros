@@ -5,10 +5,6 @@ import SettingsMenu from "../components/SettingsMenu.jsx";
 import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { listRevenues } from "../services/revenues.js";
-import { listExpenses } from "../services/expenses.js";
-import { listInvestments } from "../services/investments.js";
-import { listOvertime } from "../services/overtime.js";
 import { NAV_LINKS, normalizeMobileNavSelection } from "../data/navigation.js";
 import { DEFAULT_PLAN_ID } from "../data/plans.js";
 
@@ -20,10 +16,7 @@ const METRICS_LOOKBACK_DAYS = 14;
 const ICON_MAP = {
   dashboard: DashboardIcon,
   library: LibraryIcon,
-  reading: ReadingIcon,
-  summaries: SummaryIcon,
-  audio: AudioIcon,
-  discover: DiscoverIcon,
+  catalog: LibraryIcon,
   assistant: AssistantIcon,
   settings: SettingsIcon,
 };
@@ -73,55 +66,28 @@ export default function Layout() {
 
   useEffect(() => {
     if (!user) {
-      setHighlightCards([]);
       setNotifications([]);
       setNotificationsError(null);
+      setNotificationsLoading(false);
       return;
     }
 
-    let canceled = false;
-
-    async function loadLibrarySignals() {
-      setNotificationsLoading(true);
-      setNotificationsError(null);
-
-      try {
-        const [revenuesData, expensesData, investmentsData, overtimeData] = await Promise.all([
-          listRevenues({ userId: user.id }),
-          listExpenses({ userId: user.id }),
-          listInvestments({ userId: user.id }),
-          listOvertime({ userId: user.id }),
-        ]);
-
-        if (canceled) return;
-
-        const metrics = computeLibraryMetrics({
-          readingEntries: revenuesData,
-          annotations: expensesData,
-          collections: investmentsData,
-          listeningEntries: overtimeData,
-        });
-
-        setNotifications(buildLiteraryNotifications({ userId: user.id, metrics }));
-      } catch (error) {
-        console.error("[layout] Erro ao carregar métricas literárias:", error);
-        if (!canceled) {
-          setNotificationsError(
-            error?.message ?? "Não foi possível carregar as novidades da biblioteca neste momento.",
-          );
-          toast.error("Não foi possível atualizar sua biblioteca agora.");
-        }
-      } finally {
-        if (!canceled) {
-          setNotificationsLoading(false);
-        }
-      }
-    }
-
-    loadLibrarySignals();
-    return () => {
-      canceled = true;
-    };
+    setNotificationsLoading(true);
+    const sampleMessages = [
+      {
+        id: `library-welcome-${user.id}`,
+        type: "info",
+        title: "Bem-vindo à Essência dos Livros",
+        message: "Use o cadastro para adicionar novos títulos e acompanhar as leituras da sua comunidade.",
+        time: new Intl.DateTimeFormat("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(new Date()),
+      },
+    ];
+    setNotifications(sampleMessages);
+    setNotificationsError(null);
+    setNotificationsLoading(false);
   }, [user, refreshVersion]);
 
   useEffect(() => {

@@ -14,32 +14,11 @@ export const NAV_LINKS = [
     description: "Sua estante pessoal e coleções",
   },
   {
-    id: "reading",
-    to: "/leituras",
-    label: "Leituras",
-    shortLabel: "Leituras",
-    description: "Sessões, progresso e hábitos",
-  },
-  {
-    id: "summaries",
-    to: "/resumos",
-    label: "Resumos",
-    shortLabel: "Resumos",
-    description: "Resumos rápidos e detalhados",
-  },
-  {
-    id: "audio",
-    to: "/audiobooks",
-    label: "Audiobooks",
-    shortLabel: "Áudio",
-    description: "Escute narrativas e insights",
-  },
-  {
-    id: "discover",
-    to: "/descobertas",
-    label: "Descobertas",
-    shortLabel: "Explorar",
-    description: "Sugestões da IA para próximos passos",
+    id: "catalog",
+    to: "/biblioteca/novo",
+    label: "Cadastro de Títulos",
+    shortLabel: "Cadastro",
+    description: "Inclua rapidamente novos livros, autores e coleções",
   },
   {
     id: "assistant",
@@ -60,19 +39,14 @@ export const NAV_LINKS = [
 export const MOBILE_NAV_ALLOWED_PATHS = [
   "/",
   "/biblioteca",
-  "/leituras",
-  "/resumos",
-  "/audiobooks",
-  "/descobertas",
+  "/biblioteca/novo",
   "/assistente",
 ];
 
 export const DEFAULT_MOBILE_NAV_PATHS = [
   "/",
   "/biblioteca",
-  "/leituras",
-  "/resumos",
-  "/audiobooks",
+  "/assistente",
 ];
 
 export const MOBILE_NAV_LINKS = NAV_LINKS.filter((link) => MOBILE_NAV_ALLOWED_PATHS.includes(link.to));

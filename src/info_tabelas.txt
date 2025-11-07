@@ -168,3 +168,10 @@ create policy "Usuário cria/atualiza assinatura própria"
 
 insert into generos (nome) values
 ('Ação'), ('Romance'), ('Filosofia'), ('Drama'), ('Biografia'), ('Técnico'), ('Fantasia');
+
+
+codigo para upload no github
+
+git add .
+>> git commit -m "descrição das alterações"
+>> git push origin main
