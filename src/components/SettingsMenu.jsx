@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext.jsx";
 
 const MENU_ITEMS = [
   {
@@ -49,10 +48,6 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef(null);
   const navigate = useNavigate();
-  const { themes, theme, selectTheme } = useTheme();
-
-  const lightThemes = React.useMemo(() => themes.filter((preset) => preset.mode === "light"), [themes]);
-  const darkThemes = React.useMemo(() => themes.filter((preset) => preset.mode === "dark"), [themes]);
 
   React.useEffect(() => {
     if (!open) {
@@ -93,11 +88,6 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
     }),
     [onOpenNotifications, onOpenPlans],
   );
-
-  const handleSelectTheme = (themeId) => {
-    selectTheme(themeId);
-    setOpen(false);
-  };
 
   const handleReload = () => {
     setOpen(false);
@@ -155,30 +145,6 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
               ))}
             </ul>
 
-            <section className="mt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Temas claros
-                </span>
-                <PaletteIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              </div>
-              <ThemeGrid
-                themes={lightThemes}
-                activeId={theme?.id}
-                onSelect={handleSelectTheme}
-              />
-            </section>
-
-            <section className="mt-4">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Temas escuros
-              </span>
-              <ThemeGrid
-                themes={darkThemes}
-                activeId={theme?.id}
-                onSelect={handleSelectTheme}
-              />
-            </section>
           </div>
 
           <footer className="mt-4 space-y-2 border-t border-gray-200 pt-3 text-xs dark:border-gray-800">
@@ -201,53 +167,6 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
           </footer>
         </div>
       )}
-    </div>
-  );
-}
-
-function ThemeGrid({ themes, activeId, onSelect }) {
-  if (!themes.length) {
-    return (
-      <p className="mt-2 rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-        Nenhum tema disponível.
-      </p>
-    );
-  }
-
-  return (
-    <div className="mt-2 grid grid-cols-2 gap-2">
-      {themes.map((preset) => {
-        const isActive = preset.id === activeId;
-        return (
-          <button
-            key={preset.id}
-            type="button"
-            onClick={() => onSelect(preset.id)}
-            title={preset.description}
-            className={`group relative flex flex-col gap-2 rounded-lg border px-2 pb-2 pt-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:focus-visible:ring-temaEmerald/40 ${
-              isActive
-                ? "border-temaSky/60 ring-1 ring-temaSky/40 dark:border-temaEmerald/60 dark:ring-temaEmerald/40"
-                : "border-gray-200 hover:border-temaSky/50 hover:bg-temaSky/5 dark:border-gray-700 dark:hover:border-temaEmerald/50 dark:hover:bg-temaEmerald/5"
-            }`}
-          >
-            <span className="flex h-6 w-full overflow-hidden rounded-md shadow-inner">
-              {preset.preview.map((color, index) => (
-                <span
-                  key={`${preset.id}-color-${index}`}
-                  className="flex-1"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </span>
-            <span className="text-[11px] font-medium text-gray-600 transition group-hover:text-temaSky dark:text-gray-300 dark:group-hover:text-temaEmerald">
-              {preset.name}
-            </span>
-            {isActive && (
-              <CheckIcon className="absolute right-1 top-1 h-4 w-4 text-temaSky dark:text-temaEmerald" />
-            )}
-          </button>
-        );
-      })}
     </div>
   );
 }
@@ -324,20 +243,6 @@ function ShieldIcon({ className }) {
   );
 }
 
-function PaletteIcon({ className }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 2a10 10 0 00-7.07 17.07 1.75 1.75 0 001.59.48l1.73-.4a2.25 2.25 0 011.77.37l2.16 1.62a1.75 1.75 0 002.76-1.4v-.78a2.25 2.25 0 012.25-2.25h1.94a1.75 1.75 0 001.71-2.23A10 10 0 0012 2zm-4.5 6a1.25 1.25 0 111.25-1.25A1.25 1.25 0 017.5 8zm3 3A1.25 1.25 0 1111.75 9.75 1.25 1.25 0 0110.5 11zm3-5.5A1.25 1.25 0 1114.75 4.25 1.25 1.25 0 0113.5 5.5zm2.75 5.5A1.25 1.25 0 1117.5 9.75 1.25 1.25 0 0116.25 11z" />
-    </svg>
-  );
-}
-
 function RefreshIcon({ className }) {
   return (
     <svg
@@ -363,20 +268,6 @@ function SignOutIcon({ className }) {
     >
       <path d="M5.75 4A2.75 2.75 0 003 6.75v10.5A2.75 2.75 0 005.75 20h5.5a.75.75 0 000-1.5h-5.5A1.25 1.25 0 014.5 17.25V6.75A1.25 1.25 0 015.75 5.5h5.5a.75.75 0 000-1.5z" />
       <path d="M15.72 7.22a.75.75 0 10-1.06 1.06L16.94 10.5H10a.75.75 0 000 1.5h6.94l-2.28 2.22a.75.75 0 001.06 1.06l3.75-3.75a.75.75 0 000-1.06z" />
-    </svg>
-  );
-}
-
-function CheckIcon({ className }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M9.53 16.28a.75.75 0 01-1.06 0l-3.25-3.25a.75.75 0 011.06-1.06l2.72 2.72 6.69-6.69a.75.75 0 111.06 1.06z" />
     </svg>
   );
 }

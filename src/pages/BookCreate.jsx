@@ -83,7 +83,7 @@ export default function BookCreatePage() {
   };
 
   const handleCreateAuthor = async (event) => {
-    event.preventDefault();
+    event?.preventDefault?.();
     if (!authorForm.nome.trim()) {
       toast.error("Informe o nome do autor.");
       return;
@@ -109,7 +109,7 @@ export default function BookCreatePage() {
   };
 
   const handleCreateCollection = async (event) => {
-    event.preventDefault();
+    event?.preventDefault?.();
     if (!collectionForm.nome.trim()) {
       toast.error("Informe o nome da coleção.");
       return;
@@ -304,7 +304,7 @@ export default function BookCreatePage() {
               <h3 className="text-lg font-semibold text-[rgb(var(--text-primary))]">Cadastrar autor rapidamente</h3>
               <p className="text-sm text-[rgb(var(--text-secondary))]">Inclua autores que ainda não constam na base.</p>
             </header>
-            <form className="space-y-3" onSubmit={handleCreateAuthor}>
+            <div className="space-y-3">
               <input
                 name="nome"
                 value={authorForm.nome}
@@ -328,13 +328,14 @@ export default function BookCreatePage() {
                 className="w-full rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/90 px-3 py-2 text-sm"
               />
               <button
-                type="submit"
+                type="button"
+                onClick={handleCreateAuthor}
                 disabled={creatingAuthor}
                 className="rounded-2xl bg-[rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[rgb(var(--color-accent-dark))] disabled:opacity-70"
               >
                 {creatingAuthor ? "Salvando autor..." : "Salvar autor"}
               </button>
-            </form>
+            </div>
           </div>
 
           <div className="rounded-[28px] border border-[rgba(0,0,0,0.08)] bg-white/75 p-5 shadow-sm">
@@ -343,7 +344,7 @@ export default function BookCreatePage() {
               <h3 className="text-lg font-semibold text-[rgb(var(--text-primary))]">Curadoria inédita</h3>
               <p className="text-sm text-[rgb(var(--text-secondary))]">Organize conjuntos especiais diretamente daqui.</p>
             </header>
-            <form className="space-y-3" onSubmit={handleCreateCollection}>
+            <div className="space-y-3">
               <input
                 name="nome"
                 value={collectionForm.nome}
@@ -368,13 +369,14 @@ export default function BookCreatePage() {
                 className="w-full rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/90 px-3 py-2 text-sm"
               />
               <button
-                type="submit"
+                type="button"
+                onClick={handleCreateCollection}
                 disabled={creatingCollection}
                 className="rounded-2xl bg-[rgb(var(--color-secondary-primary))] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[rgb(var(--color-secondary-dark))] disabled:opacity-70"
               >
                 {creatingCollection ? "Salvando coleção..." : "Salvar coleção"}
               </button>
-            </form>
+            </div>
           </div>
         </section>
 

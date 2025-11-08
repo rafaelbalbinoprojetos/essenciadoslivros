@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import SettingsMenu from "../components/SettingsMenu.jsx";
+import ThemeMenu from "../components/ThemeMenu.jsx";
+import NotificationPanel from "../components/NotificationPanel.jsx";
 import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -11,7 +13,6 @@ import { DEFAULT_PLAN_ID } from "../data/plans.js";
 const BRAND_NAME = "Essência dos Livros";
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 const SUBSCRIPTION_ENDPOINT = `${API_BASE}/api/mercadopago/subscription`;
-const METRICS_LOOKBACK_DAYS = 14;
 
 const ICON_MAP = {
   dashboard: DashboardIcon,
@@ -390,6 +391,7 @@ export default function Layout() {
                       </span>
                     ) : null}
                   </button>
+                  <ThemeMenu />
 
                   <SettingsMenu
                     onSignOut={handleSignOut}
@@ -471,378 +473,85 @@ export default function Layout() {
   );
 }
 
-function computeLibraryMetrics({ readingEntries = [], annotations = [], collections = [], listeningEntries = [] }) {
-  const now = new Date();
-  const lookback = new Date(now);
-  lookback.setDate(lookback.getDate() - METRICS_LOOKBACK_DAYS);
-
-  const readingSessions = readingEntries.map((entry) => {
-    const startedAt = entry.date ?? entry.start_time ?? entry.created_at ?? null;
-    return {
-      id: entry.id ?? randomId(),
-      title: entry.description ?? entry.title ?? entry.origin ?? "Sessão de leitura",
-      startedAt: startedAt ? new Date(startedAt) : null,
-      minutes: inferMinutes(entry),
-    };
-  });
-
-  const highlights = annotations.map((annotation) => ({
-    id: annotation.id ?? randomId(),
-    title: annotation.description ?? annotation.category ?? "Nota salva",
-    taggedAt: annotation.date
-      ? new Date(annotation.date)
-      : annotation.created_at
-        ? new Date(annotation.created_at)
-        : null,
-    category: annotation.category ?? annotation.type ?? null,
-  }));
-
-  const processedCollections = (collections ?? []).map((item) => ({
-    id: item.id ?? randomId(),
-    bookId: item.book_id ?? item.ativo_symbol ?? item.symbol ?? item.id ?? randomId(),
-    title: item.title ?? item.nome ?? item.asset_name ?? "Livro em andamento",
-    addedAt: item.inserted_at ? new Date(item.inserted_at) : item.created_at ? new Date(item.created_at) : null,
-    progress: Number(item.progress_percent ?? item.progress ?? 0),
-  }));
-
-  const listeningSessions = listeningEntries.map((entry) => {
-    const start = entry.start_time ? new Date(entry.start_time) : null;
-    const end = entry.end_time ? new Date(entry.end_time) : null;
-    let minutes = 0;
-    if (start && end && end > start) {
-      minutes = Math.round((end.getTime() - start.getTime()) / 60000);
-    } else if (Number.isFinite(entry.total_minutes)) {
-      minutes = Number(entry.total_minutes);
-    }
-    return {
-      id: entry.id ?? randomId(),
-      start,
-      end,
-      minutes,
-      label: entry.description ?? entry.origin ?? "Sessão de escuta",
-    };
-  });
-
-  const recentSessions = readingSessions.filter((session) => session.startedAt && session.startedAt >= lookback);
-  const recentHighlights = highlights.filter((highlight) => highlight.taggedAt && highlight.taggedAt >= lookback);
-  const recentCollections = processedCollections.filter(
-    (collection) => collection.addedAt && collection.addedAt >= lookback,
-  );
-
-  const readingMinutes = readingSessions.reduce((total, session) => total + session.minutes, 0);
-  const listeningMinutes = listeningSessions.reduce((total, session) => total + session.minutes, 0);
-  const highlightCount = highlights.length;
-  const activeBooks = new Set(processedCollections.map((collection) => collection.bookId)).size;
-  const streakDays = computeReadingStreak(readingSessions);
-  const totalSessions = readingSessions.length;
-
-  const lastSession = readingSessions
-    .filter((session) => session.startedAt)
-    .sort((a, b) => b.startedAt - a.startedAt)
-    .at(0);
-
-  return {
-    readingMinutes,
-    listeningMinutes,
-    highlightCount,
-    activeBooks,
-    streakDays,
-    totalSessions,
-    recentSessions,
-    recentHighlights,
-    recentCollections,
-    lastSession,
-  };
-}
-
-function inferMinutes(entry) {
-  if (!entry) return 0;
-  const numericFields = [
-    entry.minutes,
-    entry.duration_minutes,
-    entry.total_minutes,
-    entry.duration,
-    entry.amount,
-  ];
-  const numericValue = numericFields.find((value) => Number.isFinite(value));
-  if (numericValue !== undefined) {
-    return Number(numericValue);
-  }
-
-  const start = entry.start_time ? new Date(entry.start_time) : null;
-  const end = entry.end_time ? new Date(entry.end_time) : null;
-  if (start && end && end > start) {
-    return Math.round((end.getTime() - start.getTime()) / 60000);
-  }
-  return 0;
-}
-
-function computeReadingStreak(sessions) {
-  if (!sessions || sessions.length === 0) return 0;
-
-  const dates = new Set(
-    sessions
-      .filter((session) => session.startedAt)
-      .map((session) => session.startedAt.toISOString().slice(0, 10)),
-  );
-
-  if (dates.size === 0) return 0;
-
-  let streak = 0;
-  const cursor = new Date();
-
-  while (streak <= dates.size) {
-    const key = cursor.toISOString().slice(0, 10);
-    if (dates.has(key)) {
-      streak += 1;
-    } else if (streak === 0) {
-      cursor.setDate(cursor.getDate() - 1);
-      continue;
-    } else {
-      break;
-    }
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  return streak;
-}
-
-function buildLiteraryNotifications({ userId, metrics }) {
-  const entries = [];
-  const timeLabel = new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date());
-
-  if (metrics.recentCollections.length > 0) {
-    const newest = metrics.recentCollections[0];
-    entries.push({
-      id: `collection-${userId}-${newest.id}`,
-      type: "info",
-      title: "Novo livro na estante",
-      message: `Você adicionou "${newest.title}" recentemente. Que tal iniciar a leitura hoje?`,
-      time: timeLabel,
-    });
-  }
-
-  if (metrics.recentHighlights.length > 0) {
-    entries.push({
-      id: `highlight-${userId}-${metrics.recentHighlights[0].id}`,
-      type: "success",
-      title: "Insights fresquinhos",
-      message: `Foram registradas ${metrics.recentHighlights.length} novas notas e destaques nos últimos dias.`,
-      time: timeLabel,
-    });
-  }
-
-  if (metrics.streakDays >= 3) {
-    entries.push({
-      id: `streak-${userId}`,
-      type: "success",
-      title: "Ritmo consistente",
-      message: `Sua sequência de leitura está em ${metrics.streakDays} dias. Continue assim e desbloqueie novas recomendações.`,
-      time: timeLabel,
-    });
-  }
-
-  if (metrics.listeningMinutes === 0 && metrics.readingMinutes > 0) {
-    entries.push({
-      id: `audio-suggestion-${userId}`,
-      type: "info",
-      title: "Experimente um audiobook",
-      message: "Transforme leituras em momentos de escuta. Experimente um audiobook da sua estante.",
-      time: timeLabel,
-    });
-  }
-
-  if (entries.length === 0) {
-    entries.push({
-      id: `welcome-${userId}`,
-      type: "info",
-      title: "Comece explorando a biblioteca",
-      message: "Adicione livros, salve resumos e deixe que a IA sugira conteúdos alinhados ao seu estilo.",
-      time: timeLabel,
-    });
-  }
-
-  return entries;
-}
-
-function formatTrialCountdown(date) {
-  const diff = date.getTime() - Date.now();
-  if (diff <= 0) return "encerrou";
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  return `${days} ${days === 1 ? "dia" : "dias"}`;
-}
-
-function NotificationPanel({ open, loading, error, notifications, onClose }) {
-  if (!open) return null;
-
-  return (
-    <div className="absolute right-4 top-4 z-30 w-[min(100%,360px)] max-w-full rounded-3xl border border-[#6c63ff]/15 bg-white/95 p-4 shadow-2xl dark:border-white/10 dark:bg-slate-900/95">
-      <div className="flex items-center justify-between border-b border-[#cdb18c]/30 pb-3 dark:border-white/10">
-        <div>
-          <h3 className="text-sm font-semibold text-[#1f2933] dark:text-white">Atualizações da biblioteca</h3>
-          <p className="text-xs text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">
-            Sugestões e conquistas personalizadas para o seu momento de leitura.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-2 text-[#7a6c5e]/70 transition hover:bg-[#f2ede4]/80 hover:text-[#4c3f8f] dark:hover:bg-white/10"
-          aria-label="Fechar notificações"
-        >
-          <CloseIcon className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mt-3 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-        {loading ? (
-          <div className="space-y-3">
-            <NotificationSkeleton />
-            <NotificationSkeleton />
-            <NotificationSkeleton />
-          </div>
-        ) : error ? (
-          <div className="rounded-xl border border-[#b38b59]/30 bg-[#f9f5ef] p-4 text-sm text-[#4b3f35] dark:border-white/10 dark:bg-white/5 dark:text-white">
-            {error}
-          </div>
-        ) : (
-          notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className="rounded-xl border border-[#6c63ff]/15 bg-white/80 p-4 shadow-sm transition hover:border-[#6c63ff]/30 hover:shadow-md dark:border-white/10 dark:bg-slate-900/80"
-            >
-              <span className="text-xs uppercase tracking-[0.24em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">
-                {notification.time}
-              </span>
-              <p className="mt-1 text-sm font-semibold text-[#1f2933] dark:text-white">{notification.title}</p>
-              <p className="mt-1 text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/80">{notification.message}</p>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function NotificationSkeleton() {
-  return (
-    <div className="animate-pulse rounded-xl border border-[#6c63ff]/10 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-900/70">
-      <div className="h-3 w-20 rounded bg-[#cfc2ff]/50 dark:bg-white/20" />
-      <div className="mt-2 h-4 w-40 rounded bg-[#cfc2ff]/60 dark:bg-white/30" />
-      <div className="mt-2 h-3 w-56 rounded bg-[#cfc2ff]/30 dark:bg-white/10" />
-    </div>
-  );
-}
-
-function randomId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `id-${Math.random().toString(36).slice(2, 10)}`;
-}
-
 function DashboardIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M11.25 3A2.25 2.25 0 009 5.25v13.5A2.25 2.25 0 0011.25 21h1.5A2.25 2.25 0 0015 18.75V5.25A2.25 2.25 0 0012.75 3z" />
-      <path d="M4.5 6.75A2.25 2.25 0 016.75 4.5H7.5v15h-.75A2.25 2.25 0 014.5 17.25zM16.5 6.75A2.25 2.25 0 0118.75 4.5H19.5v15h-.75A2.25 2.25 0 0116.5 17.25z" />
-    </svg>
-  );
-}
-
-function ReadingIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M5 4.75A2.75 2.75 0 017.75 2h8.5A2.75 2.75 0 0119 4.75V21a.75.75 0 01-1.19.6L12 17.21l-5.81 4.39A.75.75 0 015 21z" />
-    </svg>
-  );
-}
-
-function SummaryIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M5.25 3A2.25 2.25 0 003 5.25v13.5A2.25 2.25 0 005.25 21h8.5A2.25 2.25 0 0016 18.75V15.5h2.75A2.25 2.25 0 0021 13.25v-8A2.25 2.25 0 0018.75 3zm2.5 3.75h6.5a.75.75 0 010 1.5h-6.5a.75.75 0 010-1.5zm0 3.5h6.5a.75.75 0 010 1.5h-6.5a.75.75 0 010-1.5zm0 3.5H12a.75.75 0 010 1.5H7.75a.75.75 0 010-1.5z" />
-      <path d="M16 4.5v9.25a.75.75 0 00.75.75H20.5z" />
-    </svg>
-  );
-}
-
-function AudioIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M6.75 3A2.75 2.75 0 004 5.75v12.5A2.75 2.75 0 006.75 21h1.5A2.75 2.75 0 0011 18.25v-12.5A2.75 2.75 0 008.25 3zm9 0A2.75 2.75 0 0013 5.75v12.5A2.75 2.75 0 0015.75 21h1.5A2.75 2.75 0 0020 18.25v-12.5A2.75 2.75 0 0017.25 3z" />
-    </svg>
-  );
-}
-
-function DiscoverIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm4.37 5.63l-1.6 5.46a1.25 1.25 0 01-.88.87l-5.46 1.6a.25.25 0 01-.31-.31l1.6-5.46a1.25 1.25 0 01.87-.88l5.46-1.6a.25.25 0 01.31.31z" />
-    </svg>
-  );
-}
-
-function AssistantIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M4.5 3A1.5 1.5 0 003 4.5v9A1.5 1.5 0 004.5 15H6v3.25a.75.75 0 001.22.58l3.8-3.18H16.5A1.5 1.5 0 0018 14.25v-9A1.5 1.5 0 0016.5 3z" />
-      <path d="M19.5 6.75A1.5 1.5 0 0021 5.25v-1.5A1.5 1.5 0 0019.5 2H8.25a1.5 1.5 0 00-1.5 1.5V4.5a1.5 1.5 0 001.5 1.5zm-6.75 6.75a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5a.75.75 0 01-.75.75zm4.5 0a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5a.75.75 0 01-.75.75z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5 5h6v6H5zM13 5h6v4h-6zM5 13h6v6H5zM13 15h6v4h-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function LibraryIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M6.25 4A2.25 2.25 0 004 6.25v11.5A2.25 2.25 0 006.25 20H9.5V4zm8.25 0v16h3.25A2.25 2.25 0 0020 17.75V6.25A2.25 2.25 0 0017.75 4z" />
-      <path d="M11 4h2v16h-2z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M5 4.75h5a1.75 1.75 0 011.75 1.75V20H5A1.75 1.75 0 013.25 18.25V6.5A1.75 1.75 0 015 4.75Zm9 0h5a1.75 1.75 0 011.75 1.75V20H14V6.5A1.75 1.75 0 0114 4.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M9 8v9M15 8v9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AssistantIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M12 3a7 7 0 016.93 6.12A5 5 0 0117 19H9.5l-3.06 2.45a.75.75 0 01-1.22-.58V19A5 5 0 015.07 9.12 7 7 0 0112 3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M9 10.75h6M9 13.75h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function SettingsIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M11.303 1.518a1.75 1.75 0 011.394 0l1.41.582a1.75 1.75 0 012.09-.454l1.3.6a1.75 1.75 0 01.93 2.12l-.42 1.41a1.74 1.74 0 010 .894l.42 1.41a1.75 1.75 0 01-.93 2.12l-1.3.6a1.75 1.75 0 01-2.09-.455l-1.41.582a1.75 1.75 0 01-1.394 0l-1.41-.582a1.75 1.75 0 01-2.09.455l-1.3-.6a1.75 1.75 0 01-.93-2.12l.42-1.41a1.74 1.74 0 010-.894l-.42-1.41a1.75 1.75 0 01.93-2.12l1.3-.6a1.75 1.75 0 012.09.455l1.41-.582zM12 9.25a2.25 2.25 0 102.25 2.25A2.25 2.25 0 0012 9.25zm-6.5 4.5a.75.75 0 01.75.75v1.14a2.25 2.25 0 001.11 1.94l.99.57a2.25 2.25 0 001.98.05l1.25-.52.62 1.48a1.75 1.75 0 01-.83 2.18l-1.1.57a1.75 1.75 0 01-2.09-.45l-1.41.58a1.75 1.75 0 01-1.39 0l-1.41-.58a1.75 1.75 0 01-2.09.45l-1.1-.57a1.75 1.75 0 01-.83-2.18l.62-1.48-1.25-.52a2.25 2.25 0 01-1.98-.05l-.99-.57a2.25 2.25 0 01-1.11-1.94v-1.14a.75.75 0 01.75-.75h1.14a2.25 2.25 0 001.94-1.11l.57-.99a2.25 2.25 0 01.05-1.98l.52-1.25 1.48.62a1.75 1.75 0 002.18-.83l.57-1.1a1.75 1.75 0 012.18-.83l1.48.62-.52 1.25a2.25 2.25 0 01.05 1.98l-.57.99a2.25 2.25 0 001.94 1.11h1.14z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M11.4 3.6a1 1 0 011.2 0l1.18.86a1 1 0 001.26-.08l.9-.9a1 1 0 011.5.13l1 1.28a1 1 0 01-.13 1.37l-.9.75a1 1 0 00-.33.93l.3 1.45a1 1 0 01-.78 1.18l-1.17.23a1 1 0 00-.82.82L14 13.4a1 1 0 01-1 1H11a1 1 0 01-1-1l-.21-1.2a1 1 0 00-.82-.82l-1.17-.23a1 1 0 01-.78-1.18L7.3 8.62a1 1 0 00-.33-.93l-.9-.75a1 1 0 01-.13-1.37l1-1.28a1 1 0 011.5-.13l.9.9a1 1 0 001.26.08z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <circle cx="12" cy="12" r="2.25" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
 
 function BellIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2a6 6 0 00-6 6v2.586c0 .414-.168.81-.469 1.098l-.97.97A1.5 1.5 0 006 15h12a1.5 1.5 0 001.06-2.56l-.97-.97A1.5 1.5 0 0018 10.586V8a6 6 0 00-6-6z" />
-      <path d="M10.25 18.75a1.75 1.75 0 003.5 0z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 3a6 6 0 00-6 6v2.2a2 2 0 01-.58 1.41l-.92.92A1 1 0 005 15h14a1 1 0 00.7-1.71l-.92-.92A2 2 0 0117 11.2V9a6 6 0 00-5-5.91V3Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10.5 18.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function SearchIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className} aria-hidden="true">
-      <path strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" d="M11 19a8 8 0 118-8" />
-      <path strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-2.6-2.6" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M11 4.5a6.5 6.5 0 104.6 11.1l3.4 3.39" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function MenuIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M4 6.75A.75.75 0 014.75 6h14.5a.75.75 0 010 1.5H4.75A.75.75 0 014 6.75zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H4.75A.75.75 0 014 12zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H4.75a.75.75 0 01-.75-.75z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function CloseIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className} aria-hidden="true">
-      <path strokeWidth="1.7" strokeLinecap="round" d="M6 6l12 12" />
-      <path strokeWidth="1.7" strokeLinecap="round" d="M6 18L18 6" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
+

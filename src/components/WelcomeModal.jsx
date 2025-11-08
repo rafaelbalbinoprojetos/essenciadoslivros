@@ -1,6 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
+  const portalTarget = typeof document !== "undefined" ? document.body : null;
+
+  useEffect(() => {
+    if (!open || !portalTarget) {
+      return undefined;
+    }
+
+    const { overflow } = portalTarget.style;
+    portalTarget.style.overflow = "hidden";
+
+    return () => {
+      portalTarget.style.overflow = overflow;
+    };
+  }, [open, portalTarget]);
+
+  if (!portalTarget) return null;
   if (!open) return null;
 
   const handleRootClick = () => {
@@ -17,9 +34,9 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
     onClose?.();
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/70 px-4 py-10 backdrop-blur"
+      className="fixed inset-0 z-[90] flex min-h-screen items-center justify-center overflow-y-auto bg-slate-900/70 px-4 py-8 sm:py-12 backdrop-blur"
       onClick={handleRootClick}
     >
       <div
@@ -101,4 +118,6 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, portalTarget);
 }
