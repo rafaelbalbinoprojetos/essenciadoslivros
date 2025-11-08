@@ -180,27 +180,29 @@ export default function LibraryPage() {
           <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
             Navegue por estilos
           </p>
-          <div className="mt-4 flex h-40 flex-nowrap gap-3 overflow-x-auto rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[color:rgba(var(--surface-card),0.7)] p-4 backdrop-blur sm:h-auto sm:flex-wrap">
-            {CATEGORY_ITEMS.map((category, index) => (
-              <button
-                key={category.id}
-                type="button"
-                className="group flex w-[132px] flex-none flex-col items-center gap-2 rounded-full px-4 py-2 text-[0.8rem] font-medium text-[rgb(var(--text-primary))] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(214,162,92,0.7)] sm:w-auto"
-                style={{
-                  background:
-                    index === 0
-                      ? "linear-gradient(145deg, rgba(214,162,92,0.35), rgba(118,93,255,0.15))"
-                      : "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
-                }}
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(249,215,142,0.15)] text-lg text-[rgb(var(--text-primary))] shadow-inner shadow-white/5">
-                  {category.icon}
-                </span>
-                <span className="font-serif text-sm">{category.label}</span>
-              </button>
-            ))}
+          <div className="mt-4 w-full overflow-hidden rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[color:rgba(var(--surface-card),0.7)] p-4 backdrop-blur">
+            <div className="flex h-40 flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[rgba(0,0,0,0.2)] sm:h-auto sm:flex-wrap sm:overflow-visible">
+              {CATEGORY_ITEMS.map((category, index) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  className="group flex w-[132px] flex-none flex-col items-center gap-2 rounded-full px-4 py-2 text-[0.8rem] font-medium text-[rgb(var(--text-primary))] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(214,162,92,0.7)] sm:w-auto"
+                  style={{
+                    background:
+                      index === 0
+                        ? "linear-gradient(145deg, rgba(214,162,92,0.35), rgba(118,93,255,0.15))"
+                        : "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+                  }}
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(249,215,142,0.15)] text-lg text-[rgb(var(--text-primary))] shadow-inner shadow-white/5">
+                    {category.icon}
+                  </span>
+                  <span className="font-serif text-sm">{category.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
