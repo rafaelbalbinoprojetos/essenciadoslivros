@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest);
@@ -21,7 +22,7 @@ const CATEGORY_ITEMS = [
   { id: "fantasia", label: "Fantasia", icon: "✨" },
 ];
 
-const FLOW_BOOKS = [
+const FALLBACK_FLOW_BOOKS = [
   {
     id: "flow-aurora",
     title: "Aurora sobre Códigos",
@@ -69,17 +70,17 @@ const FLOW_BOOKS = [
   },
 ];
 
-const FEATURED_BOOK = {
+const FALLBACK_FEATURED_BOOK = {
   title: "Cartas ao Horizonte Interno",
   author: "Clarice em Essência",
-  rating: 4.9,
-  description:
-    "Uma curadoria comentada de trechos, áudios e provocações para quem quer transformar leitura em ritual diário.",
+  sinopse: "Uma curadoria comentada de trechos, áudios e provocações para quem quer transformar leitura em ritual diário.",
   stats: "Audiobook · 26 minutos · 62% concluído",
   cover: coverFromPool(2),
+  pdf_url: "",
+  audio_url: "",
 };
 
-const LIST_SECTIONS = [
+const FALLBACK_LIST_SECTIONS = [
   {
     id: "progress",
     title: "📚 Em andamento",
@@ -112,6 +113,100 @@ const LIST_SECTIONS = [
   },
 ];
 
+function pickCover(book, fallbackIndex = 0) {
+  const src = (book?.capa_url ?? "").trim();
+  return src || coverFromPool(fallbackIndex);
+}
+
+function summarize(text, maxLength = 180) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 3).trim()}...`;
+}
+
+function mapBookToFlowCard(book, fallbackIndex = 0) {
+  return {
+    id: book.id,
+    title: book.titulo,
+    author: book.autor?.nome ?? "Autor não informado",
+    tag: book.destaque ? "Em destaque" : "Novo no catálogo",
+    mood: [book.genero?.nome, book.duracao_audio ? `${book.duracao_audio} min` : null].filter(Boolean).join(" · ") || "Disponível agora",
+    summary: summarize(book.sinopse, 140) || "Sinopse não informada no momento.",
+    cover: pickCover(book, fallbackIndex),
+    pdf_url: book.pdf_url,
+    audio_url: book.audio_url,
+  };
+}
+
+function mapBookToSectionCard(book, fallbackIndex = 0) {
+  return {
+    id: book.id,
+    title: book.titulo,
+    author: book.autor?.nome ?? "Autor não informado",
+    genero: book.genero?.nome,
+    sinopse: summarize(book.sinopse, 210),
+    cover: pickCover(book, fallbackIndex),
+    pdf_url: book.pdf_url,
+    audio_url: book.audio_url,
+    minutes: book.duracao_audio ? Number(book.duracao_audio) : null,
+    destaque: Boolean(book.destaque),
+  };
+}
+
+function buildSectionsFromBooks(books) {
+  if (!books?.length) return FALLBACK_LIST_SECTIONS;
+
+  const highlights = books.filter((book) => book.destaque).slice(0, 3);
+  const newcomers = books.filter((book) => !book.destaque).slice(0, 3);
+  const multimedia = books.filter((book) => book.pdf_url || book.audio_url).slice(0, 3);
+
+  const sections = [];
+  if (highlights.length) {
+    sections.push({
+      id: "featured-live",
+      title: "📚 Em destaque",
+      subtitle: "Seleções atuais da curadoria",
+      books: highlights.map((book, index) => mapBookToSectionCard(book, index)),
+    });
+  }
+  if (newcomers.length) {
+    sections.push({
+      id: "recent-live",
+      title: "✨ Novos na biblioteca",
+      subtitle: "Entradas mais recentes no catálogo",
+      books: newcomers.map((book, index) => mapBookToSectionCard(book, index + highlights.length)),
+    });
+  }
+  if (multimedia.length) {
+    sections.push({
+      id: "media-live",
+      title: "🔉 Conteúdo multimídia",
+      subtitle: "Títulos com PDF ou áudio disponíveis",
+      books: multimedia.map((book, index) => mapBookToSectionCard(book, index + highlights.length + newcomers.length)),
+    });
+  }
+
+  return sections.length ? sections : FALLBACK_LIST_SECTIONS;
+}
+
+function pickFeaturedBook(books) {
+  if (!books?.length) return FALLBACK_FEATURED_BOOK;
+  const candidate = books.find((book) => book.destaque) ?? books[0];
+  return {
+    id: candidate.id,
+    title: candidate.titulo,
+    author: candidate.autor?.nome ?? "Autor não informado",
+    cover: pickCover(candidate, 0),
+    sinopse: candidate.sinopse ?? FALLBACK_FEATURED_BOOK.sinopse,
+    stats:
+      [candidate.genero?.nome, candidate.audio_url && "Audiobook disponível", candidate.pdf_url && "PDF disponível"]
+        .filter(Boolean)
+        .join(" · ") || FALLBACK_FEATURED_BOOK.stats,
+    pdf_url: candidate.pdf_url,
+    audio_url: candidate.audio_url,
+  };
+}
+
 const TOP_RATED = [
   { id: "silencio", title: "O Invisível e o Silêncio", author: "Helena Prado", rating: 4.9, category: "Filosofia", cover: coverFromPool(2) },
   { id: "fragmentos", title: "Fragmentos de Sábado", author: "Ícaro Mendes", rating: 4.8, category: "Drama", cover: coverFromPool(0) },
@@ -140,25 +235,49 @@ const TIMELINE = [
 ];
 
 export default function LibraryPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") ?? "";
+  const { items: books, loading: loadingBooks, error: booksError, reload: reloadBooks } = useBooksCatalog({ limit: 60, status: "ativo", search: searchQuery });
   const [flowIndex, setFlowIndex] = useState(0);
   const [selectedFlow, setSelectedFlow] = useState(null);
 
+  const flowBooks = useMemo(() => {
+    return books.length ? books.slice(0, 5).map((book, index) => mapBookToFlowCard(book, index)) : FALLBACK_FLOW_BOOKS;
+  }, [books]);
+  const flowCount = flowBooks.length;
+  const flowControlsDisabled = flowCount <= 1;
+
+  const featuredBook = useMemo(() => pickFeaturedBook(books), [books]);
+  const listSections = useMemo(() => buildSectionsFromBooks(books), [books]);
+  const isEmptyState = !loadingBooks && !books.length && !booksError;
+
   useEffect(() => {
+    if (!flowCount) return undefined;
     const timer = setInterval(() => {
-      setFlowIndex((prev) => (prev + 1) % FLOW_BOOKS.length);
+      setFlowIndex((prev) => (prev + 1) % flowCount);
     }, 5500);
     return () => clearInterval(timer);
-  }, []);
+  }, [flowCount]);
+
+  useEffect(() => {
+    if (flowCount === 0) return;
+    if (flowIndex >= flowCount) {
+      setFlowIndex(0);
+    }
+  }, [flowCount, flowIndex]);
 
   const flowDeck = useMemo(() => {
-    const half = Math.floor(FLOW_BOOKS.length / 2);
-    return FLOW_BOOKS.map((card, idx) => {
+    if (!flowCount) return [];
+    const half = Math.floor(flowCount / 2);
+    return flowBooks.map((card, idx) => {
       let relative = idx - flowIndex;
-      if (relative > half) relative -= FLOW_BOOKS.length;
-      if (relative < -half) relative += FLOW_BOOKS.length;
+      if (relative > half) relative -= flowCount;
+      if (relative < -half) relative += flowCount;
       return { ...card, relative };
     });
-  }, [flowIndex]);
+  }, [flowBooks, flowCount, flowIndex]);
+
+  const activeFlowCard = flowBooks[flowIndex] ?? flowBooks[0] ?? null;
 
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)]">
@@ -176,6 +295,46 @@ export default function LibraryPage() {
             + Cadastrar título
           </Link>
         </section>
+
+        {booksError && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[32px] border border-red-200/50 bg-red-50/80 p-4 text-sm text-red-900 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-100">
+            <p>{booksError}</p>
+            <button
+              type="button"
+              onClick={reloadBooks}
+              className="rounded-full border border-red-400/40 px-4 py-1 font-semibold text-red-900 hover:bg-red-100/60 dark:text-red-100"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
+        {searchQuery && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[rgba(255,255,255,0.25)] bg-[rgba(var(--surface-card),0.6)] px-5 py-3 text-sm text-[rgb(var(--text-secondary))]">
+            <p>
+              Exibindo resultados para <span className="font-semibold text-[rgb(var(--text-primary))]">“{searchQuery}”</span>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              className="rounded-full border border-[rgba(255,255,255,0.3)] px-4 py-1 text-xs font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+            >
+              Limpar filtro
+            </button>
+          </div>
+        )}
+
+        {isEmptyState && (
+          <div className="rounded-[32px] border border-dashed border-[rgba(255,255,255,0.25)] bg-[rgba(var(--surface-card),0.6)] p-6 text-center text-sm text-[rgb(var(--text-secondary))]">
+            {searchQuery
+              ? (
+                <>
+                  Nenhum resultado encontrado para <span className="font-semibold text-[rgb(var(--text-primary))]">“{searchQuery}”</span>. Ajuste os termos ou cadastre um novo título.
+                </>
+                )
+              : "Nenhum livro cadastrado ainda. Use “Cadastrar título” para iniciar a sua biblioteca."}
+          </div>
+        )}
         
       <section className="relative w-full overflow-hidden">
   <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
@@ -233,21 +392,21 @@ export default function LibraryPage() {
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold tracking-[0.25em] text-white/70">
           <span className="rounded-full border border-white/30 px-3 py-1 text-[0.7rem] uppercase tracking-[0.4em]">
-            {FLOW_BOOKS[flowIndex].tag}
+            {activeFlowCard?.tag}
           </span>
           <span className="rounded-full bg-white/10 px-3 py-1 text-[0.7rem] uppercase tracking-[0.4em]">
-            {FLOW_BOOKS[flowIndex].mood}
+            {activeFlowCard?.mood}
           </span>
         </div>
 
         {/* Título e descrição */}
         <div className="space-y-2">
-          <h2 className="font-display text-3xl font-semibold">{FLOW_BOOKS[flowIndex].title}</h2>
+          <h2 className="font-display text-3xl font-semibold">{activeFlowCard?.title}</h2>
           <p className="text-sm uppercase tracking-[0.35em] text-white/70">
-            {FLOW_BOOKS[flowIndex].author}
+            {activeFlowCard?.author}
           </p>
           <p className="text-base text-white/90 leading-relaxed">
-            {FLOW_BOOKS[flowIndex].summary}
+            {activeFlowCard?.summary}
           </p>
         </div>
       </div>
@@ -257,22 +416,24 @@ export default function LibraryPage() {
         <div className="flex gap-3">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/30 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-            onClick={() => setFlowIndex((prev) => (prev - 1 + FLOW_BOOKS.length) % FLOW_BOOKS.length)}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/30 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => flowCount > 1 && setFlowIndex((prev) => (prev - 1 + flowCount) % flowCount)}
+            disabled={flowControlsDisabled}
           >
             Anterior
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white/90 px-5 py-2 text-sm font-semibold text-[rgb(var(--color-accent-dark))] shadow-lg shadow-black/20 transition hover:bg-white"
-            onClick={() => setFlowIndex((prev) => (prev + 1) % FLOW_BOOKS.length)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-white/90 px-5 py-2 text-sm font-semibold text-[rgb(var(--color-accent-dark))] shadow-lg shadow-black/20 transition hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => flowCount > 1 && setFlowIndex((prev) => (prev + 1) % flowCount)}
+            disabled={flowControlsDisabled}
           >
             Próximo
           </button>
         </div>
 
         <div className="flex items-center gap-2">
-          {FLOW_BOOKS.map((book, idx) => (
+          {flowBooks.map((book, idx) => (
             <span
               key={book.id}
               className={`h-1.5 rounded-full transition-all ${
@@ -347,8 +508,8 @@ export default function LibraryPage() {
           <div className="flex flex-col gap-5 lg:flex-row">
             <div className="w-full lg:w-1/3">
               <img
-                src={FEATURED_BOOK.cover}
-                alt={FEATURED_BOOK.title}
+                src={featuredBook.cover}
+                alt={featuredBook.title}
                 className="mx-auto h-[360px] w-[240px] rounded-[24px] object-cover shadow-xl lg:h-[360px] lg:w-[240px]"
               />
             </div>
@@ -356,17 +517,37 @@ export default function LibraryPage() {
               <p className="text-[0.7rem] uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.8)]">
                 Em destaque
               </p>
-              <h3 className="font-display text-2xl font-semibold text-[rgb(var(--text-primary))]">{FEATURED_BOOK.title}</h3>
-              <p className="text-sm text-[rgb(var(--text-secondary))]">{FEATURED_BOOK.author}</p>
-              <div className="flex items-center gap-2 text-xs font-semibold text-[color:rgb(var(--color-accent-dark))]">
-                ⭐ {FEATURED_BOOK.rating} · {FEATURED_BOOK.stats}
+              <h3 className="font-display text-2xl font-semibold text-[rgb(var(--text-primary))]">{featuredBook.title}</h3>
+              <p className="text-sm text-[rgb(var(--text-secondary))]">{featuredBook.author}</p>
+              <div className="flex flex-wrap gap-2 text-xs font-semibold text-[color:rgb(var(--color-accent-dark))]">
+                {featuredBook.stats}
               </div>
-              <p className="text-base leading-relaxed text-[rgb(var(--text-primary))]">{FEATURED_BOOK.description}</p>
+              <p className="text-base leading-relaxed text-[rgb(var(--text-primary))]">{featuredBook.sinopse}</p>
               <div className="flex flex-wrap gap-3 text-sm">
-                <button className="inline-flex items-center gap-2 rounded-2xl bg-[color:rgb(var(--color-accent-primary))] px-4 py-2 font-semibold text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.35)] transition hover:bg-[color:rgb(var(--color-accent-dark))]">
-                  Ler agora →
-                </button>
-                <button className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))]">
+                {featuredBook.pdf_url && (
+                  <a
+                    href={featuredBook.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[color:rgb(var(--color-accent-primary))] px-4 py-2 font-semibold text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.35)] transition hover:bg-[color:rgb(var(--color-accent-dark))]"
+                  >
+                    Ler PDF →
+                  </a>
+                )}
+                {featuredBook.audio_url && (
+                  <a
+                    href={featuredBook.audio_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+                  >
+                    Ouvir áudio
+                  </a>
+                )}
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))]"
+                >
                   Ver detalhes
                 </button>
               </div>
@@ -374,7 +555,7 @@ export default function LibraryPage() {
           </div>
         </section>
 
-        {LIST_SECTIONS.map((section) => (
+        {listSections.map((section) => (
           <section key={section.id} className="space-y-4">
             <header className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -399,26 +580,37 @@ export default function LibraryPage() {
                   <div className="mt-4 space-y-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
-                        {idx === 0 ? "Atual" : "Descoberta"}
+                        {book.genero ?? (idx === 0 ? "Atual" : "Descoberta")}
                       </p>
                       <h4 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{book.title}</h4>
                       <p className="text-sm text-[rgb(var(--text-secondary))]">{book.author}</p>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-[rgb(var(--text-secondary))]">
-                        <span>{book.progress > 0 ? `${book.progress}%` : "Novo"}</span>
-                        {book.minutes > 0 && <span>{book.minutes} min</span>}
-                      </div>
-                      <div className="h-1.5 rounded-full bg-[rgba(255,255,255,0.08)]">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[rgba(214,162,92,0.85)] to-[rgba(118,93,255,0.85)]"
-                          style={{ width: `${book.progress || 15}%` }}
-                        />
-                      </div>
+                    {book.sinopse && <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{book.sinopse}</p>}
+                    <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                      {book.pdf_url && (
+                        <a
+                          href={book.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
+                        >
+                          Abrir PDF
+                        </a>
+                      )}
+                      {book.audio_url && (
+                        <a
+                          href={book.audio_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
+                        >
+                          Ouvir áudio
+                        </a>
+                      )}
+                      {!book.pdf_url && !book.audio_url && (
+                        <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
+                      )}
                     </div>
-                    <button className="inline-flex items-center gap-2 text-sm font-semibold text-[color:rgb(var(--color-accent-dark))] opacity-0 transition group-hover:opacity-100">
-                      Retomar →
-                    </button>
                   </div>
                 </article>
               ))}
@@ -554,9 +746,26 @@ export default function LibraryPage() {
                 <p className="text-sm text-white/70">{selectedFlow.author}</p>
                 <p className="text-sm text-white/80">{selectedFlow.summary}</p>
                 <div className="flex flex-wrap gap-3 pt-2">
-                  <button className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-dark))]">
-                    Continuar leitura
-                  </button>
+                  {selectedFlow.pdf_url && (
+                    <a
+                      href={selectedFlow.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-dark))]"
+                    >
+                      Abrir PDF
+                    </a>
+                  )}
+                  {selectedFlow.audio_url && (
+                    <a
+                      href={selectedFlow.audio_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-2xl border border-white/30 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      Ouvir áudio
+                    </a>
+                  )}
                   <button className="rounded-2xl border border-white/30 px-4 py-2 text-sm font-semibold text-white" onClick={() => setSelectedFlow(null)}>
                     Fechar
                   </button>

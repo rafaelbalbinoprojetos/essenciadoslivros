@@ -112,6 +112,16 @@ export default function Layout() {
     return undefined;
   }, [trialExpired, trialStatus, updateUserMetadata, user]);
 
+  const handleSearchSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const trimmed = searchTerm.trim();
+      if (!trimmed) return;
+      navigate(`/biblioteca?search=${encodeURIComponent(trimmed)}`);
+    },
+    [navigate, searchTerm],
+  );
+
   const handleCloseWelcome = useCallback(() => setWelcomeOpen(false), []);
 
   const handleStartOnboarding = useCallback(async () => {
@@ -364,7 +374,7 @@ export default function Layout() {
               </div>
 
               <div className="ml-auto flex items-center gap-2 md:flex-1 md:justify-end md:gap-3">
-                <form className="hidden min-w-[220px] flex-1 items-center md:flex">
+                <form className="hidden min-w-[220px] flex-1 items-center md:flex" onSubmit={handleSearchSubmit}>
                   <div className="relative flex w-full items-center">
                     <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-[#7a6c5e]/70" />
                     <input

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 
 const FLOW_COVERS = [
   {
@@ -90,28 +91,72 @@ const DISCOVERY_PILLS = [
   { id: "audio", label: "Audiobooks para começar agora", to: "/biblioteca" },
 ];
 
+function resolveCoverSource(value) {
+  if (!value) return "";
+  return value.startsWith("http") ? value : getCoverUrl(value);
+}
+
+function summarizeHighlight(text, maxLength = 180) {
+  if (!text) return "Cadastre uma sinopse para este título e desbloqueie recomendações personalizadas.";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 3).trim()}...`;
+}
+
 export default function DashboardPage() {
+  const { items: books, loading: booksLoading, error: booksError, reload: reloadBooks } = useBooksCatalog({ limit: 20, status: "ativo" });
   const [flowIndex, setFlowIndex] = useState(0);
-  const totalCovers = FLOW_COVERS.length;
+  const flowItems = useMemo(() => {
+    if (!books.length) return FLOW_COVERS;
+    return books.slice(0, FLOW_COVERS.length).map((book, index) => ({
+      id: book.id,
+      title: book.titulo,
+      author: book.autor?.nome ?? "Autor não informado",
+      mood: book.genero?.nome ?? FLOW_COVERS[index % FLOW_COVERS.length].mood,
+      cover: book.capa_url || FLOW_COVERS[index % FLOW_COVERS.length].cover,
+      highlight: summarizeHighlight(book.sinopse),
+    }));
+  }, [books]);
+  const totalCovers = flowItems.length;
+  const activeFlow = flowItems[flowIndex] ?? flowItems[0] ?? null;
+  const highlightCards = useMemo(() => {
+    if (!books.length) return FEATURED_BOOKS;
+    return books.slice(0, 2).map((book) => ({
+      id: book.id,
+      title: book.titulo,
+      author: book.autor?.nome ?? "Autor não informado",
+      summaryType: book.genero?.nome ?? "Seleção Essência",
+      highlight: summarizeHighlight(book.sinopse),
+      pdf_url: book.pdf_url,
+      audio_url: book.audio_url,
+    }));
+  }, [books]);
 
   useEffect(() => {
+    if (!totalCovers) return undefined;
     const interval = setInterval(() => {
       setFlowIndex((current) => (current + 1) % totalCovers);
     }, 4500);
     return () => clearInterval(interval);
   }, [totalCovers]);
 
+  useEffect(() => {
+    if (totalCovers && flowIndex >= totalCovers) {
+      setFlowIndex(0);
+    }
+  }, [flowIndex, totalCovers]);
+
   const flowDeck = useMemo(() => {
     const sequence = [];
+    if (!totalCovers) return sequence;
     for (let offset = -2; offset <= 2; offset += 1) {
       const index = (flowIndex + offset + totalCovers) % totalCovers;
       sequence.push({
-        ...FLOW_COVERS[index],
+        ...flowItems[index],
         offset,
       });
     }
     return sequence;
-  }, [flowIndex, totalCovers]);
+  }, [flowIndex, flowItems, totalCovers]);
 
   return (
     <div className="space-y-10">
@@ -152,14 +197,13 @@ export default function DashboardPage() {
             </div>
             <div className="rounded-2xl border border-[color:rgba(var(--color-accent-primary),0.2)] bg-[rgba(255,255,255,0.75)] p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
               <strong className="font-semibold text-[color:rgb(var(--color-accent-dark))]">
-                {FLOW_COVERS[flowIndex].title}
+                {activeFlow?.title}
               </strong>
               <p className="text-xs uppercase tracking-[0.26em] text-[color:rgba(var(--color-secondary-primary),0.85)]">
-                {FLOW_COVERS[flowIndex].mood}
+                {activeFlow?.mood}
               </p>
               <p className="mt-2 text-[rgb(var(--text-secondary))]">
-                {FLOW_COVERS[flowIndex].author} · Explore insights personalizados, playlists de leitura e notas
-                inteligentes vinculadas ao título.
+                {activeFlow?.author} · Explore insights personalizados, playlists de leitura e notas inteligentes vinculadas ao título.
               </p>
             </div>
           </div>
@@ -187,12 +231,7 @@ export default function DashboardPage() {
                       "transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 500ms ease, z-index 650ms",
                   }}
                 >
-                  <img
-                    src={getCoverUrl(item.cover)}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                    draggable={false}
-                  />
+                  <img src={resolveCoverSource(item.cover)} alt={item.title} className="h-full w-full object-cover" draggable={false} />
                   <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
                     <p className="font-semibold">{item.title}</p>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-white/80">{item.mood}</p>
@@ -204,6 +243,23 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {booksError && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200/60 bg-red-50/80 p-4 text-sm text-red-900 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-100">
+          <p>{booksError}</p>
+          <button
+            type="button"
+            onClick={reloadBooks}
+            className="rounded-full border border-red-400/30 px-4 py-1 font-semibold text-red-900 hover:bg-red-100/60 dark:text-red-100"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
+      {booksLoading && !booksError && (
+        <p className="text-xs uppercase tracking-[0.3em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Sincronizando catálogo...</p>
+      )}
 
       <section className="overflow-hidden rounded-3xl border border-[#6c63ff]/20 bg-white/95 shadow-lg shadow-[#6c63ff]/10 dark:border-white/10 dark:bg-slate-900/80">
         <div className="grid gap-8 p-8 md:grid-cols-[1.15fr,0.85fr]">
@@ -269,7 +325,7 @@ export default function DashboardPage() {
         </header>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {FEATURED_BOOKS.map((book) => (
+          {highlightCards.map((book) => (
             <article
               key={book.id}
               className="flex flex-col gap-4 rounded-3xl border border-[#6c63ff]/15 bg-white/90 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#6c63ff]/30 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/80"
@@ -280,26 +336,50 @@ export default function DashboardPage() {
                   <h4 className="mt-1 text-lg font-semibold text-[#1f2933] dark:text-white">{book.title}</h4>
                   <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">{book.author}</p>
                 </div>
-                <span className="rounded-full border border-[#6c63ff]/20 px-3 py-1 text-xs font-semibold text-[#4c3f8f] dark:border-[#cfc2ff]/30 dark:text-[#cfc2ff]">
-                  {book.progress}% concluído
-                </span>
+                {(book.audio_url || book.pdf_url) && (
+                  <span className="rounded-full border border-[#6c63ff]/20 px-3 py-1 text-xs font-semibold text-[#4c3f8f] dark:border-[#cfc2ff]/30 dark:text-[#cfc2ff]">
+                    {[book.audio_url && "Audiobook", book.pdf_url && "PDF"].filter(Boolean).join(" · ")}
+                  </span>
+                )}
               </div>
               <blockquote className="rounded-2xl border border-[#6c63ff]/15 bg-[#f2ede4]/80 px-4 py-3 text-sm text-[#4b3f35] dark:border-white/10 dark:bg-white/5 dark:text-[#cfc2ff]">
                 {book.highlight}
               </blockquote>
               <div className="flex flex-wrap gap-3">
-                <Link
-                  to={`/biblioteca#${book.id}`}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
-                >
-                  Continuar leitura
-                </Link>
-                <Link
-                  to={`/biblioteca#${book.id}`}
-                  className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
-                >
-                  Abrir resumos
-                </Link>
+                {book.pdf_url ? (
+                  <a
+                    href={book.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
+                  >
+                    Abrir PDF
+                  </a>
+                ) : (
+                  <Link
+                    to={`/biblioteca#${book.id ?? "destaque"}`}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
+                  >
+                    Ver na biblioteca
+                  </Link>
+                )}
+                {book.audio_url ? (
+                  <a
+                    href={book.audio_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75] dark:text-[#cfc2ff]"
+                  >
+                    Ouvir áudio
+                  </a>
+                ) : (
+                  <Link
+                    to={`/biblioteca#${book.id ?? "destaque"}`}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
+                  >
+                    Explorar detalhes
+                  </Link>
+                )}
               </div>
             </article>
           ))}
