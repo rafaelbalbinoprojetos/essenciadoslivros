@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
-import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
+import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest).filter(Boolean);
@@ -115,8 +115,7 @@ const FALLBACK_LIST_SECTIONS = [
 ];
 
 function pickCover(book, fallbackIndex = 0) {
-  const src = normalizeCoverUrl(book?.capa_url);
-  return src || coverFromPool(fallbackIndex);
+  return ensureCoverSrc(book?.capa_url, coverFromPool(fallbackIndex));
 }
 
 function handleCoverFallback(event) {

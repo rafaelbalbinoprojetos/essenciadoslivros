@@ -1,10 +1,17 @@
-const DRIVE_HOST_SNIPPETS = ["drive.google.com", "docs.google.com"];
+const DRIVE_HOST_SNIPPETS = [
+  "drive.google.com",
+  "docs.google.com",
+  "drive.usercontent.google.com",
+  "drive.googleusercontent.com",
+];
+const DRIVE_CDN_BASE = "https://lh3.googleusercontent.com/d/";
 const DRIVE_ID_PATTERN = /[-\w]{10,}/;
 const DEFAULT_COVER_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236c63ff'/%3E%3Cstop offset='100%25' stop-color='%23b38b59'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='600' rx='32' fill='url(%23g)'/%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='Helvetica,Arial,sans-serif' font-size='44' opacity='0.9'%3EEssencia%3C/text%3E%3C/svg%3E";
 
 function buildDriveDirectUrl(id) {
-  return `https://drive.google.com/uc?id=${id}&export=view`;
+  if (!id) return "";
+  return `${DRIVE_CDN_BASE}${id}`;
 }
 
 function extractDriveId(text = "") {
@@ -46,7 +53,7 @@ export function normalizeCoverUrl(rawValue) {
     return normalizeCoverUrl(`https:${value}`);
   }
 
-  if (value.startsWith("drive.google.com") || value.startsWith("docs.google.com")) {
+  if (DRIVE_HOST_SNIPPETS.some((host) => value.startsWith(host))) {
     return normalizeCoverUrl(`https://${value}`);
   }
 
