@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import BookLink from "../components/BookLink.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
 
@@ -10,6 +11,7 @@ const FLOW_COVERS = [
     author: "Luna Varella",
     mood: "Tecnologia & poesia",
     cover: "Essência Dos Binários.png",
+    detailsId: null,
   },
   {
     id: "ii-a",
@@ -17,6 +19,7 @@ const FLOW_COVERS = [
     author: "Helena Marçal",
     mood: "Ficção especulativa",
     cover: "ii A.png",
+    detailsId: null,
   },
   {
     id: "reeves",
@@ -24,6 +27,7 @@ const FLOW_COVERS = [
     author: "Ícaro Martins",
     mood: "Biografia visual",
     cover: "Reeves (1).png",
+    detailsId: null,
   },
   {
     id: "suhiro",
@@ -31,6 +35,7 @@ const FLOW_COVERS = [
     author: "Coletânea Essência",
     mood: "Arte sequencial",
     cover: "sUhiro-Ōtomo -.png",
+    detailsId: null,
   },
   {
     id: "va",
@@ -38,6 +43,7 @@ const FLOW_COVERS = [
     author: "Marina V.",
     mood: "Romance psicológico",
     cover: "vá (1).png",
+    detailsId: null,
   },
   {
     id: "flow-zero",
@@ -45,6 +51,7 @@ const FLOW_COVERS = [
     author: "K. Aristeu",
     mood: "Sci-fi contemplativo",
     cover: "~I ~ ~ 0.png",
+    detailsId: null,
   },
   {
     id: "james",
@@ -52,6 +59,7 @@ const FLOW_COVERS = [
     author: "Clarice Porto",
     mood: "Epistolar",
     cover: "\"i James.png",
+    detailsId: null,
   },
   {
     id: "peter",
@@ -59,6 +67,7 @@ const FLOW_COVERS = [
     author: "Rafael Nunes",
     mood: "Aventura histórica",
     cover: "\"PETER (2).png",
+    detailsId: null,
   },
 ];
 
@@ -78,6 +87,7 @@ const FEATURED_BOOKS = [
     summaryType: "Resumo IA profundo",
     highlight:
       "“Liberdade é pouco. O que eu desejo ainda não tem nome.” — Lembre-se de anotar onde esse pensamento ressoa na sua rotina.",
+    detailsId: null,
   },
   {
     id: "fundamentos",
@@ -86,6 +96,7 @@ const FEATURED_BOOKS = [
     progress: 35,
     summaryType: "Insights rápidos",
     highlight: "Transforme capítulos em ações com os cartões de foco automático.",
+    detailsId: null,
   },
 ];
 
@@ -125,6 +136,7 @@ export default function DashboardPage() {
     if (!books.length) return fallbackFlowDeck;
     return books.slice(0, deckLength).map((book, index) => ({
       id: book.id,
+      detailsId: book.id ?? null,
       title: book.titulo,
       author: book.autor?.nome ?? "Autor não informado",
       mood: book.genero?.nome ?? fallbackFlowDeck[index % deckLength].mood,
@@ -138,6 +150,7 @@ export default function DashboardPage() {
     if (!books.length) return FEATURED_BOOKS;
     return books.slice(0, 2).map((book) => ({
       id: book.id,
+      detailsId: book.id ?? null,
       title: book.titulo,
       author: book.autor?.nome ?? "Autor não informado",
       summaryType: book.genero?.nome ?? "Seleção Essência",
@@ -213,7 +226,12 @@ export default function DashboardPage() {
             </div>
             <div className="rounded-2xl border border-[color:rgba(var(--color-accent-primary),0.2)] bg-[rgba(255,255,255,0.75)] p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
               <strong className="font-semibold text-[color:rgb(var(--color-accent-dark))]">
-                {activeFlow?.title}
+                <BookLink
+                  bookId={activeFlow?.detailsId}
+                  className="text-[color:rgb(var(--color-accent-dark))]"
+                >
+                  {activeFlow?.title ?? "Selecione um título"}
+                </BookLink>
               </strong>
               <p className="text-xs uppercase tracking-[0.26em] text-[color:rgba(var(--color-secondary-primary),0.85)]">
                 {activeFlow?.mood}
@@ -247,15 +265,35 @@ export default function DashboardPage() {
                       "transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 500ms ease, z-index 650ms",
                   }}
                 >
-                  <img
-                    src={item.cover}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                    draggable={false}
-                    onError={handleCoverFallback}
-                  />
+                  {item.detailsId ? (
+                    <BookLink
+                      bookId={item.detailsId}
+                      className="block h-full w-full"
+                      stopPropagation
+                    >
+                      <img
+                        src={item.cover}
+                        alt={item.title}
+                        className="h-full w-full object-cover"
+                        draggable={false}
+                        onError={handleCoverFallback}
+                      />
+                    </BookLink>
+                  ) : (
+                    <img
+                      src={item.cover}
+                      alt={item.title}
+                      className="h-full w-full object-cover"
+                      draggable={false}
+                      onError={handleCoverFallback}
+                    />
+                  )}
                   <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
-                    <p className="font-semibold">{item.title}</p>
+                    <p className="font-semibold">
+                      <BookLink bookId={item.detailsId} className="text-white" stopPropagation>
+                        {item.title}
+                      </BookLink>
+                    </p>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-white/80">{item.mood}</p>
                   </div>
                 </article>
@@ -355,7 +393,11 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-[#b38b59] dark:text-[#cfc2ff]/60">{book.summaryType}</p>
-                  <h4 className="mt-1 text-lg font-semibold text-[#1f2933] dark:text-white">{book.title}</h4>
+                  <h4 className="mt-1 text-lg font-semibold text-[#1f2933] dark:text-white">
+                    <BookLink bookId={book.detailsId} className="text-[#1f2933] dark:text-white">
+                      {book.title}
+                    </BookLink>
+                  </h4>
                   <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">{book.author}</p>
                 </div>
                 {(book.audio_url || book.pdf_url) && (
@@ -379,7 +421,7 @@ export default function DashboardPage() {
                   </a>
                 ) : (
                   <Link
-                    to={`/biblioteca#${book.id ?? "destaque"}`}
+                    to={book.detailsId ? `/biblioteca/${book.detailsId}` : "/biblioteca"}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
                   >
                     Ver na biblioteca
@@ -396,7 +438,7 @@ export default function DashboardPage() {
                   </a>
                 ) : (
                   <Link
-                    to={`/biblioteca#${book.id ?? "destaque"}`}
+                    to={book.detailsId ? `/biblioteca/${book.detailsId}` : "/biblioteca"}
                     className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
                   >
                     Explorar detalhes

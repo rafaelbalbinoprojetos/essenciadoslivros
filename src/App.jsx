@@ -2,6 +2,7 @@
 import Layout from "./layout/Layout.jsx";
 import DashboardPage from "./pages/Dashboard.jsx";
 import LibraryPage from "./pages/Library.jsx";
+import BookDetailsPage from "./pages/BookDetails.jsx";
 import ChatbotPage from "./pages/Chatbot.jsx";
 import SettingsPage from "./pages/Settings.jsx";
 import CompoundInterestPage from "./pages/CompoundInterest.jsx";
@@ -19,6 +20,7 @@ function App() {
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
             <Route path="biblioteca" element={<LibraryPage />} />
+            <Route path="biblioteca/:bookId" element={<BookDetailsPage />} />
             <Route path="biblioteca/novo" element={<BookCreatePage />} />
             <Route path="assistente" element={<ChatbotPage />} />
             <Route path="configuracoes" element={<SettingsPage />} />

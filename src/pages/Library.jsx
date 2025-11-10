@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import BookLink from "../components/BookLink.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 
@@ -32,6 +33,7 @@ const FALLBACK_FLOW_BOOKS = [
     mood: "Mistério elegante · 312 páginas",
     summary: "Investigação sensorial em bibliotecas subterrâneas guiada por IA curatorial.",
     cover: coverFromPool(0),
+    detailsId: null,
   },
   {
     id: "flow-yugen",
@@ -41,6 +43,7 @@ const FALLBACK_FLOW_BOOKS = [
     mood: "Ficção especulativa · 288 páginas",
     summary: "Arquitetos silenciosos moldam cidades lendo diário de viajantes interdimensionais.",
     cover: coverFromPool(1),
+    detailsId: null,
   },
   {
     id: "flow-atlas",
@@ -50,6 +53,7 @@ const FALLBACK_FLOW_BOOKS = [
     mood: "Romance histórico · 354 páginas",
     summary: "Cartógrafa descobre cartas escondidas em bordados que contam revoluções invisíveis.",
     cover: coverFromPool(2),
+    detailsId: null,
   },
   {
     id: "flow-vertigem",
@@ -59,6 +63,7 @@ const FALLBACK_FLOW_BOOKS = [
     mood: "Drama contemporâneo · 198 páginas",
     summary: "Retratos de leitores que trocam memórias por capítulos inéditos.",
     cover: coverFromPool(3),
+    detailsId: null,
   },
   {
     id: "flow-satori",
@@ -68,6 +73,7 @@ const FALLBACK_FLOW_BOOKS = [
     mood: "Filosofia lírica · 240 páginas",
     summary: "Meditativos fragmentos sobre o ato de reler e reescrever a si mesmo.",
     cover: coverFromPool(4),
+    detailsId: null,
   },
 ];
 
@@ -79,6 +85,7 @@ const FALLBACK_FEATURED_BOOK = {
   cover: coverFromPool(2),
   pdf_url: "",
   audio_url: "",
+  detailsId: null,
 };
 
 const FALLBACK_LIST_SECTIONS = [
@@ -87,9 +94,9 @@ const FALLBACK_LIST_SECTIONS = [
     title: "📚 Em andamento",
     subtitle: "Continue do ponto onde parou",
     books: [
-      { id: "clarice", title: "Clarice em Essência", author: "Clarice Lispector", progress: 62, minutes: 12, cover: coverFromPool(6) },
-      { id: "fundamentos", title: "Fundamentos da Leitura Atenta", author: "Equipe Essência", progress: 35, minutes: 18, cover: coverFromPool(7) },
-      { id: "aurora", title: "Aurora sobre Códigos", author: "Luna Arendt", progress: 18, minutes: 9, cover: coverFromPool(0) },
+      { id: "clarice", detailsId: null, title: "Clarice em Essência", author: "Clarice Lispector", progress: 62, minutes: 12, cover: coverFromPool(6) },
+      { id: "fundamentos", detailsId: null, title: "Fundamentos da Leitura Atenta", author: "Equipe Essência", progress: 35, minutes: 18, cover: coverFromPool(7) },
+      { id: "aurora", detailsId: null, title: "Aurora sobre Códigos", author: "Luna Arendt", progress: 18, minutes: 9, cover: coverFromPool(0) },
     ],
   },
   {
@@ -97,9 +104,9 @@ const FALLBACK_LIST_SECTIONS = [
     title: "✨ Recomendados pela IA",
     subtitle: "Escolhas alinhadas ao seu ritmo atual",
     books: [
-      { id: "oceano", title: "Oceano Diagonal", author: "Iris M. Alencar", progress: 0, minutes: 22, cover: coverFromPool(1) },
-      { id: "manifesto", title: "Manifesto das Pequenas Revoluções", author: "Hugo Rial", progress: 0, minutes: 16, cover: coverFromPool(2) },
-      { id: "sombras", title: "Sombras de Âmbar", author: "Marina Valença", progress: 0, minutes: 11, cover: coverFromPool(3) },
+      { id: "oceano", detailsId: null, title: "Oceano Diagonal", author: "Iris M. Alencar", progress: 0, minutes: 22, cover: coverFromPool(1) },
+      { id: "manifesto", detailsId: null, title: "Manifesto das Pequenas Revoluções", author: "Hugo Rial", progress: 0, minutes: 16, cover: coverFromPool(2) },
+      { id: "sombras", detailsId: null, title: "Sombras de Âmbar", author: "Marina Valença", progress: 0, minutes: 11, cover: coverFromPool(3) },
     ],
   },
   {
@@ -107,9 +114,9 @@ const FALLBACK_LIST_SECTIONS = [
     title: "🕮 Coleções",
     subtitle: "Curadorias Essência para mergulhos temáticos",
     books: [
-      { id: "classicos", title: "Clássicos Modernos", author: "12 títulos selecionados", progress: 0, minutes: 0, cover: coverFromPool(4) },
-      { id: "reflexoes", title: "Reflexões Diárias", author: "7 ensaios breves", progress: 0, minutes: 0, cover: coverFromPool(5) },
-      { id: "audio", title: "Audiobooks Curtos", author: "Coleção 15 min", progress: 0, minutes: 0, cover: coverFromPool(6) },
+      { id: "classicos", detailsId: null, title: "Clássicos Modernos", author: "12 títulos selecionados", progress: 0, minutes: 0, cover: coverFromPool(4) },
+      { id: "reflexoes", detailsId: null, title: "Reflexões Diárias", author: "7 ensaios breves", progress: 0, minutes: 0, cover: coverFromPool(5) },
+      { id: "audio", detailsId: null, title: "Audiobooks Curtos", author: "Coleção 15 min", progress: 0, minutes: 0, cover: coverFromPool(6) },
     ],
   },
 ];
@@ -132,6 +139,7 @@ function summarize(text, maxLength = 180) {
 function mapBookToFlowCard(book, fallbackIndex = 0) {
   return {
     id: book.id,
+    detailsId: book.id ?? null,
     title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
     tag: book.destaque ? "Em destaque" : "Novo no catálogo",
@@ -146,6 +154,7 @@ function mapBookToFlowCard(book, fallbackIndex = 0) {
 function mapBookToSectionCard(book, fallbackIndex = 0) {
   return {
     id: book.id,
+    detailsId: book.id ?? null,
     title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
     genero: book.genero?.nome,
@@ -199,6 +208,7 @@ function pickFeaturedBook(books) {
   const candidate = books.find((book) => book.destaque) ?? books[0];
   return {
     id: candidate.id,
+    detailsId: candidate.id ?? null,
     title: candidate.titulo,
     author: candidate.autor?.nome ?? "Autor não informado",
     cover: pickCover(candidate, 0),
@@ -213,16 +223,16 @@ function pickFeaturedBook(books) {
 }
 
 const TOP_RATED = [
-  { id: "silencio", title: "O Invisível e o Silêncio", author: "Helena Prado", rating: 4.9, category: "Filosofia", cover: coverFromPool(2) },
-  { id: "fragmentos", title: "Fragmentos de Sábado", author: "Ícaro Mendes", rating: 4.8, category: "Drama", cover: coverFromPool(0) },
-  { id: "atlas", title: "Atlas do Âmbar", author: "Helena Prado", rating: 4.7, category: "Romance", cover: coverFromPool(1) },
-  { id: "playlist", title: "Playlists para Pensar", author: "Equipe Essência", rating: 4.7, category: "Curadoria", cover: coverFromPool(4) },
+  { id: "silencio", detailsId: null, title: "O Invisível e o Silêncio", author: "Helena Prado", rating: 4.9, category: "Filosofia", cover: coverFromPool(2) },
+  { id: "fragmentos", detailsId: null, title: "Fragmentos de Sábado", author: "Ícaro Mendes", rating: 4.8, category: "Drama", cover: coverFromPool(0) },
+  { id: "atlas", detailsId: null, title: "Atlas do Âmbar", author: "Helena Prado", rating: 4.7, category: "Romance", cover: coverFromPool(1) },
+  { id: "playlist", detailsId: null, title: "Playlists para Pensar", author: "Equipe Essência", rating: 4.7, category: "Curadoria", cover: coverFromPool(4) },
 ];
 
 const TRENDING = [
-  { id: "fluxo", title: "Fluxo das Pequenas Coragens", badge: "🔥 em alta", cover: coverFromPool(7) },
-  { id: "paisagens", title: "Paisagens em Frequência", badge: "🔥 em alta", cover: coverFromPool(5) },
-  { id: "labirinto", title: "Labirintos Claros", badge: "🔥 em alta", cover: coverFromPool(6) },
+  { id: "fluxo", detailsId: null, title: "Fluxo das Pequenas Coragens", badge: "🔥 em alta", cover: coverFromPool(7) },
+  { id: "paisagens", detailsId: null, title: "Paisagens em Frequência", badge: "🔥 em alta", cover: coverFromPool(5) },
+  { id: "labirinto", detailsId: null, title: "Labirintos Claros", badge: "🔥 em alta", cover: coverFromPool(6) },
 ];
 
 const USER_STATS = {
@@ -406,7 +416,15 @@ export default function LibraryPage() {
 
         {/* Título e descrição */}
         <div className="space-y-2">
-          <h2 className="font-display text-3xl font-semibold">{activeFlowCard?.title}</h2>
+          <h2 className="font-display text-3xl font-semibold">
+            <BookLink
+              bookId={activeFlowCard?.detailsId}
+              className="hover:text-[rgba(255,255,255,0.9)]"
+              stopPropagation
+            >
+              {activeFlowCard?.title ?? "Descubra uma nova obra"}
+            </BookLink>
+          </h2>
           <p className="text-sm uppercase tracking-[0.35em] text-white/70">
             {activeFlowCard?.author}
           </p>
@@ -457,7 +475,7 @@ export default function LibraryPage() {
 
       {/* Coverflow */}
       <div
-        className="relative mx-auto h-[340px] w-full max-w-[520px] -translate-y-[160px]"
+        className="relative mx-auto h-[340px] w-full max-w-[520px] lg:-translate-y-[160px]"
         style={{
           perspective: "1300px",
           perspectiveOrigin: "50% 30%",
@@ -486,16 +504,40 @@ export default function LibraryPage() {
               }}
               onClick={() => setSelectedFlow(card)}
             >
-              <img
-                src={card.cover}
-                alt={card.title}
-                className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
-                draggable={false}
-                onError={handleCoverFallback}
-              />
+              {card.detailsId ? (
+                <BookLink
+                  bookId={card.detailsId}
+                  className="block h-full w-full"
+                  stopPropagation
+                >
+                  <img
+                    src={card.cover}
+                    alt={card.title}
+                    className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
+                    draggable={false}
+                    onError={handleCoverFallback}
+                  />
+                </BookLink>
+              ) : (
+                <img
+                  src={card.cover}
+                  alt={card.title}
+                  className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
+                  draggable={false}
+                  onError={handleCoverFallback}
+                />
+              )}
               <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-left backdrop-blur-sm">
                 <p className="text-[10px] uppercase tracking-[0.35em] text-white/60">{card.tag}</p>
-                <p className="text-base font-semibold">{card.title}</p>
+                <p className="text-base font-semibold">
+                  <BookLink
+                    bookId={card.detailsId}
+                    className="text-white hover:text-[rgba(255,255,255,0.85)]"
+                    stopPropagation
+                  >
+                    {card.title}
+                  </BookLink>
+                </p>
                 <p className="text-xs text-white/80">{card.author}</p>
               </div>
             </article>
@@ -513,18 +555,30 @@ export default function LibraryPage() {
         <section className="rounded-[30px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.92)] p-5 backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row">
             <div className="w-full lg:w-1/3">
-              <img
-                src={featuredBook.cover}
-                alt={featuredBook.title}
-                className="mx-auto h-[360px] w-[240px] rounded-[24px] object-cover shadow-xl lg:h-[360px] lg:w-[240px]"
-                onError={handleCoverFallback}
-              />
+              <BookLink
+                bookId={featuredBook.detailsId}
+                className="mx-auto block h-[360px] w-[240px] rounded-[24px] shadow-xl lg:h-[360px] lg:w-[240px]"
+              >
+                <img
+                  src={featuredBook.cover}
+                  alt={featuredBook.title}
+                  className="h-full w-full rounded-[24px] object-cover"
+                  onError={handleCoverFallback}
+                />
+              </BookLink>
             </div>
             <div className="flex-1 space-y-4">
               <p className="text-[0.7rem] uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.8)]">
                 Em destaque
               </p>
-              <h3 className="font-display text-2xl font-semibold text-[rgb(var(--text-primary))]">{featuredBook.title}</h3>
+              <h3 className="font-display text-2xl font-semibold text-[rgb(var(--text-primary))]">
+                <BookLink
+                  bookId={featuredBook.detailsId}
+                  className="text-[rgb(var(--text-primary))]"
+                >
+                  {featuredBook.title}
+                </BookLink>
+              </h3>
               <p className="text-sm text-[rgb(var(--text-secondary))]">{featuredBook.author}</p>
               <div className="flex flex-wrap gap-2 text-xs font-semibold text-[color:rgb(var(--color-accent-dark))]">
                 {featuredBook.stats}
@@ -551,12 +605,18 @@ export default function LibraryPage() {
                     Ouvir áudio
                   </a>
                 )}
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))]"
-                >
-                  Ver detalhes
-                </button>
+                {featuredBook.detailsId ? (
+                  <Link
+                    to={`/biblioteca/${featuredBook.detailsId}`}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+                  >
+                    Ver detalhes
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-2xl border border-dashed border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-secondary))]">
+                    Ver detalhes
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -572,55 +632,65 @@ export default function LibraryPage() {
               <button className="text-sm font-semibold text-[color:rgb(var(--color-accent-dark))]">Ver todos →</button>
             </header>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {section.books.map((book, idx) => (
-                <article
-                  key={book.id}
-                  className="group relative overflow-hidden rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-4 shadow-[0_25px_60px_-40px_rgba(10,8,30,0.6)] transition hover:-translate-y-1"
-                >
-                  <img
-                    src={book.cover}
-                    alt={book.title}
-                    className="h-44 w-full rounded-2xl object-cover"
-                    draggable={false}
-                    loading="lazy"
-                  />
-                  <div className="mt-4 space-y-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
-                        {book.genero ?? (idx === 0 ? "Atual" : "Descoberta")}
-                      </p>
-                      <h4 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{book.title}</h4>
-                      <p className="text-sm text-[rgb(var(--text-secondary))]">{book.author}</p>
+              {section.books.map((book, idx) => {
+                const detailsId = book.detailsId ?? (books.length > 0 ? book.id : null);
+                const hasLiveCatalog = Boolean(detailsId);
+                const CardTag = hasLiveCatalog ? Link : "article";
+                const cardProps = {
+                  className:
+                    "group relative block overflow-hidden rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-4 shadow-[0_25px_60px_-40px_rgba(10,8,30,0.6)] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--color-accent-primary),0.5)]",
+                };
+                if (hasLiveCatalog) {
+                  cardProps.to = `/biblioteca/${detailsId}`;
+                }
+                return (
+                  <CardTag key={book.id ?? `${section.id}-${idx}`} {...cardProps}>
+                    <img
+                      src={book.cover}
+                      alt={book.title}
+                      className="h-44 w-full rounded-2xl object-cover"
+                      draggable={false}
+                      loading="lazy"
+                      onError={handleCoverFallback}
+                    />
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
+                          {book.genero ?? (idx === 0 ? "Atual" : "Descoberta")}
+                        </p>
+                        <h4 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{book.title}</h4>
+                        <p className="text-sm text-[rgb(var(--text-secondary))]">{book.author}</p>
+                      </div>
+                      {book.sinopse && <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{book.sinopse}</p>}
+                      <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                        {book.pdf_url && (
+                          <a
+                            href={book.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
+                          >
+                            Abrir PDF
+                          </a>
+                        )}
+                        {book.audio_url && (
+                          <a
+                            href={book.audio_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
+                          >
+                            Ouvir áudio
+                          </a>
+                        )}
+                        {!book.pdf_url && !book.audio_url && (
+                          <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
+                        )}
+                      </div>
                     </div>
-                    {book.sinopse && <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{book.sinopse}</p>}
-                    <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                      {book.pdf_url && (
-                        <a
-                          href={book.pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
-                        >
-                          Abrir PDF
-                        </a>
-                      )}
-                      {book.audio_url && (
-                        <a
-                          href={book.audio_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
-                        >
-                          Ouvir áudio
-                        </a>
-                      )}
-                      {!book.pdf_url && !book.audio_url && (
-                        <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </CardTag>
+                );
+              })}
             </div>
           </section>
         ))}
@@ -646,7 +716,11 @@ export default function LibraryPage() {
                   onError={handleCoverFallback}
                 />
                 <div className="text-sm">
-                  <p className="font-semibold text-[rgb(var(--text-primary))]">{book.title}</p>
+                  <p className="font-semibold text-[rgb(var(--text-primary))]">
+                    <BookLink bookId={book.detailsId} className="text-[rgb(var(--text-primary))]">
+                      {book.title}
+                    </BookLink>
+                  </p>
                   <p className="text-[color:rgb(var(--text-secondary))]">{book.author}</p>
                   <p className="text-xs text-amber-400">⭐ {book.rating} · {book.category}</p>
                 </div>
@@ -682,7 +756,11 @@ export default function LibraryPage() {
                   onError={handleCoverFallback}
                 />
                   <div className="space-y-2">
-                    <p className="text-lg font-semibold">{item.title}</p>
+                    <p className="text-lg font-semibold">
+                      <BookLink bookId={item.detailsId} className="text-white">
+                        {item.title}
+                      </BookLink>
+                    </p>
                     <p className="text-sm text-white/70">Anotações, playlists e insights em alta.</p>
                   </div>
                 </div>
@@ -758,15 +836,24 @@ export default function LibraryPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex gap-6">
-              <img
-                src={selectedFlow.cover}
-                alt={selectedFlow.title}
-                className="h-48 w-36 rounded-2xl object-cover"
-                onError={handleCoverFallback}
-              />
+              <BookLink bookId={selectedFlow.detailsId} className="block">
+                <img
+                  src={selectedFlow.cover}
+                  alt={selectedFlow.title}
+                  className="h-48 w-36 rounded-2xl object-cover"
+                  onError={handleCoverFallback}
+                />
+              </BookLink>
               <div className="space-y-3">
                 <p className="text-xs uppercase tracking-[0.35em] text-white/60">{selectedFlow.tag}</p>
-                <h4 className="text-2xl font-semibold">{selectedFlow.title}</h4>
+                <h4 className="text-2xl font-semibold">
+                  <BookLink
+                    bookId={selectedFlow.detailsId}
+                    className="text-white"
+                  >
+                    {selectedFlow.title}
+                  </BookLink>
+                </h4>
                 <p className="text-sm text-white/70">{selectedFlow.author}</p>
                 <p className="text-sm text-white/80">{selectedFlow.summary}</p>
                 <div className="flex flex-wrap gap-3 pt-2">
