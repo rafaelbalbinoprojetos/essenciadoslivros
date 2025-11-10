@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
-import { normalizeCoverUrl } from "../utils/covers.js";
+import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
 
 const FLOW_COVERS = [
   {
@@ -62,6 +62,9 @@ const FLOW_COVERS = [
   },
 ];
 
+const localCoverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
+const HAS_LOCAL_COVERS = Object.keys(localCoverManifest).length > 0;
+
 function getCoverUrl(fileName) {
   return new URL(`../bookCover/${fileName}`, import.meta.url).href;
 }
@@ -94,8 +97,17 @@ const DISCOVERY_PILLS = [
 
 function resolveCoverSource(value) {
   const normalized = normalizeCoverUrl(value);
-  if (!normalized) return "";
-  return /^https?:\/\//i.test(normalized) ? normalized : getCoverUrl(normalized);
+  if (!normalized) return DEFAULT_COVER_PLACEHOLDER;
+  if (/^https?:\/\//i.test(normalized) || normalized.startsWith("data:")) {
+    return normalized;
+  }
+  if (!HAS_LOCAL_COVERS) return DEFAULT_COVER_PLACEHOLDER;
+  return getCoverUrl(normalized);
+}
+
+function handleCoverFallback(event) {
+  event.currentTarget.onerror = null;
+  event.currentTarget.src = DEFAULT_COVER_PLACEHOLDER;
 }
 
 function summarizeHighlight(text, maxLength = 180) {
@@ -107,17 +119,19 @@ function summarizeHighlight(text, maxLength = 180) {
 export default function DashboardPage() {
   const { items: books, loading: booksLoading, error: booksError, reload: reloadBooks } = useBooksCatalog({ limit: 20, status: "ativo" });
   const [flowIndex, setFlowIndex] = useState(0);
+  const fallbackFlowDeck = useMemo(() => FLOW_COVERS.map((item) => ({ ...item, cover: resolveCoverSource(item.cover) })), []);
+  const deckLength = fallbackFlowDeck.length || 1;
   const flowItems = useMemo(() => {
-    if (!books.length) return FLOW_COVERS;
-    return books.slice(0, FLOW_COVERS.length).map((book, index) => ({
+    if (!books.length) return fallbackFlowDeck;
+    return books.slice(0, deckLength).map((book, index) => ({
       id: book.id,
       title: book.titulo,
       author: book.autor?.nome ?? "Autor não informado",
-      mood: book.genero?.nome ?? FLOW_COVERS[index % FLOW_COVERS.length].mood,
-      cover: normalizeCoverUrl(book.capa_url) || FLOW_COVERS[index % FLOW_COVERS.length].cover,
+      mood: book.genero?.nome ?? fallbackFlowDeck[index % deckLength].mood,
+      cover: resolveCoverSource(book.capa_url) || fallbackFlowDeck[index % deckLength].cover,
       highlight: summarizeHighlight(book.sinopse),
     }));
-  }, [books]);
+  }, [books, deckLength, fallbackFlowDeck]);
   const totalCovers = flowItems.length;
   const activeFlow = flowItems[flowIndex] ?? flowItems[0] ?? null;
   const highlightCards = useMemo(() => {
@@ -233,7 +247,13 @@ export default function DashboardPage() {
                       "transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 500ms ease, z-index 650ms",
                   }}
                 >
-                  <img src={resolveCoverSource(item.cover)} alt={item.title} className="h-full w-full object-cover" draggable={false} />
+                  <img
+                    src={item.cover}
+                    alt={item.title}
+                    className="h-full w-full object-cover"
+                    draggable={false}
+                    onError={handleCoverFallback}
+                  />
                   <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
                     <p className="font-semibold">{item.title}</p>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-white/80">{item.mood}</p>

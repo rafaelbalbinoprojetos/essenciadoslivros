@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
-import { normalizeCoverUrl } from "../utils/covers.js";
+import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
-const COVER_POOL = Object.values(coverManifest);
+const COVER_POOL = Object.values(coverManifest).filter(Boolean);
 
 function coverFromPool(index) {
-  if (!COVER_POOL.length) return "";
+  if (!COVER_POOL.length) return DEFAULT_COVER_PLACEHOLDER;
   const normalized = ((index % COVER_POOL.length) + COVER_POOL.length) % COVER_POOL.length;
   return COVER_POOL[normalized];
 }
@@ -117,6 +117,11 @@ const FALLBACK_LIST_SECTIONS = [
 function pickCover(book, fallbackIndex = 0) {
   const src = normalizeCoverUrl(book?.capa_url);
   return src || coverFromPool(fallbackIndex);
+}
+
+function handleCoverFallback(event) {
+  event.currentTarget.onerror = null;
+  event.currentTarget.src = DEFAULT_COVER_PLACEHOLDER;
 }
 
 function summarize(text, maxLength = 180) {
@@ -487,6 +492,7 @@ export default function LibraryPage() {
                 alt={card.title}
                 className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
                 draggable={false}
+                onError={handleCoverFallback}
               />
               <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-left backdrop-blur-sm">
                 <p className="text-[10px] uppercase tracking-[0.35em] text-white/60">{card.tag}</p>
@@ -512,6 +518,7 @@ export default function LibraryPage() {
                 src={featuredBook.cover}
                 alt={featuredBook.title}
                 className="mx-auto h-[360px] w-[240px] rounded-[24px] object-cover shadow-xl lg:h-[360px] lg:w-[240px]"
+                onError={handleCoverFallback}
               />
             </div>
             <div className="flex-1 space-y-4">
@@ -632,7 +639,13 @@ export default function LibraryPage() {
           <div className="mt-5 space-y-4">
             {TOP_RATED.map((book) => (
               <div key={book.id} className="flex items-center gap-4 rounded-2xl border border-white/5 p-3">
-                <img src={book.cover} alt={book.title} className="h-16 w-12 rounded-xl object-cover" draggable={false} />
+                <img
+                  src={book.cover}
+                  alt={book.title}
+                  className="h-16 w-12 rounded-xl object-cover"
+                  draggable={false}
+                  onError={handleCoverFallback}
+                />
                 <div className="text-sm">
                   <p className="font-semibold text-[rgb(var(--text-primary))]">{book.title}</p>
                   <p className="text-[color:rgb(var(--text-secondary))]">{book.author}</p>
@@ -662,7 +675,13 @@ export default function LibraryPage() {
                   {item.badge}
                 </span>
                 <div className="flex gap-4">
-                  <img src={item.cover} alt={item.title} className="h-24 w-20 rounded-2xl object-cover" draggable={false} />
+                <img
+                  src={item.cover}
+                  alt={item.title}
+                  className="h-24 w-20 rounded-2xl object-cover"
+                  draggable={false}
+                  onError={handleCoverFallback}
+                />
                   <div className="space-y-2">
                     <p className="text-lg font-semibold">{item.title}</p>
                     <p className="text-sm text-white/70">Anotações, playlists e insights em alta.</p>
@@ -740,7 +759,12 @@ export default function LibraryPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex gap-6">
-              <img src={selectedFlow.cover} alt={selectedFlow.title} className="h-48 w-36 rounded-2xl object-cover" />
+              <img
+                src={selectedFlow.cover}
+                alt={selectedFlow.title}
+                className="h-48 w-36 rounded-2xl object-cover"
+                onError={handleCoverFallback}
+              />
               <div className="space-y-3">
                 <p className="text-xs uppercase tracking-[0.35em] text-white/60">{selectedFlow.tag}</p>
                 <h4 className="text-2xl font-semibold">{selectedFlow.title}</h4>
