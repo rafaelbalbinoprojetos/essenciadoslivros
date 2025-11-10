@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
+import { normalizeCoverUrl } from "../utils/covers.js";
 
 const FLOW_COVERS = [
   {
@@ -92,8 +93,9 @@ const DISCOVERY_PILLS = [
 ];
 
 function resolveCoverSource(value) {
-  if (!value) return "";
-  return value.startsWith("http") ? value : getCoverUrl(value);
+  const normalized = normalizeCoverUrl(value);
+  if (!normalized) return "";
+  return /^https?:\/\//i.test(normalized) ? normalized : getCoverUrl(normalized);
 }
 
 function summarizeHighlight(text, maxLength = 180) {
@@ -112,7 +114,7 @@ export default function DashboardPage() {
       title: book.titulo,
       author: book.autor?.nome ?? "Autor não informado",
       mood: book.genero?.nome ?? FLOW_COVERS[index % FLOW_COVERS.length].mood,
-      cover: book.capa_url || FLOW_COVERS[index % FLOW_COVERS.length].cover,
+      cover: normalizeCoverUrl(book.capa_url) || FLOW_COVERS[index % FLOW_COVERS.length].cover,
       highlight: summarizeHighlight(book.sinopse),
     }));
   }, [books]);
