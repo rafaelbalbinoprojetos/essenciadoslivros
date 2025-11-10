@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
+import { buildAudioSource } from "../utils/media.js";
 
 const AUTHOR_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='gradient' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2334315b'/%3E%3Cstop offset='100%25' stop-color='%235f5677'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='200' rx='72' fill='url(%23gradient)'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='rgba(255,255,255,0.8)' font-family='Helvetica,Arial,sans-serif' font-size='72'%3EE%3C/text%3E%3C/svg%3E";
@@ -117,7 +118,8 @@ export default function BookDetailsPage() {
   const genre = book?.genero?.nome;
   const collection = book?.colecao?.nome;
   const synopsis = book?.sinopse ?? "Sinopse não informada ainda.";
-  const hasAudio = Boolean(book?.audio_url);
+  const audioSource = useMemo(() => buildAudioSource(book?.audio_url), [book?.audio_url]);
+  const hasAudio = Boolean(audioSource);
   const hasPdf = Boolean(book?.pdf_url);
 
   const handlePlaybackToggle = () => {
@@ -267,7 +269,7 @@ export default function BookDetailsPage() {
                   <span>{formatTime(audioProgress)}</span>
                   <span>{formatTime(audioDuration)}</span>
                 </div>
-                <audio ref={audioRef} src={book.audio_url} preload="metadata" />
+                <audio ref={audioRef} src={audioSource} preload="metadata" />
               </>
             ) : (
               <p className="text-sm text-[rgb(var(--text-secondary))]">
@@ -328,4 +330,3 @@ export default function BookDetailsPage() {
     </div>
   );
 }
-

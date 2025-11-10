@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import BookLink from "../components/BookLink.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
+import { buildAudioSource } from "../utils/media.js";
 
 const FLOW_COVERS = [
   {
@@ -400,9 +401,9 @@ export default function DashboardPage() {
                   </h4>
                   <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">{book.author}</p>
                 </div>
-                {(book.audio_url || book.pdf_url) && (
+                {(buildAudioSource(book.audio_url) || book.pdf_url) && (
                   <span className="rounded-full border border-[#6c63ff]/20 px-3 py-1 text-xs font-semibold text-[#4c3f8f] dark:border-[#cfc2ff]/30 dark:text-[#cfc2ff]">
-                    {[book.audio_url && "Audiobook", book.pdf_url && "PDF"].filter(Boolean).join(" · ")}
+                    {[buildAudioSource(book.audio_url) && "Audiobook", book.pdf_url && "PDF"].filter(Boolean).join(" · ")}
                   </span>
                 )}
               </div>
@@ -427,9 +428,9 @@ export default function DashboardPage() {
                     Ver na biblioteca
                   </Link>
                 )}
-                {book.audio_url ? (
+                {buildAudioSource(book.audio_url) ? (
                   <a
-                    href={book.audio_url}
+                    href={buildAudioSource(book.audio_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75] dark:text-[#cfc2ff]"

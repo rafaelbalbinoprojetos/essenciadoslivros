@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BookLink from "../components/BookLink.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
+import { buildAudioSource } from "../utils/media.js";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest).filter(Boolean);
@@ -87,6 +88,8 @@ const FALLBACK_FEATURED_BOOK = {
   audio_url: "",
   detailsId: null,
 };
+
+const PAGE_SIZE = 24;
 
 const FALLBACK_LIST_SECTIONS = [
   {
@@ -252,7 +255,53 @@ const TIMELINE = [
 export default function LibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") ?? "";
-  const { items: books, loading: loadingBooks, error: booksError, reload: reloadBooks } = useBooksCatalog({ limit: 60, status: "ativo", search: searchQuery });
+  const rawPageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
+  const currentPage = Number.isFinite(rawPageParam) && rawPageParam > 0 ? rawPageParam : 1;
+  const offset = (currentPage - 1) * PAGE_SIZE;
+  const {
+    items: books,
+    total: totalBooks = 0,
+    loading: loadingBooks,
+    error: booksError,
+    reload: reloadBooks,
+  } = useBooksCatalog({ limit: PAGE_SIZE, status: "ativo", search: searchQuery, offset });
+  const totalPages = Math.max(1, Math.ceil(totalBooks / PAGE_SIZE) || 1);
+  const pageSlots = useMemo(() => buildPaginationSlots(totalPages, currentPage), [totalPages, currentPage]);
+  const showingStart = totalBooks ? Math.min(offset + 1, totalBooks) : 0;
+  const showingEnd = totalBooks ? Math.min(offset + books.length, totalBooks) : 0;
+  const handlePageChange = useCallback(
+    (nextPage) => {
+      const normalizedTotalPages = Math.max(1, totalPages);
+      const safePage = Math.max(1, Math.min(nextPage, normalizedTotalPages));
+      const params = new URLSearchParams(searchParams);
+      if (searchQuery) {
+        params.set("search", searchQuery);
+      } else {
+        params.delete("search");
+      }
+      if (safePage <= 1) {
+        params.delete("page");
+      } else {
+        params.set("page", String(safePage));
+      }
+      setSearchParams(params);
+    },
+    [searchParams, searchQuery, setSearchParams, totalPages],
+  );
+  const previousSearchRef = useRef(searchQuery);
+  useEffect(() => {
+    if (previousSearchRef.current !== searchQuery) {
+      previousSearchRef.current = searchQuery;
+      handlePageChange(1);
+    }
+  }, [searchQuery, handlePageChange]);
+  useEffect(() => {
+    if (!loadingBooks && totalBooks > 0 && currentPage > totalPages) {
+      handlePageChange(totalPages);
+    }
+  }, [currentPage, handlePageChange, loadingBooks, totalBooks, totalPages]);
+  const canGoPreviousPage = currentPage > 1;
+  const canGoNextPage = currentPage < totalPages;
   const [flowIndex, setFlowIndex] = useState(0);
   const [selectedFlow, setSelectedFlow] = useState(null);
 
@@ -595,9 +644,9 @@ export default function LibraryPage() {
                     Ler PDF →
                   </a>
                 )}
-                {featuredBook.audio_url && (
+                {buildAudioSource(featuredBook.audio_url) && (
                   <a
-                    href={featuredBook.audio_url}
+                    href={buildAudioSource(featuredBook.audio_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
@@ -663,9 +712,9 @@ export default function LibraryPage() {
                       </div>
                       {book.sinopse && <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{book.sinopse}</p>}
                       <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                        {book.pdf_url && (
-                          <a
-                            href={book.pdf_url}
+                      {book.pdf_url && (
+                        <a
+                          href={book.pdf_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
@@ -673,19 +722,19 @@ export default function LibraryPage() {
                             Abrir PDF
                           </a>
                         )}
-                        {book.audio_url && (
-                          <a
-                            href={book.audio_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
-                          >
-                            Ouvir áudio
-                          </a>
-                        )}
-                        {!book.pdf_url && !book.audio_url && (
-                          <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
-                        )}
+                      {buildAudioSource(book.audio_url) && (
+                        <a
+                          href={buildAudioSource(book.audio_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
+                        >
+                          Ouvir áudio
+                        </a>
+                      )}
+                      {!book.pdf_url && !buildAudioSource(book.audio_url) && (
+                        <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
+                      )}
                       </div>
                     </div>
                   </CardTag>
@@ -694,6 +743,61 @@ export default function LibraryPage() {
             </div>
           </section>
         ))}
+        {totalBooks > 0 && (
+          <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 shadow-[0_25px_60px_-40px_rgba(10,8,30,0.5)]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.75)]">Navegação do catálogo</p>
+                <p className="text-sm text-[rgb(var(--text-secondary))]">
+                  Mostrando {showingStart}
+                  {" – "}
+                  {showingEnd} de {totalBooks} {searchQuery ? `resultado(s) para “${searchQuery}”.` : "títulos disponíveis."}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.18)] px-3 py-2 text-sm font-semibold text-[rgb(var(--text-primary))] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!canGoPreviousPage || loadingBooks}
+                >
+                  ← Anterior
+                </button>
+                <div className="flex items-center gap-1 rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(var(--surface-muted),0.3)] px-3 py-2">
+                  {pageSlots.map((slot) =>
+                    typeof slot === "number" ? (
+                      <button
+                        key={`page-${slot}`}
+                        type="button"
+                        onClick={() => handlePageChange(slot)}
+                        aria-current={slot === currentPage ? "page" : undefined}
+                        className={`h-9 w-9 rounded-xl text-sm font-semibold transition ${
+                          slot === currentPage
+                            ? "bg-[rgb(var(--color-accent-primary))] text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.35)]"
+                            : "text-[rgb(var(--text-primary))] hover:bg-white/10"
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ) : (
+                      <span key={slot} className="px-2 text-sm font-semibold text-[rgb(var(--text-secondary))]">
+                        …
+                      </span>
+                    ),
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.18)] px-3 py-2 text-sm font-semibold text-[rgb(var(--text-primary))] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!canGoNextPage || loadingBooks}
+                >
+                  Próximo →
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <aside className="space-y-6 xl:sticky xl:top-24">
@@ -867,9 +971,9 @@ export default function LibraryPage() {
                       Abrir PDF
                     </a>
                   )}
-                  {selectedFlow.audio_url && (
+                  {buildAudioSource(selectedFlow.audio_url) && (
                     <a
-                      href={selectedFlow.audio_url}
+                      href={buildAudioSource(selectedFlow.audio_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-2xl border border-white/30 px-4 py-2 text-sm font-semibold text-white"
@@ -888,4 +992,42 @@ export default function LibraryPage() {
       )}
     </div>
   );
+}
+
+function buildPaginationSlots(totalPages, currentPage) {
+  const safeTotal = Number.isFinite(totalPages) && totalPages > 0 ? totalPages : 1;
+  const safeCurrent = Math.min(Math.max(currentPage, 1), safeTotal);
+
+  if (safeTotal <= 5) {
+    return Array.from({ length: safeTotal }, (_, index) => index + 1);
+  }
+
+  const slots = [1];
+  let start = safeCurrent - 1;
+  let end = safeCurrent + 1;
+
+  if (start <= 2) {
+    start = 2;
+  }
+
+  if (end >= safeTotal - 1) {
+    end = safeTotal - 1;
+  }
+
+  if (start > 2) {
+    slots.push("ellipsis-start");
+  }
+
+  for (let page = start; page <= end; page += 1) {
+    if (page > 1 && page < safeTotal) {
+      slots.push(page);
+    }
+  }
+
+  if (end < safeTotal - 1) {
+    slots.push("ellipsis-end");
+  }
+
+  slots.push(safeTotal);
+  return slots;
 }
