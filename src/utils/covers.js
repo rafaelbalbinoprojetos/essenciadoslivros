@@ -2,7 +2,6 @@ const DRIVE_HOST_SNIPPETS = [
   "drive.google.com",
   "docs.google.com",
   "drive.usercontent.google.com",
-  "drive.googleusercontent.com",
 ];
 const DRIVE_CDN_BASE = "https://lh3.googleusercontent.com/d/";
 const DRIVE_ID_PATTERN = /[-\w]{10,}/;

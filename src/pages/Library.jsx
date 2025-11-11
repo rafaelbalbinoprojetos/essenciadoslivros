@@ -518,33 +518,33 @@ export default function LibraryPage() {
     </div>
 
     {/* SEÇÃO DAS CAPAS */}
-    <div className="relative mt-0 sm:mt-4 lg:mt-0">
+    <div className="relative mt-6 sm:mt-4 lg:mt-0">
       {/* Luz ambiente */}
-      <div className="pointer-events-none absolute inset-0 m-auto h-[300px] sm:h-[340px] w-[300px] sm:w-[360px] rounded-full bg-gradient-to-br from-white/20 via-transparent to-transparent blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 m-auto h-[320px] sm:h-[340px] w-[320px] sm:w-[360px] rounded-full bg-gradient-to-br from-white/20 via-transparent to-transparent blur-[120px]" />
 
       {/* Coverflow */}
       <div
-        className="relative mx-auto h-[280px] sm:h-[320px] md:h-[340px] w-full max-w-[520px] 
-                   -translate-y-[60px] sm:-translate-y-[80px] md:-translate-y-[100px] lg:-translate-y-[160px]"
+        className="relative mx-auto w-full max-w-[520px] h-[360px] sm:h-[340px] lg:h-[320px]
+                   -translate-y-[10px] sm:-translate-y-[60px] md:-translate-y-[100px] lg:-translate-y-[160px]"
         style={{
-          perspective: "110px",
-          perspectiveOrigin: "80% 100%",
+          perspective: "900px",
+          perspectiveOrigin: "50% 40%",
         }}
       >
         {flowDeck.map((card) => {
           const distance = Math.abs(card.relative);
           const isActive = card.relative === 0;
-          const translateX = `${card.relative * 145}px`;
-          const translateZ = 250 - distance * 100;
+          const translateX = `${card.relative * 120}px`;
+          const translateZ = 240 - distance * 80;
           const rotateY = card.relative * -28;
           const scale = isActive ? 1 : 0.85;
-          const opacity = Math.max(0, 0.75 - distance * 0.28);
+          const opacity = Math.max(0, 0.8 - distance * 0.28);
 
           return (
             <article
               key={card.id}
-              className="absolute left-1/2 top-1/2 h-[200px] sm:h-[220px] md:h-[240px] lg:h-[260px] 
-                         w-[130px] sm:w-[150px] md:w-[160px] lg:w-[170px]
+              className="absolute left-1/2 top-1/2 h-[260px] sm:h-[240px] lg:h-[260px] 
+                         w-[170px] sm:w-[160px] lg:w-[170px]
                          -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden 
                          rounded-[28px] border border-white/10 bg-black/40 
                          shadow-[0_25px_45px_-25px_rgba(0,0,0,0.8)] transition-all"

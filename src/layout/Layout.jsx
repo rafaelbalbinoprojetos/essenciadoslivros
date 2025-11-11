@@ -37,6 +37,7 @@ export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -47,6 +48,9 @@ export default function Layout() {
   const notificationContainerRef = React.useRef(null);
   const notificationPanelRef = React.useRef(null);
   const notificationButtonRef = React.useRef(null);
+  const mobileSearchPanelRef = React.useRef(null);
+  const mobileSearchButtonRef = React.useRef(null);
+  const mobileSearchInputRef = React.useRef(null);
 
   const userMetadata = user?.user_metadata ?? {};
   const subscriptionTier = userMetadata.subscription_tier ?? userMetadata.plan ?? "free";
@@ -92,6 +96,40 @@ export default function Layout() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!mobileSearchOpen) return undefined;
+    const input = mobileSearchInputRef.current;
+    if (input) {
+      input.focus();
+    }
+
+    const handlePointerDown = (event) => {
+      if (
+        mobileSearchPanelRef.current?.contains(event.target) ||
+        mobileSearchButtonRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setMobileSearchOpen(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMobileSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileSearchOpen]);
 
   useEffect(() => {
     setWelcomeOpen(Boolean(user) && !onboardingComplete);
@@ -150,6 +188,7 @@ export default function Layout() {
       const trimmed = searchTerm.trim();
       if (!trimmed) return;
       navigate(`/biblioteca?search=${encodeURIComponent(trimmed)}`);
+      setMobileSearchOpen(false);
     },
     [navigate, searchTerm],
   );
@@ -420,9 +459,21 @@ export default function Layout() {
                 </form>
 
                 <div className="flex items-center justify-end gap-2 md:flex-none">
-                <button
-                  ref={notificationButtonRef}
-                  type="button"
+                  <button
+                    ref={mobileSearchButtonRef}
+                    type="button"
+                    onClick={() => setMobileSearchOpen((prev) => !prev)}
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff] hover:text-[#4c3f8f] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] md:hidden ${
+                      mobileSearchOpen ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/20" : ""
+                    }`}
+                    aria-label="Abrir busca"
+                    aria-expanded={mobileSearchOpen}
+                  >
+                    <SearchIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    ref={notificationButtonRef}
+                    type="button"
                   onClick={handleToggleNotifications}
                     className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#6c63ff]/25 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff]/45 hover:text-[#4c3f8f] dark:border-white/10 dark:bg-slate-900 dark:text-white ${notificationsOpen ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/20" : ""}`}
                     aria-label="Abrir notificações"
@@ -457,6 +508,36 @@ export default function Layout() {
               onClose={handleCloseNotifications}
               container={typeof document !== "undefined" ? document.body : null}
             />
+            {mobileSearchOpen && (
+              <>
+                <div className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm md:hidden" />
+                <div
+                  ref={mobileSearchPanelRef}
+                  className="fixed left-4 right-4 top-24 z-40 md:hidden"
+                >
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    className="flex items-center gap-2 rounded-2xl border border-white/40 bg-white/95 px-3 py-2 text-sm text-[#1f2933] shadow-2xl dark:border-white/10 dark:bg-slate-900/95 dark:text-white"
+                  >
+                    <SearchIcon className="h-4 w-4 text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70" />
+                    <input
+                      ref={mobileSearchInputRef}
+                      type="search"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Busque por livros, resumos ou autores"
+                      className="flex-1 bg-transparent text-sm text-[#1f2933] placeholder:text-[#7a6c5e]/70 focus:outline-none dark:text-white"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-[#6c63ff] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#4c3f8f]"
+                    >
+                      Buscar
+                    </button>
+                  </form>
+                </div>
+              </>
+            )}
 
             <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">
               <Outlet />
