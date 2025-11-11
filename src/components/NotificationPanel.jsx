@@ -1,11 +1,25 @@
 import React from "react";
+import { createPortal } from "react-dom";
 
-export default function NotificationPanel({ open, loading, error, notifications, onClose }) {
-  if (!open) return null;
+const NotificationPanel = React.forwardRef(function NotificationPanel(
+  { open, loading, error, notifications, onClose, container },
+  ref,
+) {
+  const [mountNode, setMountNode] = React.useState(null);
 
-  return (
+  React.useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+    const target = container ?? document.body;
+    setMountNode(target);
+    return undefined;
+  }, [container]);
+
+  if (!open || !mountNode) return null;
+
+  return createPortal(
     <div
-      className="pointer-events-auto absolute right-4 top-20 z-30 w-80 rounded-2xl border border-white/20 bg-[rgba(var(--surface-card),0.96)] p-4 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95"
+      ref={ref}
+      className="pointer-events-auto fixed right-4 top-24 z-40 w-80 rounded-2xl border border-white/20 bg-[rgba(var(--surface-card),0.96)] p-4 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 md:right-8 md:top-28"
       role="dialog"
       aria-live="polite"
     >
@@ -44,6 +58,9 @@ export default function NotificationPanel({ open, loading, error, notifications,
           <p className="text-[rgb(var(--text-secondary))]">Nenhuma notificação por enquanto.</p>
         )}
       </div>
-    </div>
+    </div>,
+    mountNode,
   );
-}
+});
+
+export default NotificationPanel;

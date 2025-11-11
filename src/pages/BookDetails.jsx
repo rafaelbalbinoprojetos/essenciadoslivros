@@ -183,7 +183,7 @@ export default function BookDetailsPage() {
           <img
             src={coverSrc}
             alt={book.titulo}
-            className="mx-auto h-[420px] w-full max-w-[320px] rounded-[32px] object-cover shadow-2xl"
+            className="mx-auto h-[500px] w-full max-w-[360px] rounded-[15px] object-cover shadow-2xl"
           />
           <div className="flex flex-wrap gap-3">
             {hasPdf && (

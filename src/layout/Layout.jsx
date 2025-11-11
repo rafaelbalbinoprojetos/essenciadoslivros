@@ -45,6 +45,8 @@ export default function Layout() {
   const [subscribingPlan, setSubscribingPlan] = useState(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const notificationContainerRef = React.useRef(null);
+  const notificationPanelRef = React.useRef(null);
+  const notificationButtonRef = React.useRef(null);
 
   const userMetadata = user?.user_metadata ?? {};
   const subscriptionTier = userMetadata.subscription_tier ?? userMetadata.plan ?? "free";
@@ -60,6 +62,36 @@ export default function Layout() {
     const paths = normalizeMobileNavSelection(mobileNavPreference);
     return paths.map((path) => NAV_ITEMS_BY_PATH.get(path)).filter(Boolean);
   }, [mobileNavPreference]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (
+        notificationPanelRef.current?.contains(event.target) ||
+        notificationButtonRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setNotificationsOpen(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [notificationsOpen]);
 
   useEffect(() => {
     setWelcomeOpen(Boolean(user) && !onboardingComplete);
@@ -367,7 +399,7 @@ export default function Layout() {
                   <p className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Bem-vindo</p>
                   <h2 className="text-lg font-semibold text-[#1f2933] dark:text-white">
                     {location.pathname === "/"
-                      ? "Panorama da sua leitura"
+                      ? "Painel pessoal"
                       : NAV_ITEMS_BY_PATH.get(location.pathname)?.label}
                   </h2>
                 </div>
@@ -388,9 +420,10 @@ export default function Layout() {
                 </form>
 
                 <div className="flex items-center justify-end gap-2 md:flex-none">
-                  <button
-                    type="button"
-                    onClick={handleToggleNotifications}
+                <button
+                  ref={notificationButtonRef}
+                  type="button"
+                  onClick={handleToggleNotifications}
                     className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#6c63ff]/25 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff]/45 hover:text-[#4c3f8f] dark:border-white/10 dark:bg-slate-900 dark:text-white ${notificationsOpen ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/20" : ""}`}
                     aria-label="Abrir notificações"
                   >
@@ -416,11 +449,13 @@ export default function Layout() {
 
           <div className="relative flex flex-1 flex-col" ref={notificationContainerRef}>
             <NotificationPanel
+              ref={notificationPanelRef}
               open={notificationsOpen}
               loading={notificationsLoading}
               error={notificationsError}
               notifications={notifications}
               onClose={handleCloseNotifications}
+              container={typeof document !== "undefined" ? document.body : null}
             />
 
             <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">

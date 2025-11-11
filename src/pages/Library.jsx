@@ -465,7 +465,7 @@ export default function LibraryPage() {
 
         {/* Título e descrição */}
         <div className="space-y-2">
-          <h2 className="font-display text-3xl font-semibold">
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold leading-tight">
             <BookLink
               bookId={activeFlowCard?.detailsId}
               className="hover:text-[rgba(255,255,255,0.9)]"
@@ -474,10 +474,10 @@ export default function LibraryPage() {
               {activeFlowCard?.title ?? "Descubra uma nova obra"}
             </BookLink>
           </h2>
-          <p className="text-sm uppercase tracking-[0.35em] text-white/70">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-white/70">
             {activeFlowCard?.author}
           </p>
-          <p className="text-base text-white/90 leading-relaxed">
+          <p className="text-sm sm:text-base text-white/90 leading-relaxed">
             {activeFlowCard?.summary}
           </p>
         </div>
@@ -518,31 +518,36 @@ export default function LibraryPage() {
     </div>
 
     {/* SEÇÃO DAS CAPAS */}
-    <div className="relative">
+    <div className="relative mt-0 sm:mt-4 lg:mt-0">
       {/* Luz ambiente */}
-      <div className="pointer-events-none absolute inset-0 m-auto h-[360px] w-[360px] rounded-full bg-gradient-to-br from-white/20 via-transparent to-transparent blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 m-auto h-[300px] sm:h-[340px] w-[300px] sm:w-[360px] rounded-full bg-gradient-to-br from-white/20 via-transparent to-transparent blur-[120px]" />
 
       {/* Coverflow */}
       <div
-        className="relative mx-auto h-[340px] w-full max-w-[520px] lg:-translate-y-[160px]"
+        className="relative mx-auto h-[280px] sm:h-[320px] md:h-[340px] w-full max-w-[520px] 
+                   -translate-y-[60px] sm:-translate-y-[80px] md:-translate-y-[100px] lg:-translate-y-[160px]"
         style={{
-          perspective: "1300px",
-          perspectiveOrigin: "50% 30%",
+          perspective: "110px",
+          perspectiveOrigin: "80% 100%",
         }}
       >
         {flowDeck.map((card) => {
           const distance = Math.abs(card.relative);
           const isActive = card.relative === 0;
-          const translateX = `${card.relative * 160}px`;
-          const translateZ = 260 - distance * 70;
+          const translateX = `${card.relative * 145}px`;
+          const translateZ = 250 - distance * 100;
           const rotateY = card.relative * -28;
           const scale = isActive ? 1 : 0.85;
-          const opacity = Math.max(0, 1 - distance * 0.28);
+          const opacity = Math.max(0, 0.75 - distance * 0.28);
 
           return (
             <article
               key={card.id}
-              className="absolute left-1/2 top-1/2 h-[260px] w-[170px] -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden rounded-[28px] border border-white/10 bg-black/40 shadow-[0_25px_45px_-25px_rgba(0,0,0,0.8)] transition-all"
+              className="absolute left-1/2 top-1/2 h-[200px] sm:h-[220px] md:h-[240px] lg:h-[260px] 
+                         w-[130px] sm:w-[150px] md:w-[160px] lg:w-[170px]
+                         -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden 
+                         rounded-[28px] border border-white/10 bg-black/40 
+                         shadow-[0_25px_45px_-25px_rgba(0,0,0,0.8)] transition-all"
               style={{
                 transform: `translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                 opacity,
@@ -575,20 +580,7 @@ export default function LibraryPage() {
                   draggable={false}
                   onError={handleCoverFallback}
                 />
-              )}
-              <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-left backdrop-blur-sm">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-white/60">{card.tag}</p>
-                <p className="text-base font-semibold">
-                  <BookLink
-                    bookId={card.detailsId}
-                    className="text-white hover:text-[rgba(255,255,255,0.85)]"
-                    stopPropagation
-                  >
-                    {card.title}
-                  </BookLink>
-                </p>
-                <p className="text-xs text-white/80">{card.author}</p>
-              </div>
+              )}              
             </article>
           );
         })}
@@ -596,10 +588,6 @@ export default function LibraryPage() {
     </div>
   </div>
 </section>
-
-
-
-
 
         <section className="rounded-[30px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.92)] p-5 backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row">

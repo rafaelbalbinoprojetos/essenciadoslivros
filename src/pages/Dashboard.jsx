@@ -242,10 +242,10 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <div
-            className="relative flex h-[320px] items-center justify-center overflow-visible"
-            style={{ perspective: "1400px" }}
-          >
+        <div
+          className="relative flex h-[320px] items-center justify-center overflow-visible"
+          style={{ perspective: "1400px" }}
+        >
             {flowDeck.map((item) => {
               const distance = Math.abs(item.offset);
               const isCenter = item.offset === 0;
@@ -300,7 +300,7 @@ export default function DashboardPage() {
                 </article>
               );
             })}
-            <div className="pointer-events-none absolute inset-0 rounded-[32px] border border-white/15 shadow-inner shadow-black/10" />
+            <div className="pointer-events-none absolute inset-0 rounded-[32px] shadow-inner shadow-black/10" />
           </div>
         </div>
       </section>
