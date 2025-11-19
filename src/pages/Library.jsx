@@ -4,6 +4,7 @@ import BookLink from "../components/BookLink.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 import { buildAudioSource } from "../utils/media.js";
+import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest).filter(Boolean);
@@ -89,6 +90,60 @@ const FALLBACK_FEATURED_BOOK = {
   detailsId: null,
 };
 
+const CONTENT_RAIL_TEMPLATES = [
+  {
+    id: "biografias",
+    title: "Bibliografias inspiradoras",
+    subtitle: "Memórias e perfis que ampliam o repertório criativo",
+    keywords: ["biografia", "memória", "memoria", "memoir", "perfil"],
+  },
+  {
+    id: "times",
+    title: "Times e liderança",
+    subtitle: "Práticas para conduzir equipes e projetos complexos",
+    keywords: ["liderança", "gestão", "time", "times", "empresa", "startup"],
+  },
+  {
+    id: "investimentos",
+    title: "Investimento e finanças",
+    subtitle: "Narrativas sobre dinheiro consciente e riqueza sustentável",
+    keywords: ["investimento", "finanças", "capital", "economia"],
+  },
+  {
+    id: "autoajuda",
+    title: "Autoajuda e bem-estar",
+    subtitle: "Rituais de presença, foco e autocuidado",
+    keywords: ["autoajuda", "bem-estar", "produtividade", "mindfulness"],
+  },
+  {
+    id: "animes",
+    title: "Animes e universos ilustrados",
+    subtitle: "Influências orientais, mangás e mundos expansivos",
+    keywords: ["anime", "mangá", "manga", "otaku"],
+  },
+  {
+    id: "games",
+    title: "Games e storytelling interativo",
+    subtitle: "Histórias que nasceram dos consoles e comunidades digitais",
+    keywords: ["game", "jogo", "gamificação", "gameplay"],
+  },
+];
+
+const FALLBACK_CONTENT_RAILS = CONTENT_RAIL_TEMPLATES.map((template, templateIndex) => ({
+  ...template,
+  cards: Array.from({ length: 4 }, (_, cardIndex) => {
+    const coverIndex = templateIndex * 4 + cardIndex;
+    return {
+      id: `${template.id}-fallback-${cardIndex}`,
+      title: `${template.title} ${cardIndex + 1}`,
+      author: "Coleção Essência",
+      summary: "Seleção curada pela equipe Essência para inspirar sua próxima imersão.",
+      cover: coverFromPool(coverIndex),
+      detailsId: null,
+    };
+  }),
+}));
+
 const PAGE_SIZE = 24;
 
 const FALLBACK_LIST_SECTIONS = [
@@ -170,6 +225,25 @@ function mapBookToSectionCard(book, fallbackIndex = 0) {
   };
 }
 
+function mapBookToPlaylistTrack(book, fallbackIndex = 0) {
+  if (!book) return null;
+  const source = buildAudioSource(book.audio_url);
+  if (!source) return null;
+  return {
+    id: book.id ?? `playlist-${fallbackIndex}`,
+    bookId: book.id ?? null,
+    title: book.titulo ?? book.title ?? "Audiobook Essência",
+    author: book.autor?.nome ?? book.author ?? "Autor não informado",
+    cover: pickCover(book, fallbackIndex),
+    source,
+  };
+}
+
+function buildPlaylistFromBooks(books) {
+  if (!books?.length) return [];
+  return books.map((book, index) => mapBookToPlaylistTrack(book, index)).filter(Boolean);
+}
+
 function buildSectionsFromBooks(books) {
   if (!books?.length) return FALLBACK_LIST_SECTIONS;
 
@@ -225,6 +299,50 @@ function pickFeaturedBook(books) {
   };
 }
 
+function mapBookToRailCard(book, fallbackIndex = 0) {
+  if (!book) return null;
+  return {
+    id: book.id ?? `rail-card-${fallbackIndex}`,
+    detailsId: book.id ?? null,
+    title: book.titulo ?? "Título Essência",
+    author: book.autor?.nome ?? "Autor não informado",
+    summary: summarize(book.sinopse, 120) || "Sinopse em atualização.",
+    cover: pickCover(book, fallbackIndex),
+  };
+}
+
+function matchesRailTemplate(book = {}, template = {}) {
+  const haystack = [
+    book.genero?.nome,
+    book.titulo,
+    book.sinopse,
+    book.autor?.nome,
+    book.colecao?.nome,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return template.keywords?.some((keyword) => haystack.includes(keyword)) ?? false;
+}
+
+function buildContentRails(books) {
+  if (!books?.length) return FALLBACK_CONTENT_RAILS;
+
+  const rails = CONTENT_RAIL_TEMPLATES.map((template, templateIndex) => {
+    const cards = books
+      .filter((book) => matchesRailTemplate(book, template))
+      .slice(0, 8)
+      .map((book, cardIndex) => mapBookToRailCard(book, templateIndex * 8 + cardIndex))
+      .filter(Boolean);
+
+    return cards.length
+      ? { ...template, cards }
+      : FALLBACK_CONTENT_RAILS[templateIndex];
+  });
+
+  return rails;
+}
+
 const TOP_RATED = [
   { id: "silencio", detailsId: null, title: "O Invisível e o Silêncio", author: "Helena Prado", rating: 4.9, category: "Filosofia", cover: coverFromPool(2) },
   { id: "fragmentos", detailsId: null, title: "Fragmentos de Sábado", author: "Ícaro Mendes", rating: 4.8, category: "Drama", cover: coverFromPool(0) },
@@ -265,6 +383,7 @@ export default function LibraryPage() {
     error: booksError,
     reload: reloadBooks,
   } = useBooksCatalog({ limit: PAGE_SIZE, status: "ativo", search: searchQuery, offset });
+  const { startPlaylist, addToQueue } = useAudioPlaylist();
   const totalPages = Math.max(1, Math.ceil(totalBooks / PAGE_SIZE) || 1);
   const pageSlots = useMemo(() => buildPaginationSlots(totalPages, currentPage), [totalPages, currentPage]);
   const showingStart = totalBooks ? Math.min(offset + 1, totalBooks) : 0;
@@ -304,6 +423,7 @@ export default function LibraryPage() {
   const canGoNextPage = currentPage < totalPages;
   const [flowIndex, setFlowIndex] = useState(0);
   const [selectedFlow, setSelectedFlow] = useState(null);
+  const [manualSelection, setManualSelection] = useState([]);
 
   const flowBooks = useMemo(() => {
     return books.length ? books.slice(0, 5).map((book, index) => mapBookToFlowCard(book, index)) : FALLBACK_FLOW_BOOKS;
@@ -313,6 +433,92 @@ export default function LibraryPage() {
 
   const featuredBook = useMemo(() => pickFeaturedBook(books), [books]);
   const listSections = useMemo(() => buildSectionsFromBooks(books), [books]);
+  const contentRails = useMemo(() => buildContentRails(books), [books]);
+  const playlistTracks = useMemo(() => buildPlaylistFromBooks(books), [books]);
+  const catalogBooksById = useMemo(() => new Map(books.map((book) => [book.id, book])), [books]);
+  const handleStartPlaylist = useCallback(
+    (bookId = null) => {
+      if (!playlistTracks.length) return;
+      let startIndex = 0;
+      if (bookId) {
+        const foundIndex = playlistTracks.findIndex(
+          (track) => track.bookId === bookId || track.id === bookId,
+        );
+        if (foundIndex >= 0) {
+          startIndex = foundIndex;
+        }
+      }
+      startPlaylist(playlistTracks, { startIndex });
+    },
+    [playlistTracks, startPlaylist],
+  );
+  const hasPlaylist = playlistTracks.length > 0;
+  const manualSelectionIds = useMemo(
+    () => new Set(manualSelection.map((track) => track.bookId)),
+    [manualSelection],
+  );
+  const handleToggleManualSelection = useCallback(
+    (bookId) => {
+      if (!bookId) return;
+      setManualSelection((prev) => {
+        const existingIndex = prev.findIndex((item) => item.bookId === bookId);
+        if (existingIndex >= 0) {
+          const next = [...prev];
+          next.splice(existingIndex, 1);
+          return next;
+        }
+        const target = catalogBooksById.get(bookId);
+        if (!target) return prev;
+        const track = mapBookToPlaylistTrack(target, prev.length);
+        if (!track) return prev;
+        return [...prev, track];
+      });
+    },
+    [catalogBooksById],
+  );
+  const handleAddGroupToSelection = useCallback(
+    (bookIds = []) => {
+      if (!bookIds.length) return;
+      setManualSelection((prev) => {
+        const next = [...prev];
+        bookIds.forEach((id) => {
+          if (!id || next.some((item) => item.bookId === id)) return;
+          const target = catalogBooksById.get(id);
+          if (!target) return;
+          const track = mapBookToPlaylistTrack(target, next.length);
+          if (track) {
+            next.push(track);
+          }
+        });
+        return next;
+      });
+    },
+    [catalogBooksById],
+  );
+  const handleMoveManualSelection = useCallback((bookId, direction) => {
+    if (!bookId || !direction) return;
+    setManualSelection((prev) => {
+      const index = prev.findIndex((item) => item.bookId === bookId);
+      if (index === -1) return prev;
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.splice(targetIndex, 0, item);
+      return next;
+    });
+  }, []);
+  const handleClearManualSelection = useCallback(() => setManualSelection([]), []);
+  const handlePlayManualSelection = useCallback(() => {
+    if (!manualSelection.length) return;
+    startPlaylist(manualSelection, { startIndex: 0 });
+    setManualSelection([]);
+  }, [manualSelection, startPlaylist]);
+  const handleQueueManualSelection = useCallback(() => {
+    if (!manualSelection.length) return;
+    addToQueue(manualSelection, { playNext: true, autoplay: false });
+    setManualSelection([]);
+  }, [manualSelection, addToQueue]);
   const isEmptyState = !loadingBooks && !books.length && !booksError;
 
   useEffect(() => {
@@ -435,9 +641,123 @@ export default function LibraryPage() {
           <span className="font-serif text-sm">{category.label}</span>
         </button>
       ))}
+      </div>
     </div>
-  </div>
 </section>
+
+        {hasPlaylist && (
+          <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-6 text-[rgb(var(--text-primary))] shadow-[0_30px_70px_-60px_rgba(15,10,35,0.8)]">
+            <div className="flex flex-wrap items-center justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
+                  Playlist continua
+                </p>
+                <h3 className="mt-2 text-xl font-semibold text-[rgb(var(--text-primary))]">
+                  {playlistTracks.length === 1
+                    ? "1 audio pronto para tocar em sequencia"
+                    : `${playlistTracks.length} audios prontos para tocar em sequencia`}
+                </h3>
+                <p className="text-sm text-[rgb(var(--text-secondary))]">
+                  Comece em qualquer titulo e siga automaticamente pela curadoria com audio disponivel.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleStartPlaylist()}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[rgb(var(--color-accent-primary))] px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_rgba(0,0,0,0.7)] transition hover:bg-[rgb(var(--color-accent-dark))]"
+                >
+                  Ouvir playlist sequencial
+                </button>
+                <span className="text-xs font-medium text-[rgb(var(--text-secondary))]">O player fixa no rodape para você continuar navegando.</span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {manualSelection.length > 0 && (
+          <section className="space-y-4 rounded-[32px] border border-[rgba(255,255,255,0.12)] bg-[rgba(var(--surface-card),0.9)] p-6 shadow-[0_28px_70px_-60px_rgba(15,10,35,0.85)]">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
+                  Playlist manual
+                </p>
+                <h3 className="text-xl font-semibold text-[rgb(var(--text-primary))]">
+                  {manualSelection.length === 1
+                    ? "1 titulo selecionado"
+                    : `${manualSelection.length} titulos selecionados`}
+                </h3>
+                <p className="text-sm text-[rgb(var(--text-secondary))]">
+                  Reordene como preferir e toque imediatamente ou apenas adicione na fila atual.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handlePlayManualSelection}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_rgba(0,0,0,0.7)] transition hover:bg-[rgb(var(--color-accent-dark))]"
+                >
+                  Tocar selecao agora
+                </button>
+                <button
+                  type="button"
+                  onClick={handleQueueManualSelection}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.15)] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-primary))] hover:bg-white/5"
+                >
+                  Adicionar na fila atual
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearManualSelection}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-dashed border-[rgba(255,255,255,0.15)] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-secondary))] hover:bg-white/5"
+                >
+                  Limpar selecao
+                </button>
+              </div>
+            </header>
+            <ol className="space-y-3">
+              {manualSelection.map((track, index) => (
+                <li
+                  key={track.id}
+                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-muted),0.5)] px-4 py-3 text-sm text-[rgb(var(--text-primary))]"
+                >
+                  <span className="text-xs font-bold text-[color:rgba(var(--color-secondary-primary),0.9)]">
+                    #{String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{track.title}</p>
+                    <p className="truncate text-xs text-[rgb(var(--text-secondary))]">{track.author}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveManualSelection(track.bookId, "up")}
+                      disabled={index === 0}
+                      className="rounded-full border border-[rgba(255,255,255,0.2)] px-2 py-1 text-xs font-semibold text-[rgb(var(--text-primary))] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveManualSelection(track.bookId, "down")}
+                      disabled={index === manualSelection.length - 1}
+                      className="rounded-full border border-[rgba(255,255,255,0.2)] px-2 py-1 text-xs font-semibold text-[rgb(var(--text-primary))] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleManualSelection(track.bookId)}
+                      className="rounded-full border border-red-300/30 px-3 py-1 text-xs font-semibold text-red-200 hover:bg-red-500/10"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
 
 <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[rgba(12,10,22,0.9)] px-6 py-10 text-white shadow-[0_45px_90px_-60px_rgba(5,3,20,0.95)]">
@@ -731,6 +1051,77 @@ export default function LibraryPage() {
             </div>
           </section>
         ))}
+
+        {contentRails.map((rail) => (
+          <section key={rail.id} className="space-y-4 rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 shadow-[0_30px_70px_-60px_rgba(15,10,35,0.8)]">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
+                  {rail.subtitle}
+                </p>
+                <h3 className="text-xl font-semibold text-[rgb(var(--text-primary))]">{rail.title}</h3>
+              </div>
+              <button
+                type="button"
+                className="rounded-full border border-[rgba(255,255,255,0.2)] px-4 py-1 text-sm font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+              >
+                Explorar tudo
+              </button>
+            </header>
+            <div className="relative -mx-4 sm:mx-0">
+              <div
+                className="scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-thumb-rounded-full flex gap-4 overflow-x-auto px-4 py-2"
+                style={{ scrollSnapType: "x proximity" }}
+              >
+                {rail.cards.map((card, index) => (
+                  <article
+                    key={card.id ?? `${rail.id}-${index}`}
+                    className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-[28px] border border-[rgba(255,255,255,0.12)] bg-[rgba(var(--surface-base),0.9)] p-4 shadow-[0_20px_40px_-30px_rgba(12,10,20,0.9)]"
+                    style={{ scrollSnapAlign: "start" }}
+                  >
+                    <BookLink
+                      bookId={card.detailsId}
+                      className="group block overflow-hidden rounded-[22px]"
+                      stopPropagation
+                    >
+                      <div
+                        className="w-full overflow-hidden rounded-[22px] bg-black/10"
+                        style={{ aspectRatio: "9 / 16" }}
+                      >
+                        <img
+                          src={card.cover}
+                          alt={card.title}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                          onError={handleCoverFallback}
+                        />
+                      </div>
+                    </BookLink>
+                    <div className="mt-4 space-y-2">
+                      <h4 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{card.title}</h4>
+                      <p className="text-xs uppercase tracking-[0.3em] text-[rgb(var(--text-secondary))]">{card.author}</p>
+                      <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{card.summary}</p>
+                    </div>
+                    <div className="mt-3">
+                      {card.detailsId ? (
+                        <BookLink
+                          bookId={card.detailsId}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.18)] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+                        >
+                          Ver detalhes
+                        </BookLink>
+                      ) : (
+                        <span className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[rgba(255,255,255,0.18)] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-secondary))]">
+                          Detalhes em breve
+                        </span>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ))}
+
         {totalBooks > 0 && (
           <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 shadow-[0_25px_60px_-40px_rgba(10,8,30,0.5)]">
             <div className="flex flex-wrap items-center justify-between gap-4">

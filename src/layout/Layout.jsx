@@ -6,6 +6,7 @@ import ThemeMenu from "../components/ThemeMenu.jsx";
 import NotificationPanel from "../components/NotificationPanel.jsx";
 import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
+import AudioPlaylistBar from "../components/AudioPlaylistBar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { NAV_LINKS, normalizeMobileNavSelection } from "../data/navigation.js";
 import { DEFAULT_PLAN_ID } from "../data/plans.js";
@@ -436,7 +437,7 @@ export default function Layout() {
                 </button>
                 <div>
                   <p className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Bem-vindo</p>
-                  <h2 className="text-lg font-semibold text-[#1f2933] dark:text-white">
+                  <h2 className="text-base font-semibold text-[#1f2933] leading-tight dark:text-white md:text-lg">
                     {location.pathname === "/"
                       ? "Painel pessoal"
                       : NAV_ITEMS_BY_PATH.get(location.pathname)?.label}
@@ -542,6 +543,7 @@ export default function Layout() {
             <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">
               <Outlet />
             </main>
+            <AudioPlaylistBar />
 
         </div>
 

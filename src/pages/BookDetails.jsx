@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 import { buildAudioSource } from "../utils/media.js";
+import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 
 const AUTHOR_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='gradient' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2334315b'/%3E%3Cstop offset='100%25' stop-color='%235f5677'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='200' rx='72' fill='url(%23gradient)'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='rgba(255,255,255,0.8)' font-family='Helvetica,Arial,sans-serif' font-size='72'%3EE%3C/text%3E%3C/svg%3E";
@@ -31,6 +32,7 @@ function getAuthorInitials(name = "") {
 export default function BookDetailsPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { startPlaylist, addToQueue } = useAudioPlaylist();
   const audioRef = useRef(null);
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -121,6 +123,26 @@ export default function BookDetailsPage() {
   const audioSource = useMemo(() => buildAudioSource(book?.audio_url), [book?.audio_url]);
   const hasAudio = Boolean(audioSource);
   const hasPdf = Boolean(book?.pdf_url);
+  const playlistTrack = useMemo(() => {
+    if (!book || !audioSource) return null;
+    return {
+      id: book.id ?? "book-current",
+      bookId: book.id ?? null,
+      title: book.titulo ?? "Audiobook Essência",
+      author: authorName,
+      cover: coverSrc,
+      source: audioSource,
+    };
+  }, [audioSource, authorName, book, coverSrc]);
+
+  const handlePlayInGlobalPlayer = useCallback(() => {
+    if (!playlistTrack) return;
+    startPlaylist([playlistTrack]);
+  }, [playlistTrack, startPlaylist]);
+  const handleQueueInGlobalPlayer = useCallback(() => {
+    if (!playlistTrack) return;
+    addToQueue([playlistTrack], { playNext: true, autoplay: false });
+  }, [playlistTrack, addToQueue]);
 
   const handlePlaybackToggle = () => {
     if (!audioRef.current) return;
@@ -270,6 +292,24 @@ export default function BookDetailsPage() {
                   <span>{formatTime(audioDuration)}</span>
                 </div>
                 <audio ref={audioRef} src={audioSource} preload="metadata" />
+                {playlistTrack && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handlePlayInGlobalPlayer}
+                      className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.2)] px-4 py-1 text-xs font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
+                    >
+                      Tocar no player contínuo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleQueueInGlobalPlayer}
+                      className="inline-flex items-center gap-2 rounded-full border border-dashed border-[rgba(255,255,255,0.2)] px-4 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-white/10"
+                    >
+                      Adicionar à fila atual
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-sm text-[rgb(var(--text-secondary))]">
