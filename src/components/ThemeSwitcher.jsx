@@ -1,12 +1,12 @@
-import React from "react";
+﻿import React from "react";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function ThemeSwitcher() {
   const { isDark, toggleTheme, theme } = useTheme();
 
   const label = isDark
-    ? "Alternar para o tema claro padrão"
-    : "Alternar para o tema escuro padrão";
+    ? "Alternar para o tema claro padr�o"
+    : "Alternar para o tema escuro padr�o";
 
   return (
     <button

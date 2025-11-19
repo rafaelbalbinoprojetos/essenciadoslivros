@@ -1,4 +1,4 @@
-import { Readable } from "node:stream";
+﻿import { Readable } from "node:stream";
 
 const DRIVE_HOST_WHITELIST = ["drive.google.com", "docs.google.com", "drive.usercontent.google.com", "drive.googleusercontent.com"];
 
@@ -37,7 +37,7 @@ export default async function handler(request, response) {
 
   try {
     const headers = {
-      "User-Agent": "EssenciaMediaProxy/1.0",
+      "User-Agent": "MeuShapeMediaProxy/1.0",
     };
 
     if (request.headers.range) {

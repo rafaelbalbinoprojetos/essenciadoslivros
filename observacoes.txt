@@ -1,1 +1,1 @@
-caso o chat pare de editar, é so ir abaixo do prompt dele e selecionar agente full access
+﻿caso o chat pare de editar, ? so ir abaixo do prompt dele e selecionar agente full access

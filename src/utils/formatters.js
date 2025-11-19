@@ -1,4 +1,4 @@
-const DEFAULT_LOCALE = "pt-BR";
+﻿const DEFAULT_LOCALE = "pt-BR";
 
 const CURRENCY_CACHE = new Map();
 

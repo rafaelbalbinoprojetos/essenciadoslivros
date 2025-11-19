@@ -1,33 +1,46 @@
-const DRIVE_ID_PATTERN = /[-\w]{10,}/;
-const DRIVE_HOSTS = ["drive.google.com", "docs.google.com", "drive.usercontent.google.com", "drive.googleusercontent.com"];
+const GOOGLE_DRIVE_FILE_REGEX = /https:\/\/drive\.google\.com\/file\/d\/([^/]+)\//i;
+const GOOGLE_DRIVE_OPEN_REGEX = /https:\/\/drive\.google\.com\/open\?id=([^&]+)/i;
+const GOOGLE_DRIVE_UC_REGEX = /https:\/\/drive\.google\.com\/uc\?id=([^&]+)/i;
 
-function extractDriveId(value = "") {
-  const match = value.match(DRIVE_ID_PATTERN);
-  return match ? match[0] : "";
+function buildGoogleDriveDirectLink(fileId) {
+  if (!fileId) return null;
+  return `https://lh3.googleusercontent.com/d/${fileId}`;
 }
 
-function buildDriveProxyUrl(fileId) {
-  return `/api/media/audio?id=${encodeURIComponent(fileId)}`;
-}
-
-export function buildAudioSource(rawValue) {
-  const value = typeof rawValue === "string" ? rawValue.trim() : "";
-  if (!value) return "";
-
-  try {
-    const url = new URL(value);
-    if (DRIVE_HOSTS.some((host) => url.hostname.includes(host))) {
-      const id = url.searchParams.get("id") ?? extractDriveId(url.pathname);
-      if (id) {
-        return buildDriveProxyUrl(id);
-      }
-    }
-  } catch {
-    const id = extractDriveId(value);
-    if (id) {
-      return buildDriveProxyUrl(id);
-    }
+export function resolveMediaUrl(url) {
+  if (!url || typeof url !== "string") {
+    return null;
+  }
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return null;
   }
 
-  return value;
+  const matchFile = trimmed.match(GOOGLE_DRIVE_FILE_REGEX);
+  if (matchFile) {
+    return buildGoogleDriveDirectLink(matchFile[1]);
+  }
+
+  const matchOpen = trimmed.match(GOOGLE_DRIVE_OPEN_REGEX);
+  if (matchOpen) {
+    return buildGoogleDriveDirectLink(matchOpen[1]);
+  }
+
+  const matchUc = trimmed.match(GOOGLE_DRIVE_UC_REGEX);
+  if (matchUc) {
+    return buildGoogleDriveDirectLink(matchUc[1]);
+  }
+
+  return trimmed;
+}
+
+export function buildAudioSource(value) {
+  const resolved = resolveMediaUrl(value);
+  if (!resolved) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(resolved)) {
+    return resolved;
+  }
+  return resolved;
 }

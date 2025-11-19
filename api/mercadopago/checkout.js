@@ -1,4 +1,4 @@
-/* eslint-env node */
+﻿/* eslint-env node */
 import crypto from "crypto";
 import { DEFAULT_PLAN_ID, PLAN_DETAILS } from "../../src/data/plans.js";
 

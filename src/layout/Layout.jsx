@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import SettingsMenu from "../components/SettingsMenu.jsx";
@@ -6,18 +6,22 @@ import ThemeMenu from "../components/ThemeMenu.jsx";
 import NotificationPanel from "../components/NotificationPanel.jsx";
 import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
+import AudioPlaylistBar from "../components/AudioPlaylistBar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { NAV_LINKS, normalizeMobileNavSelection } from "../data/navigation.js";
 import { DEFAULT_PLAN_ID } from "../data/plans.js";
 
-const BRAND_NAME = "Essência dos Livros";
+const BRAND_NAME = "MEU SHAPE";
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 const SUBSCRIPTION_ENDPOINT = `${API_BASE}/api/mercadopago/subscription`;
 
 const ICON_MAP = {
   dashboard: DashboardIcon,
-  library: LibraryIcon,
-  catalog: LibraryIcon,
+  workouts: WorkoutIcon,
+  exercises: ExercisesIcon,
+  fichas: PlansIcon,
+  nutrition: NutritionIcon,
+  evolution: EvolutionIcon,
   assistant: AssistantIcon,
   settings: SettingsIcon,
 };
@@ -146,10 +150,10 @@ export default function Layout() {
     setNotificationsLoading(true);
     const sampleMessages = [
       {
-        id: `library-welcome-${user.id}`,
+        id: `shape-welcome-${user.id}`,
         type: "info",
-        title: "Bem-vindo à Essência dos Livros",
-        message: "Use o cadastro para adicionar novos títulos e acompanhar as leituras da sua comunidade.",
+        title: "Bem-vindo ao MEU SHAPE",
+        message: "Ative suas fichas personalizadas e acompanhe treinos, nutri??o e evolu??o em um s? lugar.",
         time: new Intl.DateTimeFormat("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
@@ -166,8 +170,8 @@ export default function Layout() {
       setPlansOpen(true);
     }
 
-    window.addEventListener("essencia:open-plans", handleOpenPlans);
-    return () => window.removeEventListener("essencia:open-plans", handleOpenPlans);
+    window.addEventListener("meushape:open-plans", handleOpenPlans);
+    return () => window.removeEventListener("meushape:open-plans", handleOpenPlans);
   }, []);
 
   useEffect(() => {
@@ -187,7 +191,7 @@ export default function Layout() {
       event.preventDefault();
       const trimmed = searchTerm.trim();
       if (!trimmed) return;
-      navigate(`/biblioteca?search=${encodeURIComponent(trimmed)}`);
+      navigate(`/treinos?search=${encodeURIComponent(trimmed)}`);
       setMobileSearchOpen(false);
     },
     [navigate, searchTerm],
@@ -229,7 +233,7 @@ export default function Layout() {
     setNotificationsOpen((previous) => {
       const next = !previous;
       if (next) {
-        const event = new CustomEvent("essencia:close-settings-menu");
+        const event = new CustomEvent("meushape:close-settings-menu");
         window.dispatchEvent(event);
       }
       return next;
@@ -324,19 +328,19 @@ export default function Layout() {
         position="top-right"
         toastOptions={{
           className:
-            "rounded-xl border border-white/40 bg-[#fffcf7]/95 px-4 py-3 text-sm text-[#1f2933] shadow-lg backdrop-blur",
+            "rounded-xl border border-white/40 bg-[#F5F7FB]/95 px-4 py-3 text-sm text-[#1f2933] shadow-lg backdrop-blur",
         }}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[18rem] transform border-r border-white/40 bg-[#fffcf7]/90 backdrop-blur-md transition-transform duration-300 dark:border-white/10 dark:bg-slate-900/90 md:sticky md:top-0 md:inset-auto md:self-start md:z-20 md:h-screen md:w-[19rem] md:flex-shrink-0 md:translate-x-0 md:rounded-none md:bg-[#fffcf7]/85 md:shadow-none md:dark:bg-slate-900/85 lg:w-[21rem] ${
+        className={`fixed inset-y-0 left-0 z-40 w-[18rem] transform border-r border-white/40 bg-[#F5F7FB]/90 backdrop-blur-md transition-transform duration-300 dark:border-white/10 dark:bg-slate-900/90 md:sticky md:top-0 md:inset-auto md:self-start md:z-20 md:h-screen md:w-[19rem] md:flex-shrink-0 md:translate-x-0 md:rounded-none md:bg-[#F5F7FB]/85 md:shadow-none md:dark:bg-slate-900/85 lg:w-[21rem] ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
         aria-label="Navegação principal"
       >
         <div className="flex items-center justify-between border-b border-white/35 px-5 py-4 dark:border-white/10">
           <div>
-            <span className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/60">
+            <span className="text-xs uppercase tracking-[0.28em] text-[#4A5568]/70 dark:text-[#cfc2ff]/60">
               Plataforma de Leitura
             </span>
             <h1 className="mt-2 text-xl font-semibold text-[#1f2933] dark:text-[#f8f6ff]">{BRAND_NAME}</h1>
@@ -345,8 +349,8 @@ export default function Layout() {
           <button
             type="button"
             onClick={() => setMenuOpen(false)}
-            className="rounded-lg p-2 text-[#7a6c5e] transition hover:bg-[#f2ede4]/80 hover:text-[#6c63ff] md:hidden"
-            aria-label="Fechar navegação"
+            className="rounded-lg p-2 text-[#4A5568] transition hover:bg-[#E6F4FF]/80 hover:text-[#32C5FF] md:hidden"
+            aria-label="Fechar Navegação"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
@@ -362,8 +366,8 @@ export default function Layout() {
                 [
                   "sidebar-link group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition duration-200",
                   isActive
-                    ? "sidebar-link--active text-[#4c3f8f] shadow-sm dark:text-[#cfc2ff]"
-                    : "text-[#4b3f35]/80 hover:bg-[#f2ede4] hover:text-[#4c3f8f] dark:text-[#a89fc1] dark:hover:bg-white/5 dark:hover:text-white",
+                    ? "sidebar-link--active text-[#0F1F3C] shadow-sm dark:text-[#cfc2ff]"
+                    : "text-[#0F1F3C]/80 hover:bg-[#E6F4FF] hover:text-[#0F1F3C] dark:text-[#a89fc1] dark:hover:bg-white/5 dark:hover:text-white",
                 ]
                   .filter(Boolean)
                   .join(" ")
@@ -376,7 +380,7 @@ export default function Layout() {
               <div className="flex flex-1 flex-col">
                 <span className="text-sm font-semibold">{item.label}</span>
                 {item.description ? (
-                  <span className="text-xs text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">{item.description}</span>
+                  <span className="text-xs text-[#4A5568]/70 dark:text-[#cfc2ff]/70">{item.description}</span>
                 ) : null}
               </div>
             </NavLink>
@@ -384,20 +388,20 @@ export default function Layout() {
         </nav>
 
         <div className="mt-auto space-y-4 px-5 pb-6">
-          <div className="rounded-2xl border border-[#cdb18c]/30 bg-[#f2ede4]/70 p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
-            <span className="text-xs uppercase tracking-[0.28em] text-[#b38b59] dark:text-[#cfc2ff]">Plano</span>
-            <p className="mt-2 text-base font-semibold text-[#4b3f35] dark:text-white">
-              {subscriptionTier === "premium" ? "Essência Premium" : "Essência Free"}
+          <div className="rounded-2xl border border-[#32C5FF]/30 bg-[#E6F4FF]/70 p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
+            <span className="text-xs uppercase tracking-[0.28em] text-[#67FF9A] dark:text-[#cfc2ff]">Plano</span>
+            <p className="mt-2 text-base font-semibold text-[#0F1F3C] dark:text-white">
+              {subscriptionTier === "premium" ? "Shape Pro" : "Shape Free"}
             </p>
             {trialActive && trialEndsAt ? (
-              <p className="mt-1 text-xs text-[#7a6c5e]/80 dark:text-[#cfc2ff]/80">
+              <p className="mt-1 text-xs text-[#4A5568]/80 dark:text-[#cfc2ff]/80">
                 Teste termina em {formatTrialCountdown(trialEndsAt)}
               </p>
             ) : null}
             <button
               type="button"
               onClick={() => setPlansOpen(true)}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4c3f8f]"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#32C5FF] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0F1F3C]"
             >
               Explorar benefícios
             </button>
@@ -406,7 +410,7 @@ export default function Layout() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#6c63ff]/20 bg-white/70 px-3 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/40 hover:bg-white dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:border-white/30"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#32C5FF]/20 bg-white/70 px-3 py-2 text-sm font-semibold text-[#0F1F3C] transition hover:border-[#32C5FF]/40 hover:bg-white dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:border-white/30"
           >
             Sair da conta
           </button>
@@ -417,7 +421,7 @@ export default function Layout() {
         <button
           type="button"
           className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm md:hidden"
-          aria-label="Fechar navegação lateral"
+          aria-label="Fechar Navegação lateral"
           onClick={() => setMenuOpen(false)}
         />
       )}
@@ -429,14 +433,14 @@ export default function Layout() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
-                  className="inline-flex items-center justify-center rounded-xl border border-[#6c63ff]/20 bg-white/80 p-2 text-[#4b3f35] transition hover:border-[#6c63ff]/40 hover:text-[#4c3f8f] md:hidden"
-                  aria-label="Abrir navegação principal"
+                  className="inline-flex items-center justify-center rounded-xl border border-[#32C5FF]/20 bg-white/80 p-2 text-[#0F1F3C] transition hover:border-[#32C5FF]/40 hover:text-[#0F1F3C] md:hidden"
+                  aria-label="Abrir Navegação principal"
                 >
                   <MenuIcon className="h-5 w-5" />
                 </button>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Bem-vindo</p>
-                  <h2 className="text-lg font-semibold text-[#1f2933] dark:text-white">
+                  <p className="text-xs uppercase tracking-[0.28em] text-[#4A5568]/70 dark:text-[#cfc2ff]/70">Bem-vindo</p>
+                  <h2 className="text-base font-semibold text-[#1f2933] leading-tight dark:text-white md:text-lg">
                     {location.pathname === "/"
                       ? "Painel pessoal"
                       : NAV_ITEMS_BY_PATH.get(location.pathname)?.label}
@@ -447,13 +451,13 @@ export default function Layout() {
               <div className="ml-auto flex items-center gap-2 md:flex-1 md:justify-end md:gap-3">
                 <form className="hidden min-w-[220px] flex-1 items-center md:flex" onSubmit={handleSearchSubmit}>
                   <div className="relative flex w-full items-center">
-                    <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-[#7a6c5e]/70" />
+                    <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-[#4A5568]/70" />
                     <input
                       type="search"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Busque por livros, resumos ou autores"
-                      className="w-full rounded-xl border border-[#cdb18c]/40 bg-white py-2 pl-9 pr-4 text-sm text-[#1f2933] shadow-sm outline-none transition focus:border-[#6c63ff]/60 focus:ring-2 focus:ring-[#6c63ff]/20 dark:border-white/10 dark:bg-slate-900/60 dark:text-white"
+                      placeholder="Busque por treinos, exerc?cios ou receitas"
+                      className="w-full rounded-xl border border-[#32C5FF]/40 bg-white py-2 pl-9 pr-4 text-sm text-[#1f2933] shadow-sm outline-none transition focus:border-[#32C5FF]/60 focus:ring-2 focus:ring-[#32C5FF]/20 dark:border-white/10 dark:bg-slate-900/60 dark:text-white"
                     />
                   </div>
                 </form>
@@ -463,8 +467,8 @@ export default function Layout() {
                     ref={mobileSearchButtonRef}
                     type="button"
                     onClick={() => setMobileSearchOpen((prev) => !prev)}
-                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff] hover:text-[#4c3f8f] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] md:hidden ${
-                      mobileSearchOpen ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/20" : ""
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#32C5FF]/60 bg-white text-[#0F1F3C] shadow-sm transition hover:border-[#32C5FF] hover:text-[#0F1F3C] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] md:hidden ${
+                      mobileSearchOpen ? "ring-2 ring-[#32C5FF]/30 dark:ring-white/20" : ""
                     }`}
                     aria-label="Abrir busca"
                     aria-expanded={mobileSearchOpen}
@@ -475,12 +479,12 @@ export default function Layout() {
                     ref={notificationButtonRef}
                     type="button"
                   onClick={handleToggleNotifications}
-                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#6c63ff]/25 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff]/45 hover:text-[#4c3f8f] dark:border-white/10 dark:bg-slate-900 dark:text-white ${notificationsOpen ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/20" : ""}`}
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#32C5FF]/25 bg-white text-[#0F1F3C] shadow-sm transition hover:border-[#32C5FF]/45 hover:text-[#0F1F3C] dark:border-white/10 dark:bg-slate-900 dark:text-white ${notificationsOpen ? "ring-2 ring-[#32C5FF]/30 dark:ring-white/20" : ""}`}
                     aria-label="Abrir notificações"
                   >
                     <BellIcon className="h-5 w-5" />
                     {notifications.length > 0 ? (
-                      <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#6c63ff] text-[11px] font-semibold text-white shadow">
+                      <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#32C5FF] text-[11px] font-semibold text-white shadow">
                         {notifications.length}
                       </span>
                     ) : null}
@@ -519,18 +523,18 @@ export default function Layout() {
                     onSubmit={handleSearchSubmit}
                     className="flex items-center gap-2 rounded-2xl border border-white/40 bg-white/95 px-3 py-2 text-sm text-[#1f2933] shadow-2xl dark:border-white/10 dark:bg-slate-900/95 dark:text-white"
                   >
-                    <SearchIcon className="h-4 w-4 text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70" />
+                    <SearchIcon className="h-4 w-4 text-[#4A5568]/70 dark:text-[#cfc2ff]/70" />
                     <input
                       ref={mobileSearchInputRef}
                       type="search"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Busque por livros, resumos ou autores"
-                      className="flex-1 bg-transparent text-sm text-[#1f2933] placeholder:text-[#7a6c5e]/70 focus:outline-none dark:text-white"
+                      placeholder="Busque por treinos, exerc?cios ou receitas"
+                      className="flex-1 bg-transparent text-sm text-[#1f2933] placeholder:text-[#4A5568]/70 focus:outline-none dark:text-white"
                     />
                     <button
                       type="submit"
-                      className="rounded-xl bg-[#6c63ff] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#4c3f8f]"
+                      className="rounded-xl bg-[#32C5FF] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#0F1F3C]"
                     >
                       Buscar
                     </button>
@@ -542,6 +546,7 @@ export default function Layout() {
             <main className="flex-1 overflow-y-auto px-4 pb-24 pt-6 md:px-8 bg-[rgb(var(--surface-base))]">
               <Outlet />
             </main>
+            <AudioPlaylistBar />
 
         </div>
 
@@ -565,7 +570,7 @@ export default function Layout() {
       </div>
       {(mobileNavItems.length || NAV_ITEMS.length) && (
         <nav className="pointer-events-auto md:hidden fixed inset-x-0 bottom-0 z-40">
-          <div className="mx-auto flex w-full max-w-xl items-center justify-between rounded-t-3xl border border-[#6c63ff]/20 border-b-0 bg-white/95 px-4 py-3 shadow-[0_-20px_45px_-35px_rgba(108,99,255,0.5)] backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
+          <div className="mx-auto flex w-full max-w-xl items-center justify-between rounded-t-3xl border border-[#32C5FF]/20 border-b-0 bg-white/95 px-4 py-3 shadow-[0_-20px_45px_-35px_rgba(108,99,255,0.5)] backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
             {(mobileNavItems.length ? mobileNavItems : NAV_ITEMS).map((item) => {
               const isActive =
                 item.to === "/"
@@ -607,16 +612,50 @@ function DashboardIcon({ className }) {
   );
 }
 
-function LibraryIcon({ className }) {
+function WorkoutIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M5 4.75h5a1.75 1.75 0 011.75 1.75V20H5A1.75 1.75 0 013.25 18.25V6.5A1.75 1.75 0 015 4.75Zm9 0h5a1.75 1.75 0 011.75 1.75V20H14V6.5A1.75 1.75 0 0114 4.75Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M9 8v9M15 8v9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M4.5 10.5h3v3h-3zM16.5 10.5h3v3h-3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M7.5 12h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M11 9.5v5m2-5v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ExercisesIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3.5" y="5" width="5" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="15.5" y="5" width="5" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8.5 12h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PlansIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M7 3.5h8.5L20 8v12.25A1.75 1.75 0 0118.25 22H7A1.75 1.75 0 015.25 20.25V5.25A1.75 1.75 0 017 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M15.5 3.5V8H20" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8.5 12h7M8.5 15h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function NutritionIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M7 7h10a4 4 0 014 4v0a4 4 0 01-4 4H7a4 4 0 01-4-4v0a4 4 0 014-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M12 3v18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function EvolutionIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M3.5 15.5l4-4 3 3 6-6 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 20.5h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -680,4 +719,7 @@ function CloseIcon({ className }) {
     </svg>
   );
 }
+
+
+
 

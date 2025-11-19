@@ -1,14 +1,14 @@
-export const EXPENSE_CATEGORIES = [
-  { value: "alimentacao", label: "Alimentacao" },
+﻿export const EXPENSE_CATEGORIES = [
+  { value: "alimentação", label: "Alimentação" },
   { value: "transporte", label: "Transporte" },
   { value: "moradia", label: "Moradia" },
   { value: "lazer", label: "Lazer" },
-  { value: "saude", label: "Saude" },
+  { value: "saúde", label: "Saúde" },
   { value: "outros", label: "Outros" },
 ];
 
 export const PAYMENT_METHODS = [
-  { value: "cartao", label: "Cartao" },
+  { value: "cartao", label: "Cartão" },
   { value: "dinheiro", label: "Dinheiro" },
   { value: "pix", label: "PIX" },
   { value: "boleto", label: "Boleto" },
@@ -26,12 +26,12 @@ export const FIXED_BILL_FREQUENCIES = [
 export const FIXED_BILL_STATUS = [
   { value: "pendente", label: "Pendente" },
   { value: "pago", label: "Pago" },
-  { value: "atrasado", label: "Atrasado" },
+  { value: "atrásado", label: "Atrásado" },
   { value: "cancelado", label: "Cancelado" },
 ];
 
 export const REVENUE_CATEGORIES = [
-  { value: "salario", label: "Salario" },
+  { value: "salario", label: "Salário" },
   { value: "freelance", label: "Freelance" },
   { value: "investimento", label: "Investimentos" },
   { value: "outros", label: "Outros" },
@@ -39,14 +39,14 @@ export const REVENUE_CATEGORIES = [
 
 export const INVESTMENT_TYPES = [
   { value: "renda_fixa", label: "Renda fixa" },
-  { value: "renda_variavel", label: "Renda variavel" },
+  { value: "renda_variavel", label: "Renda variável" },
   { value: "fundos", label: "Fundos" },
   { value: "criptomoedas", label: "Criptomoedas" },
   { value: "outros", label: "Outros" },
 ];
 
 export const ASSET_TYPES = [
-  { value: "acao", label: "Ação" },
+  { value: "ação", label: "Ação" },
   { value: "cripto", label: "Criptomoeda" },
   { value: "etf", label: "ETF" },
   { value: "moeda", label: "Moeda estrangeira" },
@@ -58,3 +58,4 @@ export const OVERTIME_PERCENTAGES = [
   { value: "1.00", label: "100%" },
   { value: "1.20", label: "120%" },
 ];
+

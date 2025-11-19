@@ -1,4 +1,4 @@
-#root {
+﻿#root {
   width: 100%;
   min-height: 100vh;
   margin: 0 auto;
@@ -13,7 +13,7 @@
 }
 
 .glass-panel {
-  background-color: rgba(255, 252, 247, 0.85);
-  border: 1px solid rgba(108, 99, 255, 0.08);
+  background-color: rgba(15, 31, 60, 0.08);
+  border: 1px solid rgba(50, 197, 255, 0.2);
   backdrop-filter: blur(18px);
 }

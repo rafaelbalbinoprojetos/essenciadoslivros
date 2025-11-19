@@ -1,20 +1,26 @@
-# React + Vite
+﻿# MEU SHAPE - Front-end
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação React + Tailwind que evoluiu do sistema de e-books para um hub completo de treino, nutrição e evolução corporal. Enquanto o backend/Supabase será integrado em breve, o front já reflete todo o branding fitness, fluxos principais e componentes reutilizáveis.
 
-Currently, two official plugins are available:
+## Principais seções
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Panorama do Shape** - Dashboard com treino do dia, calorias restantes, gráfico de peso e linha do tempo.
+- **Treinos** - Biblioteca com filtros por objetivo/nível, cards com séries, vídeos e execução guiada.
+- **Coach IA** - Chat com prompts inteligentes e contexto dinâmico (objetivo, calorias, equipamentos).
+- **Nutrição** - Plano alimentar, macros, refeições e receitas rápidas.
+- **Evolução** - Peso, medidas, PRs e fotos antes/depois.
+- **Perfil & Plano** - Dados pessoais, preferências e assinatura SaaS.
 
-## React Compiler
+## Scripts
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+```bash
+npm install
+npm run dev     # ambiente local
+npm run build   # bundle de produção
+```
 
-## Expanding the ESLint configuration
+## Próximos passos
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# essencia-dos-livros
-# essencia-dos-livros
-# essenciadoslivros
-# essenciadoslivros
+- Conectar Supabase às tabelas de treinos, execuções, nutrição e evolução.
+- Ligar o fluxo de checkout/planos ao gateway (Mercado Pago/Stripe).
+- Substituir os dados demonstrativos do arquivo `src/data/fitness.js` pelos dados reais.

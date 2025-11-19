@@ -1,4 +1,4 @@
-const MS_IN_MINUTE = 60 * 1000;
+﻿const MS_IN_MINUTE = 60 * 1000;
 const NIGHT_BONUS_MULTIPLIER = 0.3; // +30%
 
 export function ensureEndDate(start, end) {

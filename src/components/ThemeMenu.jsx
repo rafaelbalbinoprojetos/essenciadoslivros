@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function ThemeMenu() {
@@ -45,12 +45,12 @@ export default function ThemeMenu() {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls="theme-menu"
-        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff] hover:text-[#4c3f8f] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] ${
-          open ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/25" : ""
+        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#32C5FF]/60 bg-white text-[#0F1F3C] shadow-sm transition hover:border-[#32C5FF] hover:text-[#0F1F3C] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] ${
+          open ? "ring-2 ring-[#32C5FF]/30 dark:ring-white/25" : ""
         }`}
         title="Selecionar tema"
       >
-        <span className="sr-only">{open ? "Fechar seleção de temas" : "Abrir seleção de temas"}</span>
+        <span className="sr-only">{open ? "Fechar sele��o de temas" : "Abrir sele��o de temas"}</span>
         <PaletteIcon className="h-5 w-5" />
       </button>
 
@@ -62,9 +62,9 @@ export default function ThemeMenu() {
           className="absolute right-0 top-12 z-40 flex w-80 max-h-[80vh] flex-col rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-2xl dark:border-gray-800 dark:bg-gray-900"
         >
           <header className="border-b border-gray-200 pb-3 dark:border-gray-800">
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Temas Essência</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Temas MEU SHAPE</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Altere rapidamente entre as paletas clara e escura.
+              Alterne entre as paletas claras e escuras energ�ticas.
             </p>
           </header>
 
@@ -93,7 +93,7 @@ function ThemeGrid({ themes, activeId, onSelect }) {
   if (!themes.length) {
     return (
       <p className="mt-2 rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-        Nenhum tema disponível.
+        Nenhum tema dispon�vel.
       </p>
     );
   }
@@ -108,10 +108,10 @@ function ThemeGrid({ themes, activeId, onSelect }) {
             type="button"
             onClick={() => onSelect(preset.id)}
             title={preset.description}
-            className={`group relative flex flex-col gap-2 rounded-lg border px-2 pb-2 pt-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6c63ff]/40 dark:focus-visible:ring-white/30 ${
+            className={`group relative flex flex-col gap-2 rounded-lg border px-2 pb-2 pt-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#32C5FF]/40 dark:focus-visible:ring-white/30 ${
               isActive
-                ? "border-[#6c63ff]/60 ring-1 ring-[#6c63ff]/40 dark:border-white/40"
-                : "border-gray-200 hover:border-[#6c63ff]/50 hover:bg-[#6c63ff]/5 dark:border-gray-700 dark:hover:border-white/40 dark:hover:bg-white/5"
+                ? "border-[#32C5FF]/60 ring-1 ring-[#32C5FF]/40 dark:border-white/40"
+                : "border-gray-200 hover:border-[#32C5FF]/50 hover:bg-[#32C5FF]/5 dark:border-gray-700 dark:hover:border-white/40 dark:hover:bg-white/5"
             }`}
           >
             <span className="flex h-6 w-full overflow-hidden rounded-md shadow-inner">
@@ -119,10 +119,10 @@ function ThemeGrid({ themes, activeId, onSelect }) {
                 <span key={`${preset.id}-color-${index}`} className="flex-1" style={{ backgroundColor: color }} />
               ))}
             </span>
-            <span className="text-[11px] font-medium text-gray-600 transition group-hover:text-[#6c63ff] dark:text-gray-300 dark:group-hover:text-white">
+            <span className="text-[11px] font-medium text-gray-600 transition group-hover:text-[#32C5FF] dark:text-gray-300 dark:group-hover:text-white">
               {preset.name}
             </span>
-            {isActive && <CheckIcon className="absolute right-1 top-1 h-4 w-4 text-[#6c63ff] dark:text-white" />}
+            {isActive && <CheckIcon className="absolute right-1 top-1 h-4 w-4 text-[#32C5FF] dark:text-white" />}
           </button>
         );
       })}

@@ -1,15 +1,15 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 
 const BASE_CLASSES =
   "transition hover:text-[color:rgb(var(--color-accent-primary))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--color-accent-primary),0.4)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-md";
 
-export default function BookLink({ bookId, children, className = "", stopPropagation = false, onClick, ...rest }) {
+export default function WorkoutLink({ workoutId, children, className = "", stopPropagation = false, onClick, ...rest }) {
   if (children === null || typeof children === "undefined") {
     return null;
   }
 
-  if (!bookId) {
+  if (!workoutId) {
     return (
       <span className={className} {...rest}>
         {children}
@@ -28,7 +28,7 @@ export default function BookLink({ bookId, children, className = "", stopPropaga
 
   return (
     <Link
-      to={`/biblioteca/${bookId}`}
+      to={`/treinos/${workoutId}`}
       className={`${BASE_CLASSES} ${className}`.trim()}
       onClick={handleClick}
       {...rest}

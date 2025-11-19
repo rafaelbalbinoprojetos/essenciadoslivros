@@ -1,53 +1,65 @@
-export const NAV_LINKS = [
+﻿export const NAV_LINKS = [
   {
     id: "dashboard",
     to: "/",
-    label: "Panorama",
-    shortLabel: "Início",
-    description: "Resumo do seu universo literário",
+    label: "Panorama do Shape",
+    shortLabel: "Inicio",
+    description: "Ultimos treinos, calorias e evolucao",
   },
   {
-    id: "library",
-    to: "/biblioteca",
-    label: "Biblioteca",
-    shortLabel: "Livros",
-    description: "Sua estante pessoal e coleções",
+    id: "workouts",
+    to: "/treinos",
+    label: "Treinos",
+    shortLabel: "Treinos",
+    description: "Fichas guiadas, series, videos e cronometro",
   },
   {
-    id: "catalog",
-    to: "/biblioteca/novo",
-    label: "Cadastro de Títulos",
-    shortLabel: "Cadastro",
-    description: "Inclua rapidamente novos livros, autores e coleções",
+    id: "exercises",
+    to: "/exercicios",
+    label: "Exercicios",
+    shortLabel: "Exercicios",
+    description: "Catalogo filtravel de exercicios com video e equipamento",
+  },
+  {
+    id: "fichas",
+    to: "/fichas",
+    label: "Fichas",
+    shortLabel: "Fichas",
+    description: "Catalogo premium de fichas ja cadastradas",
+  },
+  {
+    id: "nutrition",
+    to: "/nutricao",
+    label: "Nutricao",
+    shortLabel: "Nutricao",
+    description: "Calorias diarias, macros e receitas",
+  },
+  {
+    id: "evolution",
+    to: "/evolucao",
+    label: "Evolucao",
+    shortLabel: "Evolucao",
+    description: "Peso, medidas, fotos e PRs",
   },
   {
     id: "assistant",
-    to: "/assistente",
-    label: "Assistente IA",
-    shortLabel: "Assistente",
-    description: "Converse com a curadoria inteligente",
+    to: "/coach",
+    label: "Coach IA",
+    shortLabel: "Coach",
+    description: "Treinador virtual para treinos e alimentacao",
   },
   {
     id: "settings",
-    to: "/configuracoes",
-    label: "Configurações",
-    shortLabel: "Config",
-    description: "Preferências, plano e segurança",
+    to: "/perfil",
+    label: "Perfil & Plano",
+    shortLabel: "Perfil",
+    description: "Dados pessoais, preferencias e assinatura",
   },
 ];
 
-export const MOBILE_NAV_ALLOWED_PATHS = [
-  "/",
-  "/biblioteca",
-  "/biblioteca/novo",
-  "/assistente",
-];
+export const MOBILE_NAV_ALLOWED_PATHS = ["/", "/treinos", "/exercicios", "/fichas", "/nutricao", "/evolucao", "/coach"];
 
-export const DEFAULT_MOBILE_NAV_PATHS = [
-  "/",
-  "/biblioteca",
-  "/assistente",
-];
+export const DEFAULT_MOBILE_NAV_PATHS = ["/", "/treinos", "/coach"];
 
 export const MOBILE_NAV_LINKS = NAV_LINKS.filter((link) => MOBILE_NAV_ALLOWED_PATHS.includes(link.to));
 

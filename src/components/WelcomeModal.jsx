@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+﻿import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
@@ -43,11 +43,11 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-modal-title"
-        className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1530] via-[#2b1f44] to-[#46356d] text-white shadow-2xl shadow-[#6c63ff]/25"
+        className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1530] via-[#2b1f44] to-[#46356d] text-white shadow-2xl shadow-[#32C5FF]/25"
         onClick={handleDialogClick}
       >
-        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#6c63ff]/25 blur-3xl" aria-hidden="true" />
-        <div className="absolute -bottom-24 left-10 h-48 w-48 rounded-full bg-[#b38b59]/25 blur-3xl" aria-hidden="true" />
+        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#32C5FF]/25 blur-3xl" aria-hidden="true" />
+        <div className="absolute -bottom-24 left-10 h-48 w-48 rounded-full bg-[#67FF9A]/25 blur-3xl" aria-hidden="true" />
 
         <button
           type="button"
@@ -68,28 +68,27 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
 
           <div className="mt-6 space-y-3">
             <h2 id="welcome-modal-title" className="text-2xl font-semibold leading-tight text-white">
-              Bem-vindo à Essência dos Livros!
+              Bem-vindo ao MEU SHAPE!
             </h2>
             <p className="text-sm text-[#e6ddff]/80">
-              Você está no plano gratuito. Explore 7 dias de teste Premium com resumos inteligentes, audiobooks selecionados e
-              curadoria de leitura com IA.
+              Voc� est� no plano gratuito. Experimente 7 dias do Shape Pro com treinos ilimitados, nutri��o din�mica e Coach IA.
             </p>
           </div>
 
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-[#e6ddff]/85">
-            <p className="font-medium text-white">Durante o teste gratuito você desbloqueia:</p>
+            <p className="font-medium text-white">Durante o teste gratuito voc� desbloqueia:</p>
             <ul className="mt-3 space-y-2">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-base leading-none">-</span>
-                <span>Resumos exclusivos com diferentes formatos (rápido, detalhado e insights da IA).</span>
+                <span>Treinos completos com v�deos, cron�metro inteligente e ajustes autom�ticos de carga.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-base leading-none">-</span>
-                <span>Audiobooks premium para acompanhar sua rotina em qualquer lugar.</span>
+                <span>Plano alimentar com macros recalculados e exporta��o em PDF.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-base leading-none">-</span>
-                <span>Assistente literário com recomendações personalizadas e registros ilimitados.</span>
+                <span>Coach virtual ilimitado com recomenda��es de treino, refei��o e recupera��o.</span>
               </li>
             </ul>
           </div>
@@ -98,9 +97,9 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
             <button
               type="button"
               onClick={onStart}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#6c63ff] via-[#4c3f8f] to-[#b38b59] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#6c63ff]/30 transition hover:from-[#574de3] hover:via-[#3c2f75] hover:to-[#8f683f] sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#32C5FF] via-[#0F1F3C] to-[#67FF9A] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#32C5FF]/30 transition hover:from-[#574de3] hover:via-[#3c2f75] hover:to-[#8f683f] sm:w-auto"
             >
-              Começar agora
+              Come�ar agora
             </button>
             <button
               type="button"
@@ -112,7 +111,7 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
           </div>
 
           <p className="mt-6 text-center text-[11px] text-[#e6ddff]/70">
-            Cancelamento simples, sem cartão até o fim do teste. Aproveite para descobrir novas histórias.
+            Cancelamento simples, sem cart�o at� o fim do teste. Ajuste o plano quando quiser.
           </p>
         </div>
       </div>

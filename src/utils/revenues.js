@@ -1,4 +1,4 @@
-export function parseRevenueDescription(description) {
+﻿export function parseRevenueDescription(description) {
   if (!description) {
     return { origin: null, notes: null };
   }

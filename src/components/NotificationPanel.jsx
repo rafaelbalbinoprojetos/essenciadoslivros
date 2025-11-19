@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { createPortal } from "react-dom";
 
 const NotificationPanel = React.forwardRef(function NotificationPanel(
@@ -29,9 +29,9 @@ const NotificationPanel = React.forwardRef(function NotificationPanel(
           type="button"
           onClick={onClose}
           className="rounded-full p-1 text-xs text-[rgb(var(--text-secondary))] transition hover:bg-white/20"
-          aria-label="Fechar notificações"
+          aria-label="Fechar Notificações"
         >
-          ×
+          ?-
         </button>
       </header>
 
@@ -64,3 +64,5 @@ const NotificationPanel = React.forwardRef(function NotificationPanel(
 });
 
 export default NotificationPanel;
+
+

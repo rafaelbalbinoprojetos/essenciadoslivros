@@ -1,4 +1,4 @@
-export function parseDecimalInput(rawValue) {
+﻿export function parseDecimalInput(rawValue) {
   if (rawValue === null || rawValue === undefined) {
     return null;
   }

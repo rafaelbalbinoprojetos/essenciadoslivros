@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const MENU_ITEMS = [
@@ -8,7 +8,7 @@ const MENU_ITEMS = [
     icon: UserIcon,
     description: "Preferências pessoais",
     action: (navigate, helpers) => {
-      navigate("/configuracoes?tab=perfil");
+      navigate("/perfil");
       helpers.close();
     },
   },
@@ -38,7 +38,7 @@ const MENU_ITEMS = [
     icon: ShieldIcon,
     description: "Ajustes de autenticação",
     action: (navigate, helpers) => {
-      navigate("/configuracoes?tab=seguranca");
+      navigate("/perfil?tab=seguranca");
       helpers.close();
     },
   },
@@ -76,8 +76,8 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
 
   React.useEffect(() => {
     const handleExternalClose = () => setOpen(false);
-    window.addEventListener("essencia:close-settings-menu", handleExternalClose);
-    return () => window.removeEventListener("essencia:close-settings-menu", handleExternalClose);
+    window.addEventListener("meushape:close-settings-menu", handleExternalClose);
+    return () => window.removeEventListener("meushape:close-settings-menu", handleExternalClose);
   }, []);
 
   const helpers = React.useMemo(
@@ -108,7 +108,7 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
         aria-expanded={open}
         aria-controls="settings-menu"
         className={`flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-temaEmerald dark:hover:text-temaEmerald ${open ? "ring-2 ring-temaSky/30 dark:ring-temaEmerald/30" : ""}`}
-        title="Abrir configurações do usuário"
+        title="Abrir configurações do usu�rio"
       >
         <span className="sr-only">{open ? "Fechar configurações" : "Abrir configurações"}</span>
         <GearIcon className="h-5 w-5" />
@@ -119,11 +119,11 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
           id="settings-menu"
           role="dialog"
           aria-modal="false"
-          aria-label="Configurações"
+          aria-label="configurações"
           className="absolute right-0 top-12 z-40 flex w-80 max-h-[80vh] flex-col rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-2xl dark:border-gray-800 dark:bg-gray-900"
         >
           <header className="border-b border-gray-200 pb-3 dark:border-gray-800">
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Configurações</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">configurações</p>
           </header>
 
           <div className="mt-3 flex-1 overflow-y-auto pr-1">
@@ -271,3 +271,4 @@ function SignOutIcon({ className }) {
     </svg>
   );
 }
+

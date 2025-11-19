@@ -1,4 +1,4 @@
-/* eslint-env node */
+﻿/* eslint-env node */
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
