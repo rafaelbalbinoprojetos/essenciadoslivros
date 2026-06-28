@@ -1,6 +1,7 @@
 /* eslint-env node */
 import crypto from "crypto";
 import { DEFAULT_PLAN_ID, PLAN_DETAILS } from "../../src/data/plans.js";
+import { requireUser } from "../../lib/serverAuth.js";
 
 const MERCADO_PAGO_PREAPPROVAL_API = "https://api.mercadopago.com/preapproval";
 
@@ -27,11 +28,17 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Credenciais do Mercado Pago não configuradas." });
   }
 
-  const body = parseBody(req);
-  const { plan = DEFAULT_PLAN_ID, userId, email } = body;
+  // Exige login: userId e email vêm do token verificado, nunca do body.
+  const user = await requireUser(req, res);
+  if (!user) return;
 
-  if (!userId || !email) {
-    return res.status(400).json({ error: "userId e email são obrigatórios para criar a assinatura." });
+  const body = parseBody(req);
+  const { plan = DEFAULT_PLAN_ID } = body;
+  const userId = user.id;
+  const email = user.email;
+
+  if (!email) {
+    return res.status(400).json({ error: "Conta sem email válido para criar a assinatura." });
   }
 
   const planKey = typeof plan === "string" ? plan.toLowerCase() : DEFAULT_PLAN_ID;

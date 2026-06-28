@@ -1,6 +1,7 @@
 /* eslint-env node */
 import { createClient } from "@supabase/supabase-js";
 import { OpenAI } from "openai";
+import { requireUser, hasActivePremium } from "../lib/serverAuth.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -47,6 +48,16 @@ export default async function handler(request, response) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     response.status(405).json({ error: "Método não permitido." });
+    return;
+  }
+
+  // Exige usuário autenticado (impede consumo anônimo da cota da OpenAI).
+  const user = await requireUser(request, response);
+  if (!user) return;
+
+  // Gating premium server-side (não confiar apenas no React).
+  if (!(await hasActivePremium(user))) {
+    response.status(402).json({ error: "Recurso exclusivo do plano premium." });
     return;
   }
 

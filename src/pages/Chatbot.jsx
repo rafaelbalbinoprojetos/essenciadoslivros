@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { authHeaders } from "../lib/supabase.js";
 
 const SUGGESTED_PROMPTS = [
   "Registrar despesa: gastei 25 reais com lanche hoje.",
@@ -145,7 +146,7 @@ export default function ChatbotPage() {
     try {
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({
           messages: [...conversationPayload, userMessage],
           userId: user.id,
@@ -272,7 +273,7 @@ export default function ChatbotPage() {
       const base64 = await blobToBase64(blob);
       const response = await fetch(`${API_BASE}/api/transcribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({
           audio: base64,
           mimeType: blob.type || "audio/webm",

@@ -8,6 +8,7 @@ import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
 import AudioPlaylistBar from "../components/AudioPlaylistBar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { authHeaders } from "../lib/supabase.js";
 import { NAV_LINKS, normalizeMobileNavSelection } from "../data/navigation.js";
 import { DEFAULT_PLAN_ID } from "../data/plans.js";
 
@@ -280,11 +281,9 @@ export default function Layout() {
 
         const response = await fetch(SUBSCRIPTION_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: await authHeaders(),
           body: JSON.stringify({
             plan: selectedPlan,
-            userId: user.id,
-            email: user.email,
           }),
         });
 

@@ -1,5 +1,6 @@
 /* eslint-env node */
 import { OpenAI } from "openai";
+import { requireUser, hasActivePremium } from "../lib/serverAuth.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -33,6 +34,13 @@ export default async function handler(req, res) {
 
   if (!openai.apiKey) {
     return res.status(500).json({ error: "OPENAI_API_KEY não configurada." });
+  }
+
+  // Exige usuário autenticado com acesso premium (recurso de voz do assistente).
+  const user = await requireUser(req, res);
+  if (!user) return;
+  if (!(await hasActivePremium(user))) {
+    return res.status(402).json({ error: "Recurso exclusivo do plano premium." });
   }
 
   try {

@@ -15,3 +15,25 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   },
 });
+
+/**
+ * Retorna o access token (JWT) da sessão atual, ou null se deslogado.
+ * Usado para autenticar as chamadas aos endpoints /api.
+ */
+export async function getAccessToken() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token ?? null;
+}
+
+/**
+ * Monta os headers de autenticação para fetch nos endpoints /api.
+ * Sempre inclui Content-Type JSON e, se houver sessão, o Bearer token.
+ */
+export async function authHeaders(extra = {}) {
+  const token = await getAccessToken();
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+}
