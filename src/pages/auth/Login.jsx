@@ -4,13 +4,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { supabase } from "../../lib/supabase.js";
 import ThemeSwitcher from "../../components/ThemeSwitcher.jsx";
-
-const LOGIN_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80",
-  "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1600&q=80",
-  "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1600&q=80",
-  "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80",
-];
+import loginHeroImage from "../../assets/imagem-login.png";
 
 const TERMS_URL = import.meta.env.VITE_TERMS_URL ?? "#";
 const PRIVACY_URL = import.meta.env.VITE_PRIVACY_URL ?? "#";
@@ -27,11 +21,6 @@ export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [emailStatus, setEmailStatus] = useState("idle"); // idle | typing | checking | new | existing
   const [resettingPassword, setResettingPassword] = useState(false);
-
-  const heroImage = useMemo(() => {
-    if (LOGIN_BACKGROUNDS.length === 0) return null;
-    return LOGIN_BACKGROUNDS[Math.floor(Math.random() * LOGIN_BACKGROUNDS.length)];
-  }, []);
 
   useEffect(() => {
     if (session) {
@@ -136,71 +125,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-4 py-12">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#090705] px-4 py-8 sm:px-6 lg:py-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 top-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+        <img src={loginHeroImage} alt="" className="h-full w-full scale-110 object-cover opacity-30 blur-2xl" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_48%,rgba(191,137,63,0.18),transparent_38%),linear-gradient(90deg,rgba(8,6,4,0.45),rgba(8,6,4,0.88))]" />
       </div>
 
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-[34px] border border-white/10 bg-white/15 shadow-2xl shadow-black/40 backdrop-blur-3xl dark:border-white/10">
+      <div className="relative w-full max-w-7xl overflow-hidden rounded-[34px] border border-[#d5b06a]/25 bg-[#120d08]/70 shadow-[0_45px_120px_-45px_rgba(0,0,0,0.95)] backdrop-blur-3xl">
         <div
-          className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/10 to-white/5 dark:from-slate-900/70 dark:via-slate-900/40 dark:to-slate-900/60"
+          className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/15"
           aria-hidden="true"
         />
 
-        <div className="relative grid grid-cols-1 overflow-hidden md:grid-cols-[1.25fr,1fr]">
-          <div className="relative flex min-h-[260px] flex-col justify-between overflow-hidden bg-slate-900/80">
-            {heroImage && (
-              <img
-                src={heroImage}
-                alt="Coleção de livros e leituras da Essência"
-                className="absolute inset-0 h-full w-full object-cover opacity-90"
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/55 to-emerald-600/45" aria-hidden="true" />
-
-            <div className="relative z-10 flex flex-col gap-8 p-10 text-slate-100">
-              <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
-                  Essência dos Livros
-                </span>
-                <h3 className="text-3xl font-semibold leading-snug text-white/95">
-                  Leia o essencial, no seu ritmo.
-                </h3>
-                <p className="text-sm text-slate-200/80">
-                  Resumos de livros, filmes e jogos em texto e áudio, com curadoria e um assistente literário com IA.
-                  Descubra o que ler a seguir em um só lugar.
-                </p>
-              </div>
-
-              <div className="space-y-4 text-sm text-slate-200/70">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-emerald-200">
-                    <span className="text-lg" aria-hidden="true">
-                      ⚡
-                    </span>
-                  </div>
-                  <p>
-                    Acesso imediato ao plano gratuito e 7 dias com todos os recursos Premium — assistente literário, voz, audiobooks e
-                    resumos inteligentes.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-emerald-200">
-                    <span className="text-lg" aria-hidden="true">
-                      🔐
-                    </span>
-                  </div>
-                  <p>Se já tiver cadastro, basta informar sua senha. Se for novo por aqui, criamos sua conta automaticamente.</p>
-                </div>
-              </div>
-            </div>
+        <div className="relative grid grid-cols-1 overflow-hidden md:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.8fr)]">
+          <div className="relative min-h-[280px] overflow-hidden bg-black md:min-h-[720px]">
+            <img
+              src={loginHeroImage}
+              alt="Essência dos Livros — leia o essencial, no seu ritmo"
+              className="absolute inset-0 h-full w-full object-cover object-center md:object-[52%_center]"
+            />
+            <div className="absolute inset-0 border border-white/10 shadow-[inset_-35px_0_55px_-45px_rgba(0,0,0,0.9)]" aria-hidden="true" />
           </div>
 
-          <div className="relative bg-white/95 px-8 py-10 sm:px-10 md:pl-12 md:pr-10 dark:bg-slate-950/90">
-            <div className="absolute -top-16 right-10 h-32 w-32 rounded-full bg-emerald-200/10 blur-3xl" aria-hidden="true" />
-            <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-sky-200/10 blur-3xl" aria-hidden="true" />
+          <div className="relative bg-[#fbf6ea]/[0.97] px-7 py-9 sm:px-10 sm:py-10 md:flex md:flex-col md:justify-center md:px-11 dark:bg-[#100d0a]/[0.96]">
+            <div className="absolute -top-16 right-10 h-32 w-32 rounded-full bg-amber-300/10 blur-3xl" aria-hidden="true" />
+            <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-amber-200/10 blur-3xl" aria-hidden="true" />
 
             <div className="relative flex items-start justify-between">
               <div className="space-y-2">
@@ -228,7 +177,7 @@ export default function LoginPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-[0_15px_40px_-20px_rgba(15,23,42,0.35)] focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:focus:border-emerald-300"
+                  className="w-full rounded-xl border border-[#d7c8ac] bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-[0_15px_40px_-20px_rgba(58,39,17,0.3)] focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/25 dark:border-[#4c4032] dark:bg-black/25 dark:text-slate-100 dark:focus:border-amber-300"
                   placeholder="voce@exemplo.com"
                 />
                 <p className={`text-xs leading-relaxed ${emailHelperTone}`}>{emailHelperText}</p>
@@ -249,13 +198,13 @@ export default function LoginPage() {
                     minLength={6}
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-200 bg-white/70 px-4 py-3 pr-12 text-sm text-slate-900 shadow-[0_15px_40px_-20px_rgba(15,23,42,0.35)] focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:focus:border-emerald-300"
+                    className="w-full rounded-xl border border-[#d7c8ac] bg-white/70 px-4 py-3 pr-12 text-sm text-slate-900 shadow-[0_15px_40px_-20px_rgba(58,39,17,0.3)] focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/25 dark:border-[#4c4032] dark:bg-black/25 dark:text-slate-100 dark:focus:border-amber-300"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-500 transition hover:text-emerald-600 dark:text-emerald-300 dark:hover:text-emerald-200"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 transition hover:text-amber-600 dark:text-amber-300 dark:hover:text-amber-200"
                     aria-pressed={passwordVisible}
                   >
                     {passwordVisible ? "Ocultar" : "Mostrar"}
@@ -266,7 +215,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handlePasswordReset}
                     disabled={resettingPassword || loading}
-                    className="text-xs font-semibold text-emerald-600 transition hover:text-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 dark:text-emerald-300 dark:hover:text-emerald-200"
+                    className="text-xs font-semibold text-amber-700 transition hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-amber-300 dark:hover:text-amber-200"
                   >
                     {resettingPassword ? "Enviando link de recuperação..." : "Esqueci minha senha"}
                   </button>
@@ -294,18 +243,18 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-400 via-emerald-500 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-500 hover:to-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#b98232] via-[#d5a04c] to-[#9c671f] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-900/25 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Conectando..." : "Entrar ou Criar conta"}
               </button>
 
               <p className="text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
                 Ao criar, você concorda com nossos{" "}
-                <a href={TERMS_URL} target="_blank" rel="noreferrer" className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-300">
+                <a href={TERMS_URL} target="_blank" rel="noreferrer" className="font-semibold text-amber-700 hover:text-amber-600 dark:text-amber-300">
                   termos de uso
                 </a>{" "}
                 e{" "}
-                <a href={PRIVACY_URL} target="_blank" rel="noreferrer" className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-300">
+                <a href={PRIVACY_URL} target="_blank" rel="noreferrer" className="font-semibold text-amber-700 hover:text-amber-600 dark:text-amber-300">
                   política de privacidade
                 </a>
                 .
