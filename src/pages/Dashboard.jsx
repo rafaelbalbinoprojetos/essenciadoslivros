@@ -1,482 +1,400 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import BookLink from "../components/BookLink.jsx";
+import { AnimatePresence, motion as Motion } from "framer-motion";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Film,
+  FolderArchive,
+  Headphones,
+  LibraryBig,
+  Play,
+  ScrollText,
+  Sparkles,
+  Tags,
+} from "lucide-react";
+import JourneyHomeSection from "../components/JourneyHomeSection.jsx";
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
-import { DEFAULT_COVER_PLACEHOLDER, normalizeCoverUrl } from "../utils/covers.js";
-import { buildAudioSource } from "../utils/media.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import { ensureCoverSrc } from "../utils/covers.js";
+import { hasCinematicExperience } from "../services/narratives.js";
 
-const FLOW_COVERS = [
-  {
-    id: "essencia-binarios",
-    title: "Essência dos Binários",
-    author: "Luna Varella",
-    mood: "Tecnologia & poesia",
-    cover: "Essência Dos Binários.png",
-    detailsId: null,
-  },
-  {
-    id: "ii-a",
-    title: "Interlúdio Infinito",
-    author: "Helena Marçal",
-    mood: "Ficção especulativa",
-    cover: "ii A.png",
-    detailsId: null,
-  },
-  {
-    id: "reeves",
-    title: "O Arco de Reeves",
-    author: "Ícaro Martins",
-    mood: "Biografia visual",
-    cover: "Reeves (1).png",
-    detailsId: null,
-  },
-  {
-    id: "suhiro",
-    title: "Suhiro Ōtomo – Fragmentos",
-    author: "Coletânea Essência",
-    mood: "Arte sequencial",
-    cover: "sUhiro-Ōtomo -.png",
-    detailsId: null,
-  },
-  {
-    id: "va",
-    title: "Vértice Azul",
-    author: "Marina V.",
-    mood: "Romance psicológico",
-    cover: "vá (1).png",
-    detailsId: null,
-  },
-  {
-    id: "flow-zero",
-    title: "Flow Ø",
-    author: "K. Aristeu",
-    mood: "Sci-fi contemplativo",
-    cover: "~I ~ ~ 0.png",
-    detailsId: null,
-  },
-  {
-    id: "james",
-    title: "Cartas para James",
-    author: "Clarice Porto",
-    mood: "Epistolar",
-    cover: "\"i James.png",
-    detailsId: null,
-  },
-  {
-    id: "peter",
-    title: "Peter e o Atlas",
-    author: "Rafael Nunes",
-    mood: "Aventura histórica",
-    cover: "\"PETER (2).png",
-    detailsId: null,
-  },
+const HERO_FLOW_ACCENTS = [
+  { glow: "rgba(118,93,255,0.34)", solid: "#7b5dff" },
+  { glow: "rgba(214,162,92,0.34)", solid: "#d6a25c" },
+  { glow: "rgba(199,91,135,0.34)", solid: "#c75b87" },
+  { glow: "rgba(92,127,140,0.34)", solid: "#5c7f8c" },
+  { glow: "rgba(205,143,76,0.34)", solid: "#cd8f4c" },
 ];
 
-const localCoverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
-const HAS_LOCAL_COVERS = Object.keys(localCoverManifest).length > 0;
-
-function getCoverUrl(fileName) {
-  return new URL(`../bookCover/${fileName}`, import.meta.url).href;
+function getNarrative(book) {
+  return Array.isArray(book?.narrativa) ? book.narrativa[0] : book?.narrativa;
 }
 
-const FEATURED_BOOKS = [
-  {
-    id: "clarice",
-    title: "Clarice em Essência",
-    author: "Clarice Lispector",
-    progress: 62,
-    summaryType: "Resumo IA profundo",
-    highlight:
-      "“Liberdade é pouco. O que eu desejo ainda não tem nome.” — Lembre-se de anotar onde esse pensamento ressoa na sua rotina.",
-    detailsId: null,
-  },
-  {
-    id: "fundamentos",
-    title: "Os Fundamentos da Leitura Atenta",
-    author: "Equipe Essência",
-    progress: 35,
-    summaryType: "Insights rápidos",
-    highlight: "Transforme capítulos em ações com os cartões de foco automático.",
-    detailsId: null,
-  },
-];
-
-const DISCOVERY_PILLS = [
-  { id: "classicos", label: "Clássicos que inspiram", to: "/biblioteca" },
-  { id: "ia", label: "Coleções IA para o seu perfil", to: "/biblioteca" },
-  { id: "audio", label: "Audiobooks para começar agora", to: "/biblioteca" },
-];
-
-function resolveCoverSource(value) {
-  const normalized = normalizeCoverUrl(value);
-  if (!normalized) return DEFAULT_COVER_PLACEHOLDER;
-  if (/^https?:\/\//i.test(normalized) || normalized.startsWith("data:")) {
-    return normalized;
-  }
-  if (!HAS_LOCAL_COVERS) return DEFAULT_COVER_PLACEHOLDER;
-  return getCoverUrl(normalized);
+function sceneCount(book) {
+  return (getNarrative(book)?.faixas ?? []).filter((track) => track.status === "ativo").length;
 }
 
-function handleCoverFallback(event) {
-  event.currentTarget.onerror = null;
-  event.currentTarget.src = DEFAULT_COVER_PLACEHOLDER;
+function coverOf(book, cinematic = false) {
+  return ensureCoverSrc(
+    cinematic
+      ? book?.capa_cinematica_url || book?.capa_url
+      : book?.capa_url || book?.capa_cinematica_url,
+  );
 }
 
-function summarizeHighlight(text, maxLength = 180) {
-  if (!text) return "Cadastre uma sinopse para este título e desbloqueie recomendações personalizadas.";
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength - 3).trim()}...`;
+function shortText(value, limit = 150) {
+  const text = value?.trim();
+  if (!text) return "Uma obra preservada para ser descoberta em diferentes experiências.";
+  return text.length > limit ? `${text.slice(0, limit - 1).trim()}…` : text;
+}
+
+function RailCard({ book, cinematic = false, badge, featured = false }) {
+  return (
+    <article className={`group flex-none ${featured ? "w-[280px] sm:w-[330px]" : "w-[220px] sm:w-[245px]"}`}>
+      <Link
+        to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`}
+        className="block overflow-hidden rounded-[22px] border border-[rgba(var(--color-accent-primary),0.14)] bg-[rgb(var(--surface-card))] shadow-[0_24px_55px_-38px_rgba(32,22,15,0.72)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_65px_-34px_rgba(32,22,15,0.78)]"
+      >
+        <div className={`relative overflow-hidden bg-black/5 p-2 pb-0 ${featured ? "aspect-[4/5]" : "aspect-[3/4]"}`}>
+          <img src={coverOf(book, cinematic)} alt={book.titulo} loading="lazy" className="h-full w-full object-contain" />
+          {badge && (
+            <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/48 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md">
+              {badge}
+            </span>
+          )}
+          <span className="absolute inset-x-2 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent" />
+          <span className="absolute inset-x-5 bottom-4 text-white">
+            <span className="block truncate font-display text-lg font-semibold">{book.titulo}</span>
+            <span className="mt-1 block truncate text-xs text-white/68">{book.autor?.nome ?? "Curadoria Essência"}</span>
+          </span>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
+function CollectionRail({ eyebrow, title, description, to, books, cinematic = false, badge }) {
+  if (!books.length) return null;
+  return (
+    <section className="space-y-5">
+      <header className="flex min-w-0 flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="min-w-0 max-w-2xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.36em] text-[rgb(var(--color-accent-dark))]">{eyebrow}</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-[rgb(var(--text-primary))]">{title}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--text-secondary))]">{description}</p>
+        </div>
+        <Link to={to} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[rgba(var(--color-accent-primary),0.24)] px-4 py-2 text-xs font-semibold text-[rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.08)]">
+          Ver coleção <ArrowRight className="h-4 w-4" />
+        </Link>
+      </header>
+      <div className="flex gap-5 overflow-x-auto pb-5 pt-1 [scrollbar-width:thin]">
+        {books.map((book, index) => <RailCard key={book.id} book={book} cinematic={cinematic} badge={badge} featured={index === 0} />)}
+      </div>
+    </section>
+  );
 }
 
 export default function DashboardPage() {
-  const { items: books, loading: booksLoading, error: booksError, reload: reloadBooks } = useBooksCatalog({ limit: 20, status: "ativo" });
-  const [flowIndex, setFlowIndex] = useState(0);
-  const fallbackFlowDeck = useMemo(() => FLOW_COVERS.map((item) => ({ ...item, cover: resolveCoverSource(item.cover) })), []);
-  const deckLength = fallbackFlowDeck.length || 1;
-  const flowItems = useMemo(() => {
-    if (!books.length) return fallbackFlowDeck;
-    return books.slice(0, deckLength).map((book, index) => ({
-      id: book.id,
-      detailsId: book.id ?? null,
-      title: book.titulo,
-      author: book.autor?.nome ?? "Autor não informado",
-      mood: book.genero?.nome ?? fallbackFlowDeck[index % deckLength].mood,
-      cover: resolveCoverSource(book.capa_url) || fallbackFlowDeck[index % deckLength].cover,
-      highlight: summarizeHighlight(book.sinopse),
-    }));
-  }, [books, deckLength, fallbackFlowDeck]);
-  const totalCovers = flowItems.length;
-  const activeFlow = flowItems[flowIndex] ?? flowItems[0] ?? null;
-  const highlightCards = useMemo(() => {
-    if (!books.length) return FEATURED_BOOKS;
-    return books.slice(0, 2).map((book) => ({
-      id: book.id,
-      detailsId: book.id ?? null,
-      title: book.titulo,
-      author: book.autor?.nome ?? "Autor não informado",
-      summaryType: book.genero?.nome ?? "Seleção Essência",
-      highlight: summarizeHighlight(book.sinopse),
-      pdf_url: book.pdf_url,
-      audio_url: book.audio_url,
-    }));
+  const { user } = useAuth();
+  const { items: books, loading, error, reload } = useBooksCatalog({ limit: 60, status: "ativo" });
+
+  const cinematicBooks = useMemo(() => books.filter(hasCinematicExperience), [books]);
+  const audioBooks = useMemo(() => books.filter((book) => book.audio_url), [books]);
+  const guideBooks = useMemo(() => books.filter((book) => book.pdf_url), [books]);
+  const recentBooks = useMemo(() => [...books].sort((a, b) => new Date(b.data_adicao || 0) - new Date(a.data_adicao || 0)).slice(0, 6), [books]);
+  const heroBooks = useMemo(() => {
+    const featured = books.filter((book) => book.destaque);
+    const candidates = [...featured, ...cinematicBooks, ...books];
+    const seen = new Set();
+
+    return candidates.filter((book) => {
+      if (!book?.id || seen.has(book.id)) return false;
+      seen.add(book.id);
+      return true;
+    }).slice(0, 6);
+  }, [books, cinematicBooks]);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroBook = heroBooks[heroIndex] ?? heroBooks[0] ?? null;
+  const heroAccent = HERO_FLOW_ACCENTS[heroIndex % HERO_FLOW_ACCENTS.length];
+  const heroDeck = useMemo(() => {
+    if (!heroBooks.length) return [];
+    const half = Math.floor(heroBooks.length / 2);
+    return heroBooks.map((book, index) => {
+      let relative = index - heroIndex;
+      if (relative > half) relative -= heroBooks.length;
+      if (relative < -half) relative += heroBooks.length;
+      return { book, relative };
+    });
+  }, [heroBooks, heroIndex]);
+
+  useEffect(() => {
+    if (heroIndex >= heroBooks.length) setHeroIndex(0);
+  }, [heroBooks.length, heroIndex]);
+
+  useEffect(() => {
+    if (heroBooks.length < 2) return undefined;
+    const interval = window.setInterval(() => {
+      setHeroIndex((current) => (current + 1) % heroBooks.length);
+    }, 6500);
+    return () => window.clearInterval(interval);
+  }, [heroBooks.length]);
+
+  const genres = useMemo(() => {
+    const map = new Map();
+    books.forEach((book) => {
+      const name = book.genero?.nome;
+      if (name && !map.has(name)) map.set(name, book);
+    });
+    return [...map.entries()].slice(0, 10);
   }, [books]);
 
-  useEffect(() => {
-    if (!totalCovers) return undefined;
-    const interval = setInterval(() => {
-      setFlowIndex((current) => (current + 1) % totalCovers);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [totalCovers]);
+  const interestRails = useMemo(() => {
+    const groups = new Map();
+    books.forEach((book) => {
+      const name = book.genero?.nome;
+      if (!name) return;
+      if (!groups.has(name)) groups.set(name, []);
+      groups.get(name).push(book);
+    });
+    return [...groups.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 4);
+  }, [books]);
 
-  useEffect(() => {
-    if (totalCovers && flowIndex >= totalCovers) {
-      setFlowIndex(0);
-    }
-  }, [flowIndex, totalCovers]);
+  const stats = useMemo(() => {
+    const collections = new Set(books.map((book) => book.colecao?.id).filter(Boolean)).size;
+    const genreCount = new Set(books.map((book) => book.genero?.id).filter(Boolean)).size;
+    const hours = Math.round(books.reduce((sum, book) => sum + (Number(book.duracao_audio) || 0), 0) / 60);
+    return [
+      { label: "Obras preservadas", value: books.length, icon: LibraryBig },
+      { label: "Registros em áudio", value: audioBooks.length, icon: Headphones },
+      { label: "Memórias narradas", value: cinematicBooks.length, icon: Film },
+      { label: "Cenas arquivadas", value: cinematicBooks.reduce((sum, book) => sum + sceneCount(book), 0), icon: Play },
+      { label: "Guias preservados", value: guideBooks.length, icon: ScrollText },
+      { label: "Universos catalogados", value: genreCount, icon: Tags },
+      { label: "Coleções históricas", value: collections, icon: FolderArchive },
+      { label: "Horas de memória", value: hours, icon: Clock3 },
+    ];
+  }, [audioBooks.length, books, cinematicBooks, guideBooks.length]);
 
-  const flowDeck = useMemo(() => {
-    const sequence = [];
-    if (!totalCovers) return sequence;
-    for (let offset = -2; offset <= 2; offset += 1) {
-      const index = (flowIndex + offset + totalCovers) % totalCovers;
-      sequence.push({
-        ...flowItems[index],
-        offset,
-      });
-    }
-    return sequence;
-  }, [flowIndex, flowItems, totalCovers]);
+  const firstName = user?.user_metadata?.name?.split(" ")[0] || user?.email?.split("@")[0] || "leitor";
+
+  if (loading && !books.length) {
+    return <p className="py-20 text-center text-sm text-[rgb(var(--text-secondary))]">Abrindo o acervo Essência...</p>;
+  }
 
   return (
-    <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-[32px] border border-[#6c63ff]/15 bg-[rgb(var(--surface-card))]/90 p-6 shadow-lg shadow-[#6c63ff]/10 dark:border-white/10 dark:bg-white/5">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -left-28 top-10 h-64 w-64 rounded-full bg-[rgba(var(--color-accent-primary),0.08)] blur-3xl" />
-          <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-[rgba(var(--color-secondary-primary),0.08)] blur-3xl" />
+    <div className="min-w-0 max-w-full space-y-16 overflow-x-hidden pb-14 md:space-y-20">
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-300/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-200">
+          <span>{error}</span><button type="button" onClick={reload} className="font-semibold underline">Tentar novamente</button>
         </div>
-        <div className="relative grid gap-6 md:grid-cols-[1.1fr,0.9fr] lg:grid-cols-[1fr,420px]">
-          <div className="space-y-6 pr-4">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#6c63ff]/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[#4c3f8f] dark:bg-[#cfc2ff]/15 dark:text-[#cfc2ff]">
-                Últimos livros
-              </span>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-[rgb(var(--text-primary))]">
-                Entre no fluxo Essência e descubra uma capa por vez
-              </h2>
-              <p className="mt-3 text-sm text-[rgb(var(--text-secondary))]">
-                Curadoria atualizada automaticamente com seus títulos mais recentes. Cada capa traz um mood
-                e um atalho para mergulhar no livro certo, no momento certo.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-2xl border border-[color:rgba(var(--color-accent-primary),0.25)] px-4 py-2 text-sm font-semibold text-[color:rgb(var(--color-accent-dark))] transition hover:border-[color:rgba(var(--color-accent-primary),0.45)] hover:text-[color:rgb(var(--color-accent-primary))]"
-                onClick={() => setFlowIndex((current) => (current - 1 + totalCovers) % totalCovers)}
-              >
-                ← Voltar capa
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[color:rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[color:rgba(var(--color-accent-primary),0.35)] transition hover:bg-[color:rgb(var(--color-accent-dark))]"
-                onClick={() => setFlowIndex((current) => (current + 1) % totalCovers)}
-              >
-                Avançar capa →
-              </button>
-            </div>
-            <div className="rounded-2xl border border-[color:rgba(var(--color-accent-primary),0.2)] bg-[rgba(255,255,255,0.75)] p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
-              <strong className="font-semibold text-[color:rgb(var(--color-accent-dark))]">
-                <BookLink
-                  bookId={activeFlow?.detailsId}
-                  className="text-[color:rgb(var(--color-accent-dark))]"
-                >
-                  {activeFlow?.title ?? "Selecione um título"}
-                </BookLink>
-              </strong>
-              <p className="text-xs uppercase tracking-[0.26em] text-[color:rgba(var(--color-secondary-primary),0.85)]">
-                {activeFlow?.mood}
-              </p>
-              <p className="mt-2 text-[rgb(var(--text-secondary))]">
-                {activeFlow?.author} · Explore insights personalizados, playlists de leitura e notas inteligentes vinculadas ao título.
-              </p>
-            </div>
+      )}
+
+      {heroBook && (
+        <section className="relative min-h-[580px] overflow-hidden rounded-[34px] border border-white/10 bg-[#0d0b0a] text-white shadow-[0_45px_100px_-58px_rgba(20,12,8,0.92)]">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-20 top-10 h-72 w-72 rounded-full blur-[120px] transition-colors duration-700" style={{ background: heroAccent.glow }} />
+            <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full blur-[130px] transition-colors duration-700" style={{ background: heroAccent.glow }} />
+            <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(8,7,6,0.78),rgba(13,11,10,0.92)_58%,rgba(13,11,10,0.98))]" />
           </div>
-        <div
-          className="relative flex h-[320px] items-center justify-center overflow-visible"
-          style={{ perspective: "1400px" }}
-        >
-            {flowDeck.map((item) => {
-              const distance = Math.abs(item.offset);
-              const isCenter = item.offset === 0;
-              const translateX = `${item.offset * 90}%`;
-              const translateZ = isCenter ? 80 : 30 - distance * 10;
-              const rotate = item.offset * -6;
-              const opacity = isCenter ? 1 : distance === 1 ? 0.75 : 0.45;
-              const scale = isCenter ? 1 : distance === 1 ? 0.88 : 0.78;
-              return (
-                <article
-                  key={item.id}
-                  className="absolute flex h-[260px] w-[190px] flex-col overflow-hidden rounded-[28px] border border-white/20 shadow-2xl will-change-transform"
-                  style={{
-                    transform: `translateX(${translateX}) translateZ(${translateZ}px) rotate(${rotate}deg) scale(${scale})`,
-                    opacity,
-                    zIndex: 50 - distance,
-                    transition:
-                      "transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 500ms ease, z-index 650ms",
-                  }}
-                >
-                  {item.detailsId ? (
-                    <BookLink
-                      bookId={item.detailsId}
-                      className="block h-full w-full"
-                      stopPropagation
+
+          <div className="relative grid min-h-[580px] min-w-0 lg:grid-cols-[minmax(340px,1fr)_minmax(0,1.18fr)]">
+            <div className="flex items-center justify-center overflow-hidden px-2 pb-0 pt-8 sm:px-8 lg:p-10">
+              <div className="relative mx-auto h-[380px] w-full max-w-[600px] sm:h-[460px]" style={{ perspective: "1100px", perspectiveOrigin: "50% 50%" }}>
+                <span className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(218,174,91,0.16)_0%,rgba(218,174,91,0.06)_42%,transparent_72%)] blur-2xl" />
+                {heroDeck.map(({ book, relative }) => {
+                  const distance = Math.abs(relative);
+                  const isActive = relative === 0;
+                  const transform = `translate(-50%, -50%) translateX(${relative * 86}px) translateZ(${210 - distance * 68}px) rotateY(${relative * -22}deg) scale(${isActive ? 1 : 0.86})`;
+                  const opacity = distance > 2 ? 0 : Math.max(0, 0.92 - distance * 0.25);
+                  const image = <img src={coverOf(book, hasCinematicExperience(book))} alt={`Capa de ${book.titulo}`} className="h-full w-full object-contain pt-2 brightness-[0.97] contrast-[1.08]" draggable={false} />;
+
+                  return (
+                    <article
+                      key={book.id}
+                      className="absolute left-1/2 top-1/2 h-[340px] w-[255px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[24px] border border-white/10 bg-black/40 shadow-[0_25px_45px_-25px_rgba(0,0,0,0.8)] transition-all sm:h-[430px] sm:w-[322px] sm:rounded-[28px]"
+                      style={{
+                        transform,
+                        opacity,
+                        zIndex: 50 - distance,
+                        transition: "transform 800ms cubic-bezier(0.17,0.67,0.23,0.99), opacity 400ms ease, z-index 400ms",
+                        transformStyle: "preserve-3d",
+                        pointerEvents: distance > 2 ? "none" : "auto",
+                      }}
                     >
-                      <img
-                        src={item.cover}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                        draggable={false}
-                        onError={handleCoverFallback}
-                      />
-                    </BookLink>
-                  ) : (
-                    <img
-                      src={item.cover}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                      draggable={false}
-                      onError={handleCoverFallback}
-                    />
-                  )}
-                  <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/60 px-3 py-2 text-xs text-white backdrop-blur">
-                    <p className="font-semibold">
-                      <BookLink bookId={item.detailsId} className="text-white" stopPropagation>
-                        {item.title}
-                      </BookLink>
-                    </p>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/80">{item.mood}</p>
+                      {isActive ? (
+                        <Link to={`/biblioteca/${book.id}`} className="block h-full w-full" aria-label={`Abrir ${book.titulo}`}>{image}</Link>
+                      ) : (
+                        <button type="button" onClick={() => setHeroIndex(heroBooks.findIndex((item) => item.id === book.id))} className="block h-full w-full" aria-label={`Destacar ${book.titulo}`}>{image}</button>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+            <Motion.div
+              key={`hero-copy-${heroBook.id}`}
+              initial={{ x: 90, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 90, opacity: 0 }}
+              transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+              className="flex min-w-0 flex-col justify-center p-6 sm:p-7 md:p-11 lg:px-12 lg:py-14 xl:px-16"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-white/48">Bem-vindo de volta, {firstName}</p>
+              <p className="mt-4 text-sm text-white/62">Hoje é um excelente dia para revisitar grandes histórias.</p>
+              <p className="mt-9 text-[10px] font-bold uppercase tracking-[0.34em] text-[rgb(var(--color-accent-light))]">Seleção do acervo</p>
+              <h1 className="mt-3 max-w-3xl break-words font-display text-4xl font-semibold leading-[1.02] md:text-6xl">{heroBook.titulo}</h1>
+              <p className="mt-4 text-base text-white/70">{heroBook.autor?.nome ?? "Curadoria Essência"} · {heroBook.genero?.nome ?? "Acervo Essência"}</p>
+              <p className="mt-6 max-w-2xl text-sm leading-7 text-white/68">{shortText(heroBook.sinopse, 300)}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to={`/biblioteca/${heroBook.id}${hasCinematicExperience(heroBook) ? "#narrativa" : ""}`} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[rgb(var(--color-accent-dark))]">
+                  <Play className="h-4 w-4" fill="currentColor" /> Continuar
+                </Link>
+                <Link to={`/biblioteca/${heroBook.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/14">
+                  Explorar obra <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/14 pt-5 text-xs text-white/55">
+                <span>{heroBook.audio_url ? "Audiobook disponível" : "Curadoria editorial"}</span>
+                <span>{sceneCount(heroBook) ? `${sceneCount(heroBook)} cenas cinematográficas` : "Experiência museológica"}</span>
+                {heroBook.duracao_audio && <span>{heroBook.duracao_audio} min de áudio</span>}
+              </div>
+
+              {heroBooks.length > 1 && (
+                <div className="mt-8 flex items-center justify-between gap-5">
+                  <div className="flex items-center gap-2" aria-label="Selecionar obra em destaque">
+                    {heroBooks.map((book, index) => (
+                      <button key={book.id} type="button" onClick={() => setHeroIndex(index)} aria-label={`Exibir ${book.titulo}`} aria-current={index === heroIndex ? "true" : undefined} className={`h-1.5 rounded-full transition-all duration-300 ${index === heroIndex ? "w-9 bg-[rgb(var(--color-accent-primary))]" : "w-2.5 bg-white/25 hover:bg-white/50"}`} />
+                    ))}
                   </div>
-                </article>
-              );
-            })}
-            <div className="pointer-events-none absolute inset-0 rounded-[32px] shadow-inner shadow-black/10" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setHeroIndex((current) => (current - 1 + heroBooks.length) % heroBooks.length)} aria-label="Obra anterior" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronLeft className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => setHeroIndex((current) => (current + 1) % heroBooks.length)} aria-label="Próxima obra" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronRight className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              )}
+            </Motion.div>
+            </AnimatePresence>
           </div>
-        </div>
-      </section>
-
-      {booksError && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200/60 bg-red-50/80 p-4 text-sm text-red-900 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-100">
-          <p>{booksError}</p>
-          <button
-            type="button"
-            onClick={reloadBooks}
-            className="rounded-full border border-red-400/30 px-4 py-1 font-semibold text-red-900 hover:bg-red-100/60 dark:text-red-100"
-          >
-            Tentar novamente
-          </button>
-        </div>
+        </section>
       )}
-
-      {booksLoading && !booksError && (
-        <p className="text-xs uppercase tracking-[0.3em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Sincronizando catálogo...</p>
-      )}
-
-      <section className="overflow-hidden rounded-3xl border border-[#6c63ff]/20 bg-white/95 shadow-lg shadow-[#6c63ff]/10 dark:border-white/10 dark:bg-slate-900/80">
-        <div className="grid gap-8 p-8 md:grid-cols-[1.15fr,0.85fr]">
-          <div className="space-y-5">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[color:rgba(var(--color-accent-primary),0.12)] px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:rgb(var(--color-accent-dark))]">
-              Essência do dia
-            </span>
-            <h2 className="font-display text-3xl font-semibold text-[#1f2933] dark:text-white">
-              Continue sua jornada com serenidade e propósito
-            </h2>
-            <p className="text-sm text-[#7a6c5e]/85 dark:text-[#cfc2ff]/80">
-              Escolhemos trechos, resumos e audiobooks de acordo com seu ritmo. Retome um título em andamento ou explore algo
-              completamente novo com o apoio da nossa IA literária.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/biblioteca"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#6c63ff] via-[#4c3f8f] to-[#b38b59] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#6c63ff]/30 transition hover:from-[#574de3] hover:to-[#9c784f]"
-              >
-                Retomar leitura
-              </Link>
-              <Link
-                to="/assistente"
-                className="inline-flex items-center gap-2 rounded-xl border border-[#6c63ff]/30 px-5 py-2.5 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/60 hover:text-[#3c2f75] dark:border-[#cfc2ff]/30 dark:text-[#cfc2ff]"
-              >
-                Pedir sugestão à IA
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[#6c63ff]/15 bg-[#f9f5ef]/80 p-5 shadow-inner dark:border-white/10 dark:bg-white/5">
-            <p className="text-xs uppercase tracking-[0.24em] text-[#b38b59] dark:text-[#cfc2ff]/70">Hoje eu quero</p>
-            <div className="mt-4 grid gap-3 text-sm text-[#4b3f35] dark:text-[#cfc2ff]">
-              <button className="rounded-xl border border-[#6c63ff]/20 bg-white/70 px-4 py-3 text-left shadow-sm transition hover:border-[#6c63ff]/40 hover:shadow-md dark:border-white/10 dark:bg-slate-900/70">
-                <strong className="block font-semibold text-[#4c3f8f] dark:text-[#cfc2ff]">Um insight rápido</strong>
-                Receba um resumo em 3 parágrafos com cartões de ação.
-              </button>
-              <button className="rounded-xl border border-[#6c63ff]/20 bg-white/70 px-4 py-3 text-left shadow-sm transition hover:border-[#6c63ff]/40 hover:shadow-md dark:border-white/10 dark:bg-slate-900/70">
-                <strong className="block font-semibold text-[#4c3f8f] dark:text-[#cfc2ff]">Um trecho para refletir</strong>
-                A Essência sugere uma citação marcante para começar o dia.
-              </button>
-              <button className="rounded-xl border border-[#6c63ff]/20 bg-white/70 px-4 py-3 text-left shadow-sm transition hover:border-[#6c63ff]/40 hover:shadow-md dark:border-white/10 dark:bg-slate-900/70">
-                <strong className="block font-semibold text-[#4c3f8f] dark:text-[#cfc2ff]">Um audiobook breve</strong>
-                Liste narrativas com menos de 15 minutes para acompanhar seus intervalos.
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section>
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-[#1f2933] dark:text-white">Livros em destaque</h3>
-            <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">Continue a leitura ou revise as notas guardadas.</p>
-          </div>
-          <Link
-            to="/biblioteca"
-            className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-3 py-1.5 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
-          >
-            Ver biblioteca completa →
-          </Link>
+        <header className="max-w-2xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.38em] text-[rgb(var(--color-accent-dark))]">O legado preservado</p>
+          <h2 className="mt-2 font-display text-4xl font-semibold text-[rgb(var(--text-primary))]">Cada número representa uma experiência preservada.</h2>
         </header>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {highlightCards.map((book) => (
-            <article
-              key={book.id}
-              className="flex flex-col gap-4 rounded-3xl border border-[#6c63ff]/15 bg-white/90 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#6c63ff]/30 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/80"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#b38b59] dark:text-[#cfc2ff]/60">{book.summaryType}</p>
-                  <h4 className="mt-1 text-lg font-semibold text-[#1f2933] dark:text-white">
-                    <BookLink bookId={book.detailsId} className="text-[#1f2933] dark:text-white">
-                      {book.title}
-                    </BookLink>
-                  </h4>
-                  <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">{book.author}</p>
-                </div>
-                {(buildAudioSource(book.audio_url) || book.pdf_url) && (
-                  <span className="rounded-full border border-[#6c63ff]/20 px-3 py-1 text-xs font-semibold text-[#4c3f8f] dark:border-[#cfc2ff]/30 dark:text-[#cfc2ff]">
-                    {[buildAudioSource(book.audio_url) && "Audiobook", book.pdf_url && "PDF"].filter(Boolean).join(" · ")}
-                  </span>
-                )}
-              </div>
-              <blockquote className="rounded-2xl border border-[#6c63ff]/15 bg-[#f2ede4]/80 px-4 py-3 text-sm text-[#4b3f35] dark:border-white/10 dark:bg-white/5 dark:text-[#cfc2ff]">
-                {book.highlight}
-              </blockquote>
-              <div className="flex flex-wrap gap-3">
-                {book.pdf_url ? (
-                  <a
-                    href={book.pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
-                  >
-                    Abrir PDF
-                  </a>
-                ) : (
-                  <Link
-                    to={book.detailsId ? `/biblioteca/${book.detailsId}` : "/biblioteca"}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#6c63ff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4c3f8f]"
-                  >
-                    Ver na biblioteca
-                  </Link>
-                )}
-                {buildAudioSource(book.audio_url) ? (
-                  <a
-                    href={buildAudioSource(book.audio_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75] dark:text-[#cfc2ff]"
-                  >
-                    Ouvir áudio
-                  </a>
-                ) : (
-                  <Link
-                    to={book.detailsId ? `/biblioteca/${book.detailsId}` : "/biblioteca"}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-4 py-2 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
-                  >
-                    Explorar detalhes
-                  </Link>
-                )}
-              </div>
-            </article>
+        <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+          {stats.map(({ label, value, icon }) => (
+            <div key={label} className="group rounded-[20px] border border-[rgba(var(--color-accent-primary),0.13)] bg-[rgba(var(--surface-card),0.72)] p-4 shadow-[0_18px_40px_-34px_rgba(30,20,12,0.55)] transition hover:-translate-y-0.5 hover:border-[rgba(var(--color-accent-primary),0.3)]">
+              {React.createElement(icon, { className: "h-4 w-4 text-[rgb(var(--color-accent-primary))]" })}
+              <strong className="mt-5 block font-display text-3xl font-semibold text-[rgb(var(--text-primary))]">{value}</strong>
+              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.13em] text-[rgb(var(--text-subtle))]">{label}</span>
+            </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-[#1f2933] dark:text-white">Descobertas recomendadas</h3>
-            <p className="text-sm text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">Use os atalhos abaixo para explorar novas coleções.</p>
+      {genres.length > 0 && (
+        <section>
+          <header className="flex min-w-0 flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.38em] text-[rgb(var(--color-accent-dark))]">Descubra por afinidade</p><h2 className="mt-2 font-display text-4xl font-semibold text-[rgb(var(--text-primary))]">Explore Universos</h2></div>
+            <Link to="/mural" className="hidden text-sm font-semibold text-[rgb(var(--color-accent-dark))] sm:inline">Ver todos →</Link>
+          </header>
+          <div className="mt-7 grid auto-rows-[105px] gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {genres.map(([genre, book], index) => (
+              <Link key={genre} to="/mural" className={`group relative overflow-hidden rounded-[24px] border border-white/10 ${index === 0 ? "row-span-3 sm:col-span-2 lg:col-span-2" : index === 3 || index === 6 ? "row-span-3" : "row-span-2"}`}>
+                <img src={coverOf(book)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <span className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" />
+                <span className="absolute inset-x-5 bottom-5 font-display text-2xl font-semibold text-white">{genre}</span>
+              </Link>
+            ))}
           </div>
-          <Link
-            to="/assistente?prompt=recomendar"
-            className="inline-flex items-center gap-2 rounded-lg border border-[#6c63ff]/25 px-3 py-1.5 text-sm font-semibold text-[#4c3f8f] transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75]"
-          >
-            Conversar com a IA →
-          </Link>
-        </header>
+        </section>
+      )}
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          {DISCOVERY_PILLS.map((pill) => (
-            <Link
-              key={pill.id}
-              to={pill.to}
-              className="inline-flex items-center gap-2 rounded-2xl border border-[#6c63ff]/25 bg-white/70 px-4 py-2 text-sm font-semibold text-[#4c3f8f] shadow-sm transition hover:border-[#6c63ff]/45 hover:text-[#3c2f75] dark:border-[#cfc2ff]/20 dark:bg-white/5 dark:text-[#cfc2ff]"
-            >
-              {pill.label}
+      <div className="space-y-16">
+        {interestRails.map(([genre, genreBooks], index) => (
+          <CollectionRail
+            key={genre}
+            eyebrow={index === 0 ? "Continue explorando" : "Acervos por afinidade"}
+            title={genre}
+            description={`Obras de ${genre.toLocaleLowerCase("pt-BR")} reunidas para você escolher a história antes do formato.`}
+            to="/mural"
+            books={genreBooks.slice(0, 10)}
+            badge={index === 0 ? "Em destaque" : genre}
+          />
+        ))}
+        <CollectionRail eyebrow="Chegaram ao arquivo" title="Recém adicionados" description="As preservações mais recentes do acervo Essência." to="/mural" books={recentBooks} badge="Novo" />
+      </div>
+
+      {heroBook && (
+        <section className="grid overflow-hidden rounded-[32px] border border-[rgba(var(--color-accent-primary),0.16)] bg-[rgb(var(--surface-card))] shadow-[0_34px_80px_-58px_rgba(35,22,14,0.78)] lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="relative flex min-h-[420px] flex-col bg-black/5 p-7">
+            <Link to={`/biblioteca/${heroBook.id}`} className="block">
+              <img src={coverOf(heroBook)} alt={heroBook.titulo} className="mx-auto h-full max-h-[440px] w-full object-contain" />
+            </Link>
+            <AnimatePresence mode="wait" initial={false}>
+              <Motion.div
+                key={`experience-caption-${heroBook.id}`}
+                initial={{ y: 12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="mt-6 border-t border-[rgba(var(--color-accent-primary),0.16)] pt-5"
+              >
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[rgb(var(--color-accent-dark))]">Obra em destaque</p>
+                <h3 className="mt-2 font-display text-2xl font-semibold text-[rgb(var(--text-primary))]">{heroBook.titulo}</h3>
+                <p className="mt-1 text-xs text-[rgb(var(--text-subtle))]">{heroBook.autor?.nome ?? "Curadoria Essência"}</p>
+                <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">{shortText(heroBook.sinopse, 190)}</p>
+              </Motion.div>
+            </AnimatePresence>
+          </div>
+          <div className="flex flex-col justify-center p-7 md:p-12">
+            <p className="text-[10px] font-bold uppercase tracking-[0.38em] text-[rgb(var(--color-accent-dark))]">O diferencial Essência</p>
+            <h2 className="mt-3 font-display text-4xl font-semibold text-[rgb(var(--text-primary))]">Uma obra. Cinco maneiras de vivê-la.</h2>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-[rgb(var(--text-secondary))]">A obra não termina na última página. Ela pode ser lida, ouvida, revivida e compreendida como parte de um legado maior.</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {[
+                { title: "Ler", text: "Entre na obra pelo texto integral.", icon: BookOpen },
+                { title: "Ouvir", text: "Leve a história para outros ritmos.", icon: Headphones },
+                { title: "Reviver", text: "Atravesse cenas narradas como memória.", icon: Film },
+                { title: "Explorar", text: "Descubra documentos e camadas do acervo.", icon: ScrollText },
+                { title: "Conhecer o legado", text: "Entenda por que esta obra permanece.", icon: Sparkles },
+              ].map(({ title, text, icon }) => (
+                <article key={title} className="group rounded-[20px] border border-[rgba(var(--color-accent-primary),0.14)] bg-[rgba(var(--surface-base),0.55)] p-5 transition hover:-translate-y-0.5 hover:border-[rgba(var(--color-accent-primary),0.32)]">
+                  {React.createElement(icon, { className: "h-8 w-8 text-[rgb(var(--color-accent-primary))]" })}
+                  <strong className="mt-5 block font-display text-xl text-[rgb(var(--text-primary))]">{title}</strong>
+                  <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-secondary))]">{text}</p>
+                </article>
+              ))}
+            </div>
+            <Link to={`/biblioteca/${heroBook.id}`} className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white">Conhecer a experiência <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+        </section>
+      )}
+
+      <JourneyHomeSection />
+
+      <section>
+        <header><p className="text-[10px] font-bold uppercase tracking-[0.38em] text-[rgb(var(--color-accent-dark))]">Diário do arquivo</p><h2 className="mt-2 font-display text-4xl font-semibold text-[rgb(var(--text-primary))]">Novas entradas no acervo</h2></header>
+        <div className="mt-7 max-w-4xl border-l border-[rgba(var(--color-accent-primary),0.25)] pl-6">
+          {recentBooks.map((book, index) => (
+            <Link key={book.id} to={`/biblioteca/${book.id}`} className="group relative grid gap-3 border-b border-[rgba(var(--color-accent-primary),0.1)] py-5 sm:grid-cols-[90px_1fr_auto] sm:items-center">
+              <span className="absolute -left-[30px] top-8 h-2 w-2 rounded-full bg-[rgb(var(--color-accent-primary))] ring-4 ring-[rgb(var(--surface-base))]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[rgb(var(--text-subtle))]">{index === 0 ? "Hoje" : index < 3 ? "Ontem" : "Esta semana"}</span>
+              <span><strong className="block font-display text-lg text-[rgb(var(--text-primary))]">{book.titulo}</strong><span className="mt-1 block text-sm text-[rgb(var(--text-secondary))]">{hasCinematicExperience(book) ? "Nova memória cinematográfica" : book.pdf_url ? "Novo guia editorial" : "Nova obra preservada"}</span></span>
+              <ArrowRight className="hidden h-4 w-4 text-[rgb(var(--color-accent-primary))] transition group-hover:translate-x-1 sm:block" />
             </Link>
           ))}
         </div>
       </section>
+
     </div>
   );
 }

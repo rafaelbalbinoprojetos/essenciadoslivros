@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   const planKey = typeof plan === "string" ? plan.toLowerCase() : DEFAULT_PLAN_ID;
   const planConfig = PLAN_DETAILS[planKey] ?? PLAN_DETAILS[DEFAULT_PLAN_ID];
 
-  const origin = req.headers.origin || process.env.APP_ORIGIN || "https://grana.app";
+  const origin = req.headers.origin || process.env.APP_ORIGIN || "https://essenciadoslivros.vercel.app";
   const successUrl = process.env.MERCADOPAGO_SUCCESS_URL || `${origin}/assinatura/sucesso`;
   const failureUrl = process.env.MERCADOPAGO_FAILURE_URL || `${origin}/assinatura/erro`;
   const pendingUrl = process.env.MERCADOPAGO_PENDING_URL || `${origin}/assinatura/pendente`;
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   const preferencePayload = {
     items: [
       {
-        id: `granaapp-${planConfig.id}`,
+        id: `essencia-${planConfig.id}`,
         title: planConfig.name,
         description: planConfig.description,
         quantity: 1,
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     payer: {
       email,
     },
-    statement_descriptor: "GRANAAPP",
+    statement_descriptor: "ESSENCIALIVROS",
     auto_return: "approved",
     back_urls: {
       success: successUrl,

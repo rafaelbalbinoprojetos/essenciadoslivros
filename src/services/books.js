@@ -10,8 +10,12 @@ const BOOK_SELECT_FIELDS = `
   subtitulo,
   sinopse,
   capa_url,
+  capa_cinematica_url,
   pdf_url,
   audio_url,
+  tem_experiencia_cinematica,
+  titulo_cinematico,
+  descricao_cinematica,
   status,
   destaque,
   duracao_audio,
@@ -28,6 +32,14 @@ const BOOK_SELECT_FIELDS = `
   colecao:colecao_id (
     id,
     nome
+  ),
+  narrativa:narrativas (
+    id,
+    status,
+    faixas:narrativa_faixas (
+      id,
+      status
+    )
   )
 `;
 
@@ -111,6 +123,13 @@ export async function getBookById(bookId) {
 
 export async function createBook(payload) {
   const { data, error } = await supabase.from(BOOKS_TABLE).insert(payload).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateBook(id, payload) {
+  if (!id) throw new Error("Informe o identificador do livro.");
+  const { data, error } = await supabase.from(BOOKS_TABLE).update(payload).eq("id", id).select().single();
   if (error) throw error;
   return data;
 }

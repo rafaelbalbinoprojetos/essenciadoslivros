@@ -57,8 +57,12 @@ create table if not exists livros (
   colecao_id uuid references colecoes(id) on delete set null,
   sinopse text,
   capa_url text,
+  capa_cinematica_url text,
   pdf_url text,
   audio_url text,
+  tem_experiencia_cinematica boolean not null default false,
+  titulo_cinematico text,
+  descricao_cinematica text,
   duracao_audio numeric,
   data_lancamento date,
   data_adicao timestamp default now(),
@@ -87,6 +91,7 @@ create table if not exists avaliacoes (
   livro_id uuid references livros(id) on delete cascade,
   nota numeric check (nota between 0 and 5),
   comentario text,
+  usuario_nome text,
   criado_em timestamp default now(),
   unique (usuario_id, livro_id)
 );
@@ -130,10 +135,9 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce(
-    (auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean,
-    false
-  );
+  select
+    lower(coalesce(auth.jwt() ->> 'email', '')) = lower('balbino10@hotmail.com')
+    or coalesce((auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean, false);
 $$;
 
 -- =============================================================
@@ -147,7 +151,9 @@ alter table progresso_leitura enable row level security;
 alter table avaliacoes        enable row level security;
 alter table assinaturas       enable row level security;
 
--- ---------- CATÁLOGO: leitura p/ logados, escrita só admin ----------
+-- ---------- CATÁLOGO: leitura p/ logados, escrita SÓ admin ----------
+-- Modelo escolhido: só o admin (balbino10@hotmail.com, ver is_admin())
+-- cria/edita/apaga o acervo. Leitura liberada a qualquer usuário logado.
 drop policy if exists "catalogo_select_autores"  on autores;
 drop policy if exists "catalogo_select_generos"  on generos;
 drop policy if exists "catalogo_select_colecoes" on colecoes;
@@ -179,12 +185,15 @@ create policy "progresso_insert" on progresso_leitura for insert with check (aut
 create policy "progresso_update" on progresso_leitura for update using (auth.uid() = usuario_id);
 
 -- ---------- AVALIAÇÕES: cada um vê/edita a sua ----------
+-- Avaliações: leitura pública (comunidade), escrita só do dono.
 drop policy if exists "avaliacoes_select" on avaliacoes;
 drop policy if exists "avaliacoes_insert" on avaliacoes;
 drop policy if exists "avaliacoes_update" on avaliacoes;
-create policy "avaliacoes_select" on avaliacoes for select using (auth.uid() = usuario_id);
-create policy "avaliacoes_insert" on avaliacoes for insert with check (auth.uid() = usuario_id);
-create policy "avaliacoes_update" on avaliacoes for update using (auth.uid() = usuario_id);
+drop policy if exists "avaliacoes_select_publico" on avaliacoes;
+drop policy if exists "avaliacoes_write_dono" on avaliacoes;
+create policy "avaliacoes_select_publico" on avaliacoes for select to authenticated using (true);
+create policy "avaliacoes_write_dono" on avaliacoes for all to authenticated
+  using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
 
 -- ---------- ASSINATURAS: usuário só LÊ a sua. Escrita = só backend ----------
 -- IMPORTANTE: não criamos política de escrita aqui de propósito.

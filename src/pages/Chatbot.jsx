@@ -5,15 +5,15 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { authHeaders } from "../lib/supabase.js";
 
 const SUGGESTED_PROMPTS = [
-  "Registrar despesa: gastei 25 reais com lanche hoje.",
-  "Recebi 5.000 reais de salário no dia 5.",
-  "Quanto gastei com alimentação neste mês?",
-  "Cadastre que comprei 10 ações da Petrobras por 300 reais.",
-  "Resumo das rendas na última semana.",
+  "Me recomende um livro de filosofia para começar a semana.",
+  "Faça um resumo em 3 parágrafos de \"Dom Casmurro\".",
+  "Quero uma citação marcante para refletir hoje.",
+  "Sugira audiobooks com menos de 20 minutos.",
+  "Monte um roteiro de leitura sobre estoicismo.",
 ];
 
 const INITIAL_ASSISTANT_MESSAGE =
-  "Olá! Sou o assistente do GranaApp. Posso registrar despesas, rendas, investimentos, horas extras e gerar resumos. Como posso ajudar?";
+  "Olá! Sou o assistente literário da Essência dos Livros. Posso recomendar leituras, resumir obras, sugerir citações e montar roteiros. Como posso ajudar?";
 
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 
@@ -91,12 +91,12 @@ export default function ChatbotPage() {
   const canStartTrial = !hasPremiumAccess && (!userMetadata.trial_status || userMetadata.trial_status === "eligible");
   const requestOpenPlans = useCallback(() => {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("granaapp:open-plans"));
+      window.dispatchEvent(new CustomEvent("essencia:open-plans"));
     }
   }, []);
   const requestActivateTrial = useCallback(() => {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("granaapp:activate-trial"));
+      window.dispatchEvent(new CustomEvent("essencia:activate-trial"));
     }
   }, []);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -326,10 +326,10 @@ export default function ChatbotPage() {
     return (
       <div className="space-y-8">
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Assistente financeiro</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Assistente literário</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Desbloqueie o assistente com IA para registrar lançamentos por texto ou voz, gerar relatórios inteligentes e
-            receber recomendações em tempo real.
+            Desbloqueie o assistente com IA para receber recomendações de leitura, resumos sob medida e roteiros
+            personalizados — por texto ou voz.
           </p>
         </header>
 
@@ -344,8 +344,8 @@ export default function ChatbotPage() {
               <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">Função exclusiva do plano Premium</h2>
               <p className="text-sm leading-relaxed">
                 {canStartTrial
-                  ? "Ative agora o teste Premium gratuito para conversar com o assistente inteligente, entender seus gastos e cadastrar lançamentos por voz."
-                  : "Seu teste gratuito já foi utilizado. Faça o upgrade para continuar com os comandos por voz, relatórios inteligentes e recomendações automáticas."}
+                  ? "Ative agora o teste Premium gratuito para conversar com o assistente literário, descobrir leituras e pedir resumos por voz."
+                  : "Seu teste gratuito já foi utilizado. Faça o upgrade para continuar com os comandos por voz, resumos inteligentes e recomendações personalizadas."}
               </p>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -370,7 +370,7 @@ export default function ChatbotPage() {
               <ul className="space-y-2 text-sm text-emerald-800/90 dark:text-emerald-100/90">
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-lg leading-none">•</span>
-                  <span>Gerencie despesas, rendas, investimentos e horas extras apenas descrevendo o movimento.</span>
+                  <span>Peça recomendações de livros e roteiros de leitura descrevendo o que você procura.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-lg leading-none">•</span>
@@ -378,7 +378,7 @@ export default function ChatbotPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-lg leading-none">•</span>
-                  <span>Receba relatórios inteligentes e resumos prontos em poucos segundos.</span>
+                  <span>Receba resumos em texto e citações marcantes em poucos segundos.</span>
                 </li>
               </ul>
 
@@ -391,16 +391,16 @@ export default function ChatbotPage() {
           <aside className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Prévia do que você desbloqueia</h3>
             <ul className="space-y-2">
-              <li>• “Registre que paguei 120 reais na conta de luz ontem, categoria moradia.”</li>
-              <li>• “Quanto gastei com alimentação nas últimas 2 semanas?”</li>
-              <li>• “Cadastre que recebi 300 reais de freelance hoje.”</li>
-              <li>• “Quais investimentos renderam mais neste mês?”</li>
+              <li>• “Recomende três romances brasileiros para quem ama Clarice Lispector.”</li>
+              <li>• “Resuma os principais argumentos de \"O Mito de Sísifo\".”</li>
+              <li>• “Quero um audiobook curto de fantasia para hoje à noite.”</li>
+              <li>• “Monte um roteiro de leitura de 4 semanas sobre estoicismo.”</li>
             </ul>
 
             <div className="rounded-2xl border border-dashed border-temaSky/40 bg-temaSky/5 p-4 text-xs text-gray-500 dark:border-temaEmerald/40 dark:bg-temaEmerald/10 dark:text-gray-200">
               <p className="font-semibold text-gray-700 dark:text-gray-100">Dica</p>
               <p className="mt-2">
-                Combine comandos (“registra e já me fala o total do mês”) para ganhar ainda mais velocidade no seu controle financeiro.
+                Combine pedidos (“resume e já sugere outra leitura parecida”) para descobrir mais em menos tempo.
               </p>
             </div>
           </aside>
@@ -413,10 +413,10 @@ export default function ChatbotPage() {
     <div className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          Assistente financeiro
+          Assistente literário
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Converse com o bot para registrar despesas, rendas, investimentos e consultar resumos usando texto ou voz.
+          Converse com a curadoria para descobrir leituras, pedir resumos e citações usando texto ou voz.
         </p>
       </header>
 
@@ -496,9 +496,9 @@ export default function ChatbotPage() {
           <div className="rounded-2xl border border-dashed border-temaSky/40 bg-temaSky/5 p-4 text-xs text-gray-600 dark:border-temaEmerald/40 dark:bg-temaEmerald/10 dark:text-gray-200">
             <p className="font-semibold text-gray-800 dark:text-gray-100">Como o assistente ajuda:</p>
             <ul className="mt-2 space-y-1">
-              <li>• Identifica automaticamente se a mensagem é despesa, renda, investimento ou horas extras.</li>
-              <li>• Classifica categorias (alimentação, transporte, etc.) e usa a data atual quando necessário.</li>
-              <li>• Pode consultar totais por período, como “quanto gastei com alimentação este mês?”.</li>
+              <li>• Recomenda livros, filmes e jogos a partir do que você gosta ou procura.</li>
+              <li>• Gera resumos em texto, insights e citações marcantes de uma obra.</li>
+              <li>• Monta roteiros de leitura por tema, autor ou tempo disponível.</li>
               <li>• Suporte a mensagens ditadas por voz (transcrição automática).</li>
             </ul>
           </div>

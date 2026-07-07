@@ -27,7 +27,7 @@ export default {
       },
       backgroundImage: {
         "essencia-radiance":
-          "radial-gradient(circle at 20% 20%, rgba(108, 99, 255, 0.2), transparent 45%), radial-gradient(circle at 80% 0%, rgba(179, 139, 89, 0.18), transparent 50%)",
+          "radial-gradient(circle at 20% 20%, rgba(212, 166, 87, 0.18), transparent 45%), radial-gradient(circle at 80% 0%, rgba(186, 123, 79, 0.16), transparent 50%)",
       },
     },
   },

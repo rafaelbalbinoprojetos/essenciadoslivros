@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { buildAudioSource } from "../utils/media.js";
+import { createSignedUrl, BUCKETS } from "../lib/storage.js";
 import { useAuth } from "./AuthContext.jsx";
 import { supabase } from "../lib/supabase.js";
 
 const AudioPlaylistContext = createContext(null);
+
+// Vinheta de abertura tocada antes de cada título (pré-rolagem).
+const INTRO_PATH = "INTRO.mp3";
 
 function normalizeTracks(tracks = []) {
   const occurrences = new Map();
@@ -27,6 +31,8 @@ function normalizeTracks(tracks = []) {
       author: track.author ?? track.subtitle ?? "Conteúdo Essência",
       cover: track.cover ?? null,
       source,
+      skipIntro: Boolean(track.skipIntro),
+      skipProgress: Boolean(track.skipProgress),
     });
   });
 
@@ -40,13 +46,55 @@ export function AudioPlaylistProvider({ children }) {
   const pendingSeekRef = useRef(null);
   const lastPersistedRef = useRef({ trackId: null, seconds: 0, timestamp: 0 });
   const saveTimeoutRef = useRef(null);
+  const introUrlRef = useRef({ url: "", at: 0 });
+  const playingIntroRef = useRef(false);
+  const realSourceRef = useRef(null);
+  const loadingRef = useRef(false);
+  const rateRef = useRef(1);
+  const repeatRef = useRef(false);
   const { user } = useAuth();
+
+  // Resolve (e cacheia por ~50min) o link assinado da vinheta.
+  const getIntroUrl = useCallback(async () => {
+    const cached = introUrlRef.current;
+    const now = Date.now();
+    if (cached.url && now - cached.at < 50 * 60 * 1000) {
+      return cached.url;
+    }
+    try {
+      const url = await createSignedUrl(BUCKETS.audios, INTRO_PATH, 3600);
+      if (url) {
+        introUrlRef.current = { url, at: now };
+        return url;
+      }
+    } catch (err) {
+      console.error("[AudioPlaylist] falha ao assinar a vinheta:", err);
+    }
+    return null;
+  }, []);
 
   const [tracks, setTracks] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRateState] = useState(1);
+  const [repeat, setRepeat] = useState(false);
+
+  const setRate = useCallback((rate) => {
+    const value = Number(rate) || 1;
+    rateRef.current = value;
+    setPlaybackRateState(value);
+    const node = audioRef.current;
+    if (node && !playingIntroRef.current) node.playbackRate = value;
+  }, []);
+
+  const toggleRepeat = useCallback(() => {
+    setRepeat((prev) => {
+      repeatRef.current = !prev;
+      return !prev;
+    });
+  }, []);
 
   const currentTrack = currentIndex >= 0 ? tracks[currentIndex] : null;
   const hasNext = currentIndex >= 0 && currentIndex + 1 < tracks.length;
@@ -62,7 +110,8 @@ export function AudioPlaylistProvider({ children }) {
 
     const handleLoaded = () => {
       setDuration(node.duration || 0);
-      if (pendingSeekRef.current && node.duration) {
+      // Durante a vinheta não aplicamos o ponto de retomada do livro.
+      if (!playingIntroRef.current && pendingSeekRef.current && node.duration) {
         const resumeAt = Math.max(0, Math.min(pendingSeekRef.current, node.duration - 0.5));
         node.currentTime = resumeAt;
         setProgress(resumeAt);
@@ -71,7 +120,37 @@ export function AudioPlaylistProvider({ children }) {
     };
     const handleTime = () => setProgress(node.currentTime || 0);
     const handleEnded = () => {
+      // Fim da vinheta → emenda no conteúdo real (sem avançar a fila).
+      if (playingIntroRef.current) {
+        playingIntroRef.current = false;
+        const real = realSourceRef.current;
+        realSourceRef.current = null;
+        if (real) {
+          node.src = real;
+          node.currentTime = 0;
+          node.playbackRate = rateRef.current;
+          setProgress(0);
+          setDuration(0);
+          const playPromise = node.play();
+          if (playPromise?.catch) {
+            playPromise.catch(() => setIsPlaying(false));
+          }
+        }
+        return;
+      }
+      // Repetir a faixa atual.
+      if (repeatRef.current) {
+        node.currentTime = 0;
+        setProgress(0);
+        const playPromise = node.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => setIsPlaying(false));
+        }
+        return;
+      }
       if (currentIndex + 1 < tracks.length) {
+        // Ignora o evento pause disparado pelo navegador durante a troca de src.
+        loadingRef.current = true;
         autoplayRef.current = true;
         setCurrentIndex((prev) => (prev + 1 < tracks.length ? prev + 1 : prev));
       } else {
@@ -79,8 +158,14 @@ export function AudioPlaylistProvider({ children }) {
         setProgress(0);
       }
     };
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      loadingRef.current = false;
+      setIsPlaying(true);
+    };
+    const handlePause = () => {
+      if (loadingRef.current) return;
+      setIsPlaying(false);
+    };
 
     node.addEventListener("loadedmetadata", handleLoaded);
     node.addEventListener("timeupdate", handleTime);
@@ -99,33 +184,64 @@ export function AudioPlaylistProvider({ children }) {
 
   useEffect(() => {
     const node = audioRef.current;
-    if (!node) return;
+    if (!node) return undefined;
 
     if (!currentTrack?.source) {
       node.pause();
       node.removeAttribute("src");
+      playingIntroRef.current = false;
+      realSourceRef.current = null;
       setProgress(0);
       setDuration(0);
-      return;
+      return undefined;
     }
 
-    node.src = currentTrack.source;
-    node.currentTime = 0;
-    setProgress(0);
-    setDuration(0);
-
-    if (autoplayRef.current || isPlaying) {
-      const playPromise = node.play();
-      if (playPromise?.catch) {
-        playPromise.catch(() => setIsPlaying(false));
-      }
-    }
+    let cancelled = false;
+    const shouldPlay = autoplayRef.current || isPlaying;
     autoplayRef.current = false;
-  }, [currentTrack?.source, isPlaying]);
+    loadingRef.current = true; // evita que o efeito de play/pause brigue durante a resolução
+
+    (async () => {
+      const introUrl = currentTrack.skipIntro ? null : await getIntroUrl();
+      if (cancelled) return;
+      setProgress(0);
+      setDuration(0);
+      if (introUrl) {
+        // Pré-rolagem: toca a vinheta (sempre 1x) e guarda o conteúdo real.
+        playingIntroRef.current = true;
+        realSourceRef.current = currentTrack.source;
+        node.src = introUrl;
+        node.playbackRate = 1;
+      } else {
+        playingIntroRef.current = false;
+        realSourceRef.current = null;
+        node.src = currentTrack.source;
+        node.playbackRate = rateRef.current;
+      }
+      node.currentTime = 0;
+      node.loop = false;
+      if (shouldPlay) {
+        const playPromise = node.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => {
+            loadingRef.current = false;
+            setIsPlaying(false);
+          });
+        }
+      } else {
+        loadingRef.current = false;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTrack?.source, currentTrack?.skipIntro, getIntroUrl]);
 
   useEffect(() => {
     const node = audioRef.current;
     if (!node || !currentTrack?.source) return;
+    if (loadingRef.current) return; // enquanto carrega/assina, o efeito de carga cuida do play
     if (isPlaying) {
       const playPromise = node.play();
       if (playPromise?.catch) {
@@ -324,7 +440,7 @@ export function AudioPlaylistProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!user?.id || !currentTrack?.bookId) {
+    if (currentTrack?.skipProgress || !user?.id || !currentTrack?.bookId) {
       pendingSeekRef.current = null;
       return;
     }
@@ -345,7 +461,7 @@ export function AudioPlaylistProvider({ children }) {
         if (data?.tempo_reproduzido) {
           pendingSeekRef.current = Number(data.tempo_reproduzido) || 0;
           const node = audioRef.current;
-          if (node?.readyState >= 1 && pendingSeekRef.current > 0) {
+          if (node?.readyState >= 1 && pendingSeekRef.current > 0 && !playingIntroRef.current) {
             const resumeAt = Math.max(0, Math.min(pendingSeekRef.current, node.duration || pendingSeekRef.current));
             node.currentTime = resumeAt;
             setProgress(resumeAt);
@@ -362,10 +478,12 @@ export function AudioPlaylistProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [currentTrack?.bookId, user?.id]);
+  }, [currentTrack?.bookId, currentTrack?.skipProgress, user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !currentTrack?.bookId || !duration) return;
+    // Não persistir progresso enquanto a vinheta toca.
+    if (playingIntroRef.current) return;
+    if (currentTrack?.skipProgress || !user?.id || !currentTrack?.bookId || !duration) return;
     if (!Number.isFinite(progress) || progress < 5) return;
     const percent = Math.min(100, (progress / duration) * 100);
     if (!Number.isFinite(percent)) return;
@@ -393,7 +511,7 @@ export function AudioPlaylistProvider({ children }) {
         progresso_percentual: percent,
       });
     }, 1000);
-  }, [progress, duration, currentTrack?.id, currentTrack?.bookId, user?.id, persistProgress]);
+  }, [progress, duration, currentTrack?.id, currentTrack?.bookId, currentTrack?.skipProgress, user?.id, persistProgress]);
 
   const value = useMemo(
     () => ({
@@ -405,11 +523,15 @@ export function AudioPlaylistProvider({ children }) {
       hasPrevious,
       duration,
       progress,
+      playbackRate,
+      repeat,
       startPlaylist,
       playNext,
       playPrevious,
       togglePlay,
       seek,
+      setRate,
+      toggleRepeat,
       clearQueue,
       addToQueue,
       removeTrack,
@@ -425,11 +547,15 @@ export function AudioPlaylistProvider({ children }) {
       hasPrevious,
       duration,
       progress,
+      playbackRate,
+      repeat,
       startPlaylist,
       playNext,
       playPrevious,
       togglePlay,
       seek,
+      setRate,
+      toggleRepeat,
       clearQueue,
       addToQueue,
       removeTrack,

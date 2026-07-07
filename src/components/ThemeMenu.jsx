@@ -1,4 +1,5 @@
 import React from "react";
+import { Palette, Check } from "lucide-react";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function ThemeMenu() {
@@ -45,13 +46,13 @@ export default function ThemeMenu() {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls="theme-menu"
-        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[#6c63ff] hover:text-[#4c3f8f] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] ${
-          open ? "ring-2 ring-[#6c63ff]/30 dark:ring-white/25" : ""
+        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[rgb(var(--color-accent-primary))] hover:text-[rgb(var(--color-accent-dark))] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] ${
+          open ? "ring-2 ring-[rgba(var(--color-accent-primary),0.3)] dark:ring-white/25" : ""
         }`}
         title="Selecionar tema"
       >
         <span className="sr-only">{open ? "Fechar seleção de temas" : "Abrir seleção de temas"}</span>
-        <PaletteIcon className="h-5 w-5" />
+        <Palette className="h-5 w-5" />
       </button>
 
       {open && (
@@ -108,10 +109,10 @@ function ThemeGrid({ themes, activeId, onSelect }) {
             type="button"
             onClick={() => onSelect(preset.id)}
             title={preset.description}
-            className={`group relative flex flex-col gap-2 rounded-lg border px-2 pb-2 pt-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6c63ff]/40 dark:focus-visible:ring-white/30 ${
+            className={`group relative flex flex-col gap-2 rounded-lg border px-2 pb-2 pt-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--color-accent-primary),0.4)] dark:focus-visible:ring-white/30 ${
               isActive
-                ? "border-[#6c63ff]/60 ring-1 ring-[#6c63ff]/40 dark:border-white/40"
-                : "border-gray-200 hover:border-[#6c63ff]/50 hover:bg-[#6c63ff]/5 dark:border-gray-700 dark:hover:border-white/40 dark:hover:bg-white/5"
+                ? "border-[rgba(var(--color-accent-primary),0.6)] ring-1 ring-[rgba(var(--color-accent-primary),0.4)] dark:border-white/40"
+                : "border-gray-200 hover:border-[rgba(var(--color-accent-primary),0.5)] hover:bg-[rgba(var(--color-accent-primary),0.05)] dark:border-gray-700 dark:hover:border-white/40 dark:hover:bg-white/5"
             }`}
           >
             <span className="flex h-6 w-full overflow-hidden rounded-md shadow-inner">
@@ -119,10 +120,10 @@ function ThemeGrid({ themes, activeId, onSelect }) {
                 <span key={`${preset.id}-color-${index}`} className="flex-1" style={{ backgroundColor: color }} />
               ))}
             </span>
-            <span className="text-[11px] font-medium text-gray-600 transition group-hover:text-[#6c63ff] dark:text-gray-300 dark:group-hover:text-white">
+            <span className="text-[11px] font-medium text-gray-600 transition group-hover:text-[rgb(var(--color-accent-primary))] dark:text-gray-300 dark:group-hover:text-white">
               {preset.name}
             </span>
-            {isActive && <CheckIcon className="absolute right-1 top-1 h-4 w-4 text-[#6c63ff] dark:text-white" />}
+            {isActive && <Check className="absolute right-1 top-1 h-4 w-4 text-[rgb(var(--color-accent-primary))] dark:text-white" />}
           </button>
         );
       })}
@@ -130,18 +131,4 @@ function ThemeGrid({ themes, activeId, onSelect }) {
   );
 }
 
-function PaletteIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2a10 10 0 00-7.07 17.07 1.75 1.75 0 001.59.48l1.73-.4a2.25 2.25 0 011.77.37l2.16 1.62a1.75 1.75 0 002.76-1.4v-.78a2.25 2.25 0 012.25-2.25h1.94a1.75 1.75 0 001.71-2.23A10 10 0 0012 2zm-4.5 6a1.25 1.25 0 111.25-1.25A1.25 1.25 0 017.5 8zm3 3A1.25 1.25 0 1111.75 9.75 1.25 1.25 0 0110.5 11zm3-5.5A1.25 1.25 0 1114.75 4.25 1.25 1.25 0 0113.5 5.5zm2.75 5.5A1.25 1.25 0 1117.5 9.75 1.25 1.25 0 0116.25 11z" />
-    </svg>
-  );
-}
-
-function CheckIcon({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M9.53 16.28a.75.75 0 01-1.06 0l-3.25-3.25a.75.75 0 011.06-1.06l2.72 2.72 6.69-6.69a.75.75 0 111.06 1.06z" />
-    </svg>
-  );
-}
+// Ícones agora vêm da lucide-react (Palette, Check) — importados no topo.

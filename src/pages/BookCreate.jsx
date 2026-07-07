@@ -1,7 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { createAuthor, createBook, createCollection, listAuthors, listCollections, listGenres } from "../services/books.js";
+import {
+  createAuthor,
+  createBook,
+  createCollection,
+  getBookById,
+  listAuthors,
+  listCollections,
+  listGenres,
+  updateBook,
+} from "../services/books.js";
+import { BUCKETS, uploadToBucket, getPublicUrl, removeFromBucket } from "../lib/storage.js";
+import { addNarrativeTracks, deleteNarrativeTrack, getNarrativeByBook, saveNarrative, updateNarrativeTrack as updateNarrativeTrackRecord } from "../services/narratives.js";
 
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
@@ -17,8 +28,12 @@ const INITIAL_STATE = {
   colecao_id: "",
   sinopse: "",
   capa_url: "",
+  capa_cinematica_url: "",
   pdf_url: "",
   audio_url: "",
+  tem_experiencia_cinematica: false,
+  titulo_cinematico: "",
+  descricao_cinematica: "",
   duracao_audio: "",
   data_lancamento: "",
   status: "ativo",
@@ -27,6 +42,9 @@ const INITIAL_STATE = {
 
 export default function BookCreatePage() {
   const navigate = useNavigate();
+  const { bookId } = useParams();
+  const isEdit = Boolean(bookId);
+  const [bookLoading, setBookLoading] = useState(Boolean(bookId));
   const [formData, setFormData] = useState(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -38,6 +56,150 @@ export default function BookCreatePage() {
   const [collectionForm, setCollectionForm] = useState({ nome: "", descricao: "", capa_url: "" });
   const [creatingAuthor, setCreatingAuthor] = useState(false);
   const [creatingCollection, setCreatingCollection] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState({ capa: null, capaCinematica: null, pdf: null, audio: null });
+  const [uploading, setUploading] = useState(false);
+  const [narrativeForm, setNarrativeForm] = useState({ titulo: "", descricao: "" });
+  const [narrativeTracks, setNarrativeTracks] = useState([]);
+  const [existingNarrative, setExistingNarrative] = useState(null);
+  const [trackReplacements, setTrackReplacements] = useState({});
+  const [deletingTrackIds, setDeletingTrackIds] = useState(() => new Set());
+
+  const handleFileChange = (field) => (event) => {
+    const file = event.target.files?.[0] ?? null;
+    setMediaFiles((prev) => ({ ...prev, [field]: file }));
+  };
+
+  const handleNarrativeFiles = (event) => {
+    const files = Array.from(event.target.files ?? []);
+    setNarrativeTracks(
+      files.map((file, index) => ({
+        file,
+        titulo: `Cena ${index + 1} — ${file.name.replace(/\.[^.]+$/, "")}`,
+        descricao: "",
+      })),
+    );
+  };
+
+  const updateNarrativeTrack = (index, field, value) => {
+    setNarrativeTracks((current) => current.map((track, trackIndex) => (
+      trackIndex === index ? { ...track, [field]: value } : track
+    )));
+  };
+
+  const removeNarrativeTrack = (index) => {
+    setNarrativeTracks((current) => current.filter((_, trackIndex) => trackIndex !== index));
+  };
+
+  const moveNarrativeTrack = (index, direction) => {
+    setNarrativeTracks((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const updateExistingTrack = (trackId, field, value) => {
+    setExistingNarrative((current) => ({
+      ...current,
+      faixas: (current?.faixas ?? []).map((track) => (
+        track.id === trackId ? { ...track, [field]: value } : track
+      )),
+    }));
+  };
+
+  const handleTrackReplacement = (trackId) => (event) => {
+    const file = event.target.files?.[0] ?? null;
+    setTrackReplacements((current) => ({ ...current, [trackId]: file }));
+  };
+
+  const handleDeleteExistingTrack = async (track) => {
+    const confirmed = window.confirm(`Excluir definitivamente a cena ${track.ordem}: ${track.titulo}?`);
+    if (!confirmed) return;
+
+    setDeletingTrackIds((current) => new Set(current).add(track.id));
+    try {
+      await deleteNarrativeTrack(track.id);
+      setExistingNarrative((current) => ({
+        ...current,
+        faixas: (current?.faixas ?? []).filter((item) => item.id !== track.id),
+      }));
+      setTrackReplacements((current) => {
+        const next = { ...current };
+        delete next[track.id];
+        return next;
+      });
+
+      try {
+        await removeFromBucket(BUCKETS.narrativas, [track.audio_path]);
+      } catch (storageError) {
+        console.error("[BookCreate] cena excluída, mas arquivo não removido:", storageError);
+        toast.error("Cena excluída, mas o arquivo antigo precisa ser removido manualmente do Storage.");
+        return;
+      }
+      toast.success("Cena excluída com sucesso.");
+    } catch (deleteError) {
+      console.error("[BookCreate] erro ao excluir cena:", deleteError);
+      toast.error(deleteError.message ?? "Não foi possível excluir a cena.");
+    } finally {
+      setDeletingTrackIds((current) => {
+        const next = new Set(current);
+        next.delete(track.id);
+        return next;
+      });
+    }
+  };
+
+  // Modo edição: carrega o livro e preenche o formulário.
+  useEffect(() => {
+    if (!bookId) return undefined;
+    let active = true;
+    (async () => {
+      setBookLoading(true);
+      try {
+        const [book, narrative] = await Promise.all([
+          getBookById(bookId),
+          getNarrativeByBook(bookId),
+        ]);
+        if (!active || !book) return;
+        setFormData({
+          titulo: book.titulo ?? "",
+          subtitulo: book.subtitulo ?? "",
+          autor_id: book.autor?.id ?? "",
+          genero_id: book.genero?.id ?? "",
+          colecao_id: book.colecao?.id ?? "",
+          sinopse: book.sinopse ?? "",
+          capa_url: book.capa_url ?? "",
+          capa_cinematica_url: book.capa_cinematica_url ?? "",
+          pdf_url: book.pdf_url ?? "",
+          audio_url: book.audio_url ?? "",
+          tem_experiencia_cinematica: Boolean(book.tem_experiencia_cinematica),
+          titulo_cinematico: book.titulo_cinematico ?? "",
+          descricao_cinematica: book.descricao_cinematica ?? "",
+          duracao_audio: book.duracao_audio != null ? String(book.duracao_audio) : "",
+          data_lancamento: book.data_lancamento ?? "",
+          status: book.status ?? "ativo",
+          destaque: Boolean(book.destaque),
+        });
+        if (narrative) {
+          setExistingNarrative(narrative);
+          setNarrativeForm({
+            titulo: narrative.titulo ?? "",
+            descricao: narrative.descricao ?? "",
+          });
+        }
+      } catch (err) {
+        console.error("[BookCreate] erro ao carregar livro para edição:", err);
+        toast.error("Não foi possível carregar o livro para edição.");
+      } finally {
+        if (active) setBookLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [bookId]);
 
   useEffect(() => {
     async function fetchMetadata() {
@@ -154,6 +316,37 @@ export default function BookCreatePage() {
 
     setLoading(true);
     try {
+      // Faz upload dos arquivos selecionados antes de salvar.
+      let capaUrl = formData.capa_url?.trim() || null;
+      let capaCinematicaUrl = formData.capa_cinematica_url?.trim() || null;
+      let pdfPath = formData.pdf_url?.trim() || null;
+      let audioPath = formData.audio_url?.trim() || null;
+
+      if (mediaFiles.capa || mediaFiles.capaCinematica || mediaFiles.pdf || mediaFiles.audio) {
+        setUploading(true);
+        try {
+          if (mediaFiles.capa) {
+            const path = await uploadToBucket(BUCKETS.capas, mediaFiles.capa);
+            capaUrl = getPublicUrl(BUCKETS.capas, path); // capa é pública
+          }
+          if (mediaFiles.capaCinematica) {
+            const path = await uploadToBucket(BUCKETS.capas, mediaFiles.capaCinematica, {
+              prefix: "cinematicas/",
+            });
+            capaCinematicaUrl = getPublicUrl(BUCKETS.capas, path);
+          }
+          if (mediaFiles.pdf) {
+            // PDF é privado: guardamos o caminho; a leitura usa link assinado.
+            pdfPath = await uploadToBucket(BUCKETS.pdfs, mediaFiles.pdf);
+          }
+          if (mediaFiles.audio) {
+            audioPath = await uploadToBucket(BUCKETS.audios, mediaFiles.audio);
+          }
+        } finally {
+          setUploading(false);
+        }
+      }
+
       const payload = {
         titulo: requiredTitle,
         subtitulo: formData.subtitulo?.trim() || null,
@@ -161,9 +354,17 @@ export default function BookCreatePage() {
         genero_id: formData.genero_id || null,
         colecao_id: formData.colecao_id || null,
         sinopse: formData.sinopse?.trim() || null,
-        capa_url: formData.capa_url?.trim() || null,
-        pdf_url: formData.pdf_url?.trim() || null,
-        audio_url: formData.audio_url?.trim() || null,
+        capa_url: capaUrl,
+        capa_cinematica_url: capaCinematicaUrl,
+        pdf_url: pdfPath,
+        audio_url: audioPath,
+        tem_experiencia_cinematica: Boolean(
+          formData.tem_experiencia_cinematica
+          || narrativeTracks.length
+          || existingNarrative?.faixas?.length,
+        ),
+        titulo_cinematico: formData.titulo_cinematico?.trim() || null,
+        descricao_cinematica: formData.descricao_cinematica?.trim() || null,
         duracao_audio: formData.duracao_audio ? Number(formData.duracao_audio) : null,
         data_lancamento: formData.data_lancamento || null,
         status: formData.status || "ativo",
@@ -174,12 +375,79 @@ export default function BookCreatePage() {
         throw new Error("Informe um número válido para a duração do áudio.");
       }
 
-      await createBook(payload);
-      toast.success("Título cadastrado com sucesso!");
-      navigate("/biblioteca");
+      const savedBook = isEdit
+        ? await updateBook(bookId, payload)
+        : await createBook(payload);
+
+      const shouldSaveNarrative = narrativeTracks.length > 0 || existingNarrative || formData.tem_experiencia_cinematica;
+      if (shouldSaveNarrative) {
+        const narrative = await saveNarrative(savedBook.id, {
+          titulo: formData.titulo_cinematico?.trim() || narrativeForm.titulo.trim() || `${requiredTitle} — Memória Cinematográfica`,
+          descricao: formData.descricao_cinematica?.trim() || narrativeForm.descricao.trim() || null,
+          status: "ativo",
+        });
+
+        if (existingNarrative?.faixas?.length) {
+          setUploading(true);
+          try {
+            for (const track of existingNarrative.faixas) {
+              const replacement = trackReplacements[track.id];
+              let nextAudioPath = track.audio_path;
+              if (replacement) {
+                nextAudioPath = await uploadToBucket(BUCKETS.narrativas, replacement, {
+                  prefix: `${savedBook.id}/`,
+                });
+              }
+
+              await updateNarrativeTrackRecord(track.id, {
+                titulo: track.titulo.trim() || `Cena ${track.ordem}`,
+                descricao: track.descricao?.trim() || null,
+                audio_path: nextAudioPath,
+              });
+
+              if (replacement && track.audio_path && track.audio_path !== nextAudioPath) {
+                await removeFromBucket(BUCKETS.narrativas, [track.audio_path]);
+              }
+            }
+          } finally {
+            setUploading(false);
+          }
+        }
+
+        if (narrativeTracks.length > 0) {
+          setUploading(true);
+          try {
+            const uploadedTracks = [];
+            const currentLastOrder = Math.max(0, ...(existingNarrative?.faixas ?? []).map((track) => track.ordem || 0));
+            for (let index = 0; index < narrativeTracks.length; index += 1) {
+              const track = narrativeTracks[index];
+              const audioPath = await uploadToBucket(BUCKETS.narrativas, track.file, {
+                prefix: `${savedBook.id}/`,
+              });
+              uploadedTracks.push({
+                titulo: track.titulo.trim() || `Cena ${index + 1}`,
+                descricao: track.descricao.trim() || null,
+                audio_path: audioPath,
+                ordem: currentLastOrder + index + 1,
+              });
+            }
+            await addNarrativeTracks(narrative.id, uploadedTracks);
+          } finally {
+            setUploading(false);
+          }
+        }
+      }
+
+      if (isEdit) {
+        toast.success("Título atualizado com sucesso!");
+        navigate(`/biblioteca/${bookId}`);
+      } else {
+        toast.success("Título cadastrado com sucesso!");
+        navigate("/biblioteca");
+      }
     } catch (error) {
-      console.error("[BookCreate] erro ao cadastrar livro:", error);
-      toast.error(error.message ?? "Não foi possível cadastrar o título.");
+      console.error("[BookCreate] erro ao salvar livro:", error);
+      toast.error(error.message ?? "Não foi possível salvar o título.");
     } finally {
       setLoading(false);
     }
@@ -193,10 +461,17 @@ export default function BookCreatePage() {
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.7)]">Cadastro</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[rgb(var(--text-primary))]">Novo título na biblioteca</h1>
+          <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
+            {isEdit ? "Edição" : "Cadastro"}
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold text-[rgb(var(--text-primary))]">
+            {isEdit ? "Editar título" : "Novo título na biblioteca"}
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-[rgb(var(--text-secondary))]">
-            Registre metadados completos para um novo livro, conectando autor, gênero, coleções e recursos multimídia.
+            {isEdit
+              ? "Atualize os dados da obra. Para adicionar ou trocar capa, PDF ou áudio, selecione um novo arquivo — os atuais são mantidos se você não escolher outro."
+              : "Registre metadados completos para um novo livro, conectando autor, gênero, coleções e recursos multimídia."}
+            {isEdit && bookLoading ? " · Carregando…" : ""}
           </p>
         </div>
         <button
@@ -398,39 +673,225 @@ export default function BookCreatePage() {
           </label>
           <div className="grid gap-5 md:grid-cols-3">
             <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
-              URL da capa
+              Capa (imagem)
               <input
-                name="capa_url"
-                type="url"
-                value={formData.capa_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif"
+                onChange={handleFileChange("capa")}
+                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs text-[rgb(var(--text-secondary))] file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[rgb(var(--color-accent-dark))] hover:file:bg-[rgba(var(--color-accent-primary),0.25)]"
               />
+              {mediaFiles.capa ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">✓ {mediaFiles.capa.name}</span>
+              ) : isEdit && formData.capa_url ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">Capa atual mantida — escolha para trocar</span>
+              ) : null}
             </label>
             <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
               PDF / ePub
               <input
-                name="pdf_url"
-                type="url"
-                value={formData.pdf_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2"
+                type="file"
+                accept="application/pdf,.pdf,.epub,application/epub+zip"
+                onChange={handleFileChange("pdf")}
+                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs text-[rgb(var(--text-secondary))] file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[rgb(var(--color-accent-dark))] hover:file:bg-[rgba(var(--color-accent-primary),0.25)]"
               />
+              {mediaFiles.pdf ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">✓ {mediaFiles.pdf.name}</span>
+              ) : isEdit && formData.pdf_url ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">PDF atual mantido — escolha para trocar</span>
+              ) : null}
             </label>
             <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
-              Áudio / streaming
+              Áudio
               <input
-                name="audio_url"
-                type="url"
-                value={formData.audio_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2"
+                type="file"
+                accept="audio/*"
+                onChange={handleFileChange("audio")}
+                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs text-[rgb(var(--text-secondary))] file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[rgb(var(--color-accent-dark))] hover:file:bg-[rgba(var(--color-accent-primary),0.25)]"
               />
+              {mediaFiles.audio ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">✓ {mediaFiles.audio.name}</span>
+              ) : isEdit && formData.audio_url ? (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">Áudio atual mantido — escolha para adicionar/trocar</span>
+              ) : (
+                <span className="truncate text-xs text-[rgb(var(--text-subtle))]">{isEdit ? "Sem áudio ainda — adicione aqui" : ""}</span>
+              )}
             </label>
           </div>
+          <p className="text-xs text-[rgb(var(--text-subtle))]">
+            A capa fica pública. PDF e áudio são privados — abrem por link temporário assinado.
+          </p>
+
+          <div className="rounded-[24px] border border-[rgba(var(--color-accent-primary),0.18)] bg-[rgba(var(--surface-card),0.62)] p-5 shadow-sm">
+            <header className="mb-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-[rgb(var(--color-accent-dark))]">Narrativa cinematográfica</p>
+              <h3 className="mt-1 text-lg font-semibold text-[rgb(var(--text-primary))]">Cenas em áudio</h3>
+              <p className="mt-1 text-sm text-[rgb(var(--text-secondary))]">
+                Selecione todos os arquivos de uma vez e ajuste os títulos e a ordem antes de salvar.
+              </p>
+            </header>
+
+            <label className="mb-4 flex items-center gap-3 rounded-2xl border border-[rgba(var(--color-accent-primary),0.16)] bg-white/55 px-4 py-3 text-sm font-semibold text-[rgb(var(--text-secondary))]">
+              <input
+                name="tem_experiencia_cinematica"
+                type="checkbox"
+                checked={formData.tem_experiencia_cinematica}
+                onChange={handleChange}
+                className="h-4 w-4 rounded text-[rgb(var(--color-accent-primary))]"
+              />
+              Ativar Memória Cinematográfica
+            </label>
+
+            <div className="mb-4 grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Capa da Memória Cinematográfica
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/avif"
+                  onChange={handleFileChange("capaCinematica")}
+                  className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+                />
+                {mediaFiles.capaCinematica && <span className="truncate text-xs text-[rgb(var(--text-subtle))]">✓ {mediaFiles.capaCinematica.name}</span>}
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                URL da capa cinematográfica (opcional)
+                <input
+                  name="capa_cinematica_url"
+                  type="text"
+                  value={formData.capa_cinematica_url}
+                  onChange={handleChange}
+                  placeholder="https://... ou caminho existente"
+                  className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2 text-[rgb(var(--text-primary))]"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Título da experiência
+                <input
+                  type="text"
+                  value={formData.titulo_cinematico}
+                  onChange={(event) => setFormData((current) => ({ ...current, titulo_cinematico: event.target.value }))}
+                  placeholder="Memória Cinematográfica"
+                  className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2 text-[rgb(var(--text-primary))]"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Descrição
+                <input
+                  type="text"
+                  value={formData.descricao_cinematica}
+                  onChange={(event) => setFormData((current) => ({ ...current, descricao_cinematica: event.target.value }))}
+                  placeholder="Uma jornada narrada como lembrança — por alguém que esteve lá."
+                  className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2 text-[rgb(var(--text-primary))]"
+                />
+              </label>
+            </div>
+
+            <label className="mt-4 flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+              {existingNarrative ? "Adicionar novas cenas" : "Arquivos das cenas"}
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                onChange={handleNarrativeFiles}
+                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs text-[rgb(var(--text-secondary))] file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[rgb(var(--color-accent-dark))]"
+              />
+            </label>
+
+            {existingNarrative?.faixas?.length > 0 && (
+              <div className="mt-5 space-y-3">
+                <div className="rounded-2xl border border-emerald-500/15 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-800">
+                  {existingNarrative.faixas.length} cenas cadastradas. Escolha um arquivo em uma cena específica apenas quando quiser substituí-la.
+                </div>
+                {existingNarrative.faixas.map((track) => (
+                  <div key={track.id} className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/65 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--color-accent-dark))]">Cena {track.ordem}</span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="max-w-64 truncate text-xs text-[rgb(var(--text-subtle))]">{track.audio_path}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExistingTrack(track)}
+                          disabled={deletingTrackIds.has(track.id)}
+                          className="min-h-9 shrink-0 rounded-xl border border-red-200 bg-red-50/70 px-3 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {deletingTrackIds.has(track.id) ? "Excluindo..." : "Excluir cena"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <input
+                        type="text"
+                        value={track.titulo}
+                        onChange={(event) => updateExistingTrack(track.id, "titulo", event.target.value)}
+                        className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/85 px-3 py-2 text-sm text-[rgb(var(--text-primary))]"
+                        aria-label={`Título da cena ${track.ordem}`}
+                      />
+                      <input
+                        type="text"
+                        value={track.descricao ?? ""}
+                        onChange={(event) => updateExistingTrack(track.id, "descricao", event.target.value)}
+                        placeholder="Descrição opcional da cena"
+                        className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/85 px-3 py-2 text-sm text-[rgb(var(--text-primary))]"
+                        aria-label={`Descrição da cena ${track.ordem}`}
+                      />
+                    </div>
+                    <label className="mt-3 flex flex-col gap-2 text-xs font-semibold text-[rgb(var(--text-secondary))]">
+                      Substituir somente esta cena
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        onChange={handleTrackReplacement(track.id)}
+                        className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1 file:text-xs file:font-semibold"
+                      />
+                    </label>
+                    {trackReplacements[track.id] && (
+                      <p className="mt-2 text-xs font-medium text-amber-700">
+                        Será substituída por: {trackReplacements[track.id].name}. O arquivo anterior será apagado após a atualização.
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {narrativeTracks.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {narrativeTracks.map((track, index) => (
+                  <div key={`${track.file.name}-${track.file.lastModified}`} className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/65 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--color-accent-dark))]">
+                        Nova cena {(existingNarrative?.faixas?.length || 0) + index + 1}
+                      </span>
+                      <div className="flex gap-1">
+                        <button type="button" onClick={() => moveNarrativeTrack(index, -1)} disabled={index === 0} className="h-8 rounded-lg border px-2 text-xs disabled:opacity-30" aria-label="Mover cena para cima">↑</button>
+                        <button type="button" onClick={() => moveNarrativeTrack(index, 1)} disabled={index === narrativeTracks.length - 1} className="h-8 rounded-lg border px-2 text-xs disabled:opacity-30" aria-label="Mover cena para baixo">↓</button>
+                        <button type="button" onClick={() => removeNarrativeTrack(index)} className="h-8 rounded-lg border border-red-200 px-2 text-xs text-red-600" aria-label="Remover cena">Remover</button>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={track.titulo}
+                      onChange={(event) => updateNarrativeTrack(index, "titulo", event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/85 px-3 py-2 text-sm text-[rgb(var(--text-primary))]"
+                      aria-label={`Título da cena ${index + 1}`}
+                    />
+                    <input
+                      type="text"
+                      value={track.descricao}
+                      onChange={(event) => updateNarrativeTrack(index, "descricao", event.target.value)}
+                      placeholder="Descrição opcional da cena"
+                      className="mt-2 w-full rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/85 px-3 py-2 text-sm text-[rgb(var(--text-primary))]"
+                      aria-label={`Descrição da cena ${index + 1}`}
+                    />
+                    <p className="mt-2 truncate text-xs text-[rgb(var(--text-subtle))]">{track.file.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="grid gap-5 md:grid-cols-3">
             <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
               Lançamento
@@ -498,7 +959,7 @@ export default function BookCreatePage() {
             disabled={loading}
             className="inline-flex items-center gap-2 rounded-2xl bg-[rgb(var(--color-accent-primary))] px-5 py-2 text-sm font-semibold text-white shadow-[0_15px_30px_-18px_rgba(0,0,0,0.6)] transition hover:bg-[rgb(var(--color-accent-dark))] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? "Salvando..." : "Salvar título"}
+            {uploading ? "Enviando arquivos..." : loading ? "Salvando..." : isEdit ? "Salvar alterações" : "Salvar título"}
           </button>
         </div>
         {metaError ? <p className="text-sm text-red-500">⚠ {metaError}</p> : null}

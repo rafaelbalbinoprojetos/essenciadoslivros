@@ -7,11 +7,32 @@ export const NAV_LINKS = [
     description: "Resumo do seu universo literário",
   },
   {
+    id: "journeys",
+    to: "/jornadas",
+    label: "Jornadas",
+    shortLabel: "Jornadas",
+    description: "Aprenda por objetivo, passo a passo",
+  },
+  {
     id: "library",
     to: "/biblioteca",
     label: "Biblioteca",
     shortLabel: "Livros",
     description: "Sua estante pessoal e coleções",
+  },
+  {
+    id: "cinematic-memories",
+    to: "/memorias-cinematicas",
+    label: "Memórias Cinematográficas",
+    shortLabel: "Memórias",
+    description: "Jornadas sonoras narradas como lembrança",
+  },
+  {
+    id: "mural",
+    to: "/mural",
+    label: "Mural",
+    shortLabel: "Mural",
+    description: "Todo o acervo com busca e filtro",
   },
   {
     id: "catalog",
@@ -38,13 +59,16 @@ export const NAV_LINKS = [
 
 export const MOBILE_NAV_ALLOWED_PATHS = [
   "/",
+  "/jornadas",
   "/biblioteca",
+  "/memorias-cinematicas",
   "/biblioteca/novo",
   "/assistente",
 ];
 
 export const DEFAULT_MOBILE_NAV_PATHS = [
   "/",
+  "/jornadas",
   "/biblioteca",
   "/assistente",
 ];

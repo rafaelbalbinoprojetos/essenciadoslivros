@@ -7,22 +7,6 @@ import {
   sanitizeMobileNavSelection,
 } from "../data/navigation.js";
 
-function normalizeGoalValue(value) {
-  if (value === null || value === undefined || value === "") return 0;
-  const numeric = Number(String(value).replace(/[^0-9.,-]/g, "").replace(",", "."));
-  if (!Number.isFinite(numeric)) return 0;
-  return Math.max(0, numeric);
-}
-
-function formatGoalInput(value) {
-  if (value === null || value === undefined) return "";
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric) || numeric === 0) {
-    return "";
-  }
-  return String(numeric);
-}
-
 export default function SettingsPage() {
   const { user, updateUserMetadata } = useAuth();
   const metadata = useMemo(() => user?.user_metadata ?? {}, [user]);
@@ -33,67 +17,36 @@ export default function SettingsPage() {
   const trialActive = trialStatus === "active" && !trialExpired;
   const hasPremiumAccess = plan === "premium" || trialActive;
   const canStartTrial = !hasPremiumAccess && (!trialStatus || trialStatus === "eligible");
+
   const storedMobileNav = useMemo(() => {
     const sanitized = sanitizeMobileNavSelection(metadata.mobile_nav_paths);
-    if (sanitized.length > 0) {
-      return sanitized;
-    }
-    return DEFAULT_MOBILE_NAV_PATHS;
+    return sanitized.length > 0 ? sanitized : DEFAULT_MOBILE_NAV_PATHS;
   }, [metadata]);
-  const goalsMetadata = useMemo(() => metadata.financial_goals ?? {}, [metadata]);
-  const initialGoals = useMemo(
-    () => ({
-      monthlyInvestmentTarget: normalizeGoalValue(goalsMetadata.monthlyInvestmentTarget),
-      monthlyExpenseLimit: normalizeGoalValue(goalsMetadata.monthlyExpenseLimit),
-      savingsGoal: normalizeGoalValue(goalsMetadata.savingsGoal),
-    }),
-    [goalsMetadata],
-  );
+
   const alertMetadata = useMemo(() => metadata.alert_preferences ?? {}, [metadata]);
   const initialAlerts = useMemo(
-    () => ({
-      showToasts: alertMetadata.show_toasts !== false,
-    }),
+    () => ({ showToasts: alertMetadata.show_toasts !== false }),
     [alertMetadata],
   );
+
+  const initialDisplayName = metadata.display_name ?? metadata.full_name ?? "";
+
+  // --- Perfil ---
+  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const profileDirty = displayName.trim() !== initialDisplayName.trim();
+
+  // --- Menu inferior (mobile) ---
   const [mobileNavSelection, setMobileNavSelection] = useState(storedMobileNav);
   const [mobileNavSaving, setMobileNavSaving] = useState(false);
   const mobileNavSelectionSet = useMemo(() => new Set(mobileNavSelection), [mobileNavSelection]);
   const mobileNavDirty = useMemo(() => {
-    if (storedMobileNav.length !== mobileNavSelection.length) {
-      return true;
-    }
+    if (storedMobileNav.length !== mobileNavSelection.length) return true;
     return storedMobileNav.some((path, index) => path !== mobileNavSelection[index]);
   }, [mobileNavSelection, storedMobileNav]);
-  const [goalsForm, setGoalsForm] = useState(() => ({
-    monthlyInvestmentTarget: formatGoalInput(initialGoals.monthlyInvestmentTarget),
-    monthlyExpenseLimit: formatGoalInput(initialGoals.monthlyExpenseLimit),
-    savingsGoal: formatGoalInput(initialGoals.savingsGoal),
-  }));
-  const [goalsSaving, setGoalsSaving] = useState(false);
-  const goalsFormSanitized = useMemo(
-    () => ({
-      monthlyInvestmentTarget: normalizeGoalValue(goalsForm.monthlyInvestmentTarget),
-      monthlyExpenseLimit: normalizeGoalValue(goalsForm.monthlyExpenseLimit),
-      savingsGoal: normalizeGoalValue(goalsForm.savingsGoal),
-    }),
-    [goalsForm],
-  );
-  const goalsDirty = useMemo(() => {
-    return (
-      goalsFormSanitized.monthlyInvestmentTarget !== initialGoals.monthlyInvestmentTarget ||
-      goalsFormSanitized.monthlyExpenseLimit !== initialGoals.monthlyExpenseLimit ||
-      goalsFormSanitized.savingsGoal !== initialGoals.savingsGoal
-    );
-  }, [goalsFormSanitized, initialGoals]);
-  const goalsResetDisabled =
-    goalsSaving ||
-    (goalsFormSanitized.monthlyInvestmentTarget === 0 &&
-      goalsFormSanitized.monthlyExpenseLimit === 0 &&
-      goalsFormSanitized.savingsGoal === 0);
-  const [alertsForm, setAlertsForm] = useState(() => ({
-    showToasts: initialAlerts.showToasts,
-  }));
+
+  // --- Notificações ---
+  const [alertsForm, setAlertsForm] = useState(() => ({ showToasts: initialAlerts.showToasts }));
   const [alertsSaving, setAlertsSaving] = useState(false);
   const alertsDirty = useMemo(() => alertsForm.showToasts !== initialAlerts.showToasts, [alertsForm, initialAlerts]);
 
@@ -101,19 +54,11 @@ export default function SettingsPage() {
     setMobileNavSelection(storedMobileNav);
   }, [storedMobileNav]);
   useEffect(() => {
-    setGoalsForm({
-      monthlyInvestmentTarget: formatGoalInput(initialGoals.monthlyInvestmentTarget),
-      monthlyExpenseLimit: formatGoalInput(initialGoals.monthlyExpenseLimit),
-      savingsGoal: formatGoalInput(initialGoals.savingsGoal),
-    });
-  }, [
-    initialGoals.monthlyInvestmentTarget,
-    initialGoals.monthlyExpenseLimit,
-    initialGoals.savingsGoal,
-  ]);
-  useEffect(() => {
     setAlertsForm({ showToasts: initialAlerts.showToasts });
   }, [initialAlerts.showToasts]);
+  useEffect(() => {
+    setDisplayName(initialDisplayName);
+  }, [initialDisplayName]);
 
   const handleToggleMobileNav = (path) => {
     let blocked = false;
@@ -128,73 +73,44 @@ export default function SettingsPage() {
         const sanitized = sanitizeMobileNavSelection(next);
         return sanitized.length > 0 ? sanitized : prev;
       }
-      const next = [...prev, path];
-      return sanitizeMobileNavSelection(next);
+      return sanitizeMobileNavSelection([...prev, path]);
     });
     if (blocked) {
       toast.error("Selecione pelo menos um atalho.");
     }
   };
 
-  const handleGoalInputChange = (event) => {
-    const { name, value } = event.target;
-    setGoalsForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleResetGoals = () => {
-    setGoalsForm({
-      monthlyInvestmentTarget: "",
-      monthlyExpenseLimit: "",
-      savingsGoal: "",
-    });
-  };
-
   const handleAlertsToggle = () => {
     setAlertsForm((prev) => ({ showToasts: !prev.showToasts }));
   };
 
-  const handleSaveAlerts = async (event) => {
+  const handleSaveProfile = async (event) => {
     event.preventDefault();
-    if (!alertsDirty || !updateUserMetadata) {
-      return;
-    }
-
+    if (!profileDirty || !updateUserMetadata) return;
     try {
-      setAlertsSaving(true);
-      await updateUserMetadata({
-        alert_preferences: {
-          show_toasts: alertsForm.showToasts,
-        },
-      });
-      toast.success("Preferencias de alertas atualizadas.");
+      setProfileSaving(true);
+      await updateUserMetadata({ display_name: displayName.trim() });
+      toast.success("Preferências de conta atualizadas.");
     } catch (error) {
-      console.error("Erro ao salvar preferencia de alertas:", error);
-      toast.error("Nao foi possivel atualizar os alertas agora.");
+      console.error("Erro ao salvar perfil:", error);
+      toast.error("Não foi possível salvar agora.");
     } finally {
-      setAlertsSaving(false);
+      setProfileSaving(false);
     }
   };
 
-  const handleSaveGoals = async (event) => {
+  const handleSaveAlerts = async (event) => {
     event.preventDefault();
-    if (!goalsDirty || !updateUserMetadata) {
-      return;
-    }
-    const payload = {
-      monthlyInvestmentTarget: goalsFormSanitized.monthlyInvestmentTarget,
-      monthlyExpenseLimit: goalsFormSanitized.monthlyExpenseLimit,
-      savingsGoal: goalsFormSanitized.savingsGoal,
-    };
-
+    if (!alertsDirty || !updateUserMetadata) return;
     try {
-      setGoalsSaving(true);
-      await updateUserMetadata({ financial_goals: payload });
-      toast.success("Metas financeiras atualizadas.");
+      setAlertsSaving(true);
+      await updateUserMetadata({ alert_preferences: { show_toasts: alertsForm.showToasts } });
+      toast.success("Preferências de notificação atualizadas.");
     } catch (error) {
-      console.error("Erro ao salvar metas financeiras:", error);
-      toast.error("Nao foi possivel salvar as metas agora.");
+      console.error("Erro ao salvar notificações:", error);
+      toast.error("Não foi possível atualizar as notificações agora.");
     } finally {
-      setGoalsSaving(false);
+      setAlertsSaving(false);
     }
   };
 
@@ -204,22 +120,19 @@ export default function SettingsPage() {
 
   const handleSaveMobileNav = async (event) => {
     event.preventDefault();
-    if (!mobileNavDirty || !updateUserMetadata) {
-      return;
-    }
+    if (!mobileNavDirty || !updateUserMetadata) return;
     const sanitized = sanitizeMobileNavSelection(mobileNavSelection);
     if (sanitized.length === 0) {
       toast.error("Selecione pelo menos um atalho.");
       return;
     }
-
     try {
       setMobileNavSaving(true);
       await updateUserMetadata({ mobile_nav_paths: sanitized });
-      toast.success("Preferencias do menu inferior atualizadas.");
+      toast.success("Preferências do menu inferior atualizadas.");
     } catch (error) {
       console.error("Erro ao salvar menu mobile:", error);
-      toast.error("Nao foi possivel salvar as preferencias agora.");
+      toast.error("Não foi possível salvar as preferências agora.");
     } finally {
       setMobileNavSaving(false);
     }
@@ -227,68 +140,75 @@ export default function SettingsPage() {
 
   const openPlans = () => {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("granaapp:open-plans"));
+      window.dispatchEvent(new CustomEvent("essencia:open-plans"));
     }
   };
 
   const activateTrial = () => {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("granaapp:activate-trial"));
+      window.dispatchEvent(new CustomEvent("essencia:activate-trial"));
     }
   };
 
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Configuracoes</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Configurações</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Ajuste preferencias gerais, limites de alerta e integracoes futuras.
+          Ajuste seu perfil, notificações e preferências de leitura.
         </p>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <form className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Preferencias de conta</h2>
+        <form
+          onSubmit={handleSaveProfile}
+          className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+        >
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Preferências de conta</h2>
           <div className="mt-6 space-y-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Nome da empresa
+              Nome de exibição
               <input
                 type="text"
-                defaultValue="GranaApp"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="Como você quer ser chamado"
                 className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
               />
             </label>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email de notificacao
+              Email da conta
               <input
                 type="email"
-                defaultValue="financeiro@granaapp.com"
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
+                value={user?.email ?? ""}
+                readOnly
+                className="mt-1 w-full cursor-not-allowed rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-950/60 dark:text-gray-400"
               />
             </label>
             <button
               type="submit"
-              className="mt-2 inline-flex items-center justify-center rounded-md border border-transparent bg-temaSky px-4 py-2 text-sm font-semibold text-white transition hover:bg-temaSky-dark dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark"
+              disabled={profileSaving || !profileDirty}
+              className="mt-2 inline-flex items-center justify-center rounded-md border border-transparent bg-temaSky px-4 py-2 text-sm font-semibold text-white transition hover:bg-temaSky-dark disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark"
             >
-              Salvar preferencias
+              {profileSaving ? "Salvando..." : "Salvar preferências"}
             </button>
           </div>
         </form>
 
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Alertas financeiros</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Sua experiência de leitura</h2>
           <ul className="mt-4 space-y-4 text-sm text-gray-600 dark:text-gray-300">
             <li className="flex items-start gap-3">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-rose-500" aria-hidden="true" />
-              Configure avisos de caixa baixo usando react-hot-toast quando o saldo projetado ficar negativo.
+              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-amber-500" aria-hidden="true" />
+              Receba destaques e citações da curadoria Essência direto no seu painel.
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-amber-500" aria-hidden="true" />
-              Crie alertas para vencimentos de contas com base em dias de antecedencia predefinidos.
+              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-violet-500" aria-hidden="true" />
+              O assistente literário sugere leituras com base no seu histórico e coleções.
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-500" aria-hidden="true" />
-              Integre webhooks do Supabase para receber alertas externos em canais como Slack.
+              Seu progresso de leitura e escuta fica sincronizado em todos os dispositivos.
             </li>
           </ul>
         </div>
@@ -299,7 +219,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Menu inferior (mobile)</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Escolha os atalhos exibidos no menu inferior em dispositivos moveis. Pelo menos um item deve permanecer ativo.
+              Escolha os atalhos exibidos no menu inferior em dispositivos móveis. Pelo menos um item deve permanecer ativo.
             </p>
           </div>
 
@@ -343,7 +263,7 @@ export default function SettingsPage() {
                 disabled={mobileNavSaving || (mobileNavSelection.length === DEFAULT_MOBILE_NAV_PATHS.length &&
                   mobileNavSelection.every((path, index) => path === DEFAULT_MOBILE_NAV_PATHS[index]))}
               >
-                Restaurar padrao
+                Restaurar padrão
               </button>
               <button
                 type="submit"
@@ -360,17 +280,17 @@ export default function SettingsPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <form className="flex flex-col gap-6" onSubmit={handleSaveAlerts}>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Alertas automáticos</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Notificações</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ative ou desative notificações em tempo real disparadas pelo gestor financeiro no dashboard.
+              Ative ou desative avisos rápidos exibidos na tela enquanto você navega pela Essência.
             </p>
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Mostrar alertas via toast</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Mostrar avisos via toast</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Quando habilitado, alertas críticos aparecem na tela durante a análise do dashboard.
+                Quando habilitado, mensagens de confirmação e novidades aparecem brevemente na tela.
               </p>
             </div>
             <label className="relative inline-flex h-6 w-12 cursor-pointer items-center">
@@ -391,86 +311,8 @@ export default function SettingsPage() {
               className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark dark:focus-visible:ring-temaEmerald/40"
               disabled={alertsSaving || !alertsDirty}
             >
-              {alertsSaving ? "Salvando..." : "Salvar alertas"}
+              {alertsSaving ? "Salvando..." : "Salvar notificações"}
             </button>
-          </div>
-        </form>
-      </section>
-
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <form className="flex flex-col gap-6" onSubmit={handleSaveGoals}>
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Metas financeiras</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Defina objetivos mensais para orientar o gestor financeiro. Valores iguais a zero deixam a meta desativada.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Meta de investimentos (R$)
-              <input
-                type="number"
-                name="monthlyInvestmentTarget"
-                min="0"
-                step="0.01"
-                value={goalsForm.monthlyInvestmentTarget}
-                onChange={handleGoalInputChange}
-                placeholder="Ex.: 500"
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Limite de despesas (R$)
-              <input
-                type="number"
-                name="monthlyExpenseLimit"
-                min="0"
-                step="0.01"
-                value={goalsForm.monthlyExpenseLimit}
-                onChange={handleGoalInputChange}
-                placeholder="Ex.: 3500"
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Objetivo de sobra (R$)
-              <input
-                type="number"
-                name="savingsGoal"
-                min="0"
-                step="0.01"
-                value={goalsForm.savingsGoal}
-                onChange={handleGoalInputChange}
-                placeholder="Ex.: 1200"
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
-              />
-            </label>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Valores sao interpretados no periodo filtrado do dashboard. Deixe em branco para desativar.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleResetGoals}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/30 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:focus-visible:ring-temaEmerald/30"
-                disabled={goalsResetDisabled}
-              >
-                Limpar metas
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark dark:focus-visible:ring-temaEmerald/40"
-                disabled={goalsSaving || !goalsDirty}
-              >
-                {goalsSaving ? "Salvando..." : "Salvar metas"}
-              </button>
-            </div>
           </div>
         </form>
       </section>
@@ -484,15 +326,15 @@ export default function SettingsPage() {
               </span>
             </div>
             <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">Backup e exportação (Premium)</h2>
+              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">Recursos Premium</h2>
               <p className="text-sm leading-relaxed">
-                Automatize o backup diário dos seus dados e exporte tudo em CSV com um clique. Ideal para enviar ao contador, manter
-                histórico em planilhas e integrar com outras ferramentas.
+                Desbloqueie a experiência completa da Essência: resumos inteligentes em vários formatos, audiobooks premium
+                e o assistente literário sem limites.
               </p>
               <ul className="space-y-1 text-xs text-emerald-700/90 dark:text-emerald-200/80">
-                <li>• Backup seguro no Supabase Storage com histórico de versões.</li>
-                <li>• Exportação CSV de lançamentos de despesas, rendas, investimentos e horas extras.</li>
-                <li>• Relatórios inteligentes com filtros avançados e sugestão de insights.</li>
+                <li>• Resumos em texto e áudio com curadoria atualizada semanalmente.</li>
+                <li>• Audiobooks premium com sincronização de progresso e download temporário.</li>
+                <li>• Assistente literário ilimitado com recomendações e roteiros de leitura.</li>
               </ul>
             </div>
           </div>

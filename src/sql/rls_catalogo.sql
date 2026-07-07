@@ -24,10 +24,9 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce(
-    (auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean,
-    false
-  );
+  select
+    lower(coalesce(auth.jwt() ->> 'email', '')) = lower('balbino10@hotmail.com')
+    or coalesce((auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean, false);
 $$;
 
 -- -------------------------------------------------------------

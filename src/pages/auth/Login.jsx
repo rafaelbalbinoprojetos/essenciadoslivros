@@ -82,7 +82,7 @@ export default function LoginPage() {
 
         if (result.requiresEmailConfirmation) {
           toast.success(`Conta criada! Confirme pelo link enviado para ${normalizedEmail}.`);
-          setAuthNotice(`🚀 Conta criada! Confirme o email ${normalizedEmail} para começar a usar o GranaApp.`);
+          setAuthNotice(`🚀 Conta criada! Confirme o email ${normalizedEmail} para começar a usar a Essência dos Livros.`);
         } else {
           toast.success("Conta criada com sucesso! Estamos preparando o seu ambiente.");
           setAuthNotice("🚀 Conta criada! Aproveite seu período de teste Premium por 7 dias.");
@@ -153,7 +153,7 @@ export default function LoginPage() {
             {heroImage && (
               <img
                 src={heroImage}
-                alt="Coleção de investimentos e finanças pessoais"
+                alt="Coleção de livros e leituras da Essência"
                 className="absolute inset-0 h-full w-full object-cover opacity-90"
                 loading="lazy"
               />
@@ -163,14 +163,14 @@ export default function LoginPage() {
             <div className="relative z-10 flex flex-col gap-8 p-10 text-slate-100">
               <div className="space-y-3">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
-                  GranaApp
+                  Essência dos Livros
                 </span>
                 <h3 className="text-3xl font-semibold leading-snug text-white/95">
-                  Simplifique seu controle financeiro.
+                  Leia o essencial, no seu ritmo.
                 </h3>
                 <p className="text-sm text-slate-200/80">
-                  Assistente financeiro com IA para o seu dia a dia. Visualize despesas, rendas, investimentos e metas em um só lugar.
-                  Decisões mais seguras para o seu futuro.
+                  Resumos de livros, filmes e jogos em texto e áudio, com curadoria e um assistente literário com IA.
+                  Descubra o que ler a seguir em um só lugar.
                 </p>
               </div>
 
@@ -182,8 +182,8 @@ export default function LoginPage() {
                     </span>
                   </div>
                   <p>
-                    Acesso imediato ao plano gratuito e 7 dias com todos os recursos Premium — IA financeira, voz, relatórios inteligentes e
-                    exportações.
+                    Acesso imediato ao plano gratuito e 7 dias com todos os recursos Premium — assistente literário, voz, audiobooks e
+                    resumos inteligentes.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

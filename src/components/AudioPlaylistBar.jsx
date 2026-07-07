@@ -37,7 +37,7 @@ export default function AudioPlaylistBar() {
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:px-8">
       <div className="pointer-events-auto flex w-full max-w-4xl flex-col gap-3 rounded-3xl border border-[rgba(255,255,255,0.1)] bg-[rgba(var(--surface-card),0.92)] p-4 text-white shadow-[0_25px_70px_-45px_rgba(8,7,20,0.9)] backdrop-blur">
         <div className="flex items-center gap-4">
-          <img src={coverSrc} alt={currentTrack.title} className="h-16 w-16 rounded-2xl object-cover" />
+          <img src={coverSrc} alt={currentTrack.title} className="h-16 w-12 rounded-xl object-contain" />
           <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-[0.35em] text-white/60">Playlist Essência</p>
             <p className="truncate text-base font-semibold text-white">

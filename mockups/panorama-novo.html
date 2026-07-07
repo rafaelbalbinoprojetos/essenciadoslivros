@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Essência dos Livros — Mockup do Panorama</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe9db;
+    --paper-2:#f4efe4;
+    --card:#fffdf7;
+    --card-2:#faf6ec;
+    --ink:#2b2620;
+    --ink-soft:#5c554b;
+    --muted:#938a7b;
+    --line:#e6decd;
+    --gold:#b9854b;
+    --gold-deep:#9a6c39;
+    --violet:#6a5a9c;
+    --violet-deep:#3f3566;
+    --rose:#d98a6a;
+    --shadow:0 18px 40px -24px rgba(53,42,20,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #f7f2e7 0%, transparent 60%),
+      linear-gradient(105deg, var(--paper) 0%, var(--paper) 52%, var(--paper-2) 52%, var(--paper-2) 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Fraunces',Georgia,serif;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:78px;flex:none;display:flex;flex-direction:column;align-items:center;
+    padding:22px 0;gap:26px;
+  }
+  .logo{
+    width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:#fff;
+    font-family:'Fraunces',serif;font-weight:600;font-size:20px;box-shadow:var(--shadow);
+  }
+  .nav{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .nav a{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    color:var(--muted);transition:.2s;text-decoration:none;
+  }
+  .nav a:hover{color:var(--ink);background:var(--card-2);}
+  .nav a.active{background:var(--rose);color:#fff;box-shadow:var(--shadow);}
+  .nav svg{width:21px;height:21px;}
+  .sidebar .bottom{margin-top:auto;color:var(--muted);}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;padding:26px 38px 40px;max-width:1320px;}
+  .topbar{display:flex;align-items:center;gap:18px;margin-bottom:30px;}
+  .search{
+    flex:1;max-width:420px;display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,.55);border:1px solid var(--line);
+    padding:11px 16px;border-radius:30px;color:var(--muted);font-size:14px;
+  }
+  .search svg{width:17px;height:17px;}
+  .topbar .spacer{flex:1;}
+  .user{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#caa46a,#9a6c39);
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;}
+  .icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    background:rgba(255,255,255,.55);border:1px solid var(--line);color:var(--ink-soft);}
+  .icon-btn svg{width:18px;height:18px;}
+
+  /* ---------- Layout grid ---------- */
+  .grid{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);gap:34px;}
+
+  /* ---------- Hero ---------- */
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;margin-bottom:14px;}
+  .hello-tag{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;}
+  .hero h1{font-size:42px;line-height:1.05;font-weight:600;margin:10px 0 14px;letter-spacing:-.5px;}
+  .hero p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;max-width:330px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;margin-top:20px;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
+    padding:13px 22px;border-radius:30px;font-size:14px;font-weight:600;font-family:inherit;
+    box-shadow:var(--shadow);
+  }
+  .btn svg{width:15px;height:15px;}
+
+  .reading-card{
+    background:var(--card);border:1px solid var(--line);border-radius:24px;
+    padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .reading-card .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .reading-card h3{font-size:24px;font-weight:600;margin:6px 0 4px;line-height:1.15;}
+  .reading-card .author{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  .book-spread{
+    height:150px;border-radius:14px;margin:6px 0 16px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.08), transparent 12%, transparent 88%, rgba(0,0,0,.08)),
+      linear-gradient(135deg,#d9c7a0,#b89b6a);
+    position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);
+    display:flex;align-items:flex-end;padding:12px;
+  }
+  .book-spread::before{content:"";position:absolute;left:50%;top:8px;bottom:8px;width:1px;background:rgba(0,0,0,.18);}
+  .quote{font-family:'Fraunces',serif;font-style:italic;color:#4a3f2c;font-size:13px;line-height:1.4;}
+  .progress-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-bottom:8px;}
+  .progress-row b{font-size:15px;}
+  .bar{height:7px;border-radius:6px;background:var(--line);overflow:hidden;}
+  .bar > i{display:block;height:100%;width:51%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--gold-deep));}
+
+  /* ---------- Section ---------- */
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin:30px 0 16px;}
+  .section-head h2{font-size:21px;font-weight:600;}
+  .section-head a{font-size:13px;color:var(--gold-deep);text-decoration:none;font-weight:600;}
+
+  /* ---------- Covers row ---------- */
+  .covers{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .cover{cursor:pointer;transition:.25s;}
+  .cover:hover{transform:translateY(-5px);}
+  .cover .art{
+    aspect-ratio:3/4.2;border-radius:14px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;justify-content:space-between;padding:14px;color:#fff;
+    position:relative;overflow:hidden;
+  }
+  .cover .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35));}
+  .cover .art span{position:relative;z-index:1;}
+  .cover .kicker{font-size:9px;letter-spacing:.18em;text-transform:uppercase;opacity:.8;}
+  .cover .ttl{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.05;}
+  .cover .meta{margin-top:10px;}
+  .cover .meta .name{font-size:13px;font-weight:600;}
+  .cover .meta .sub{font-size:11.5px;color:var(--muted);font-style:italic;}
+  .c1{background:linear-gradient(150deg,#7a2e2a,#3e1513);}
+  .c2{background:linear-gradient(150deg,#1f3a2e,#0f2018);}
+  .c3{background:linear-gradient(150deg,#274472,#14233f);}
+  .c4{background:linear-gradient(150deg,#5a3a6e,#2c1c38);}
+
+  /* ---------- New collection ---------- */
+  .collection{
+    display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:14px 18px;box-shadow:var(--shadow);
+  }
+  .collection .stack{width:54px;height:64px;border-radius:8px;background:linear-gradient(150deg,#3a5a44,#1c3024);flex:none;box-shadow:var(--shadow);}
+  .collection .info{flex:1;}
+  .collection .info b{font-size:15px;}
+  .collection .info p{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .collection .vol{font-size:12px;color:var(--gold-deep);font-weight:600;}
+
+  /* ---------- Right rail ---------- */
+  .rail{display:flex;flex-direction:column;gap:22px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);}
+  .panel > .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .panel .ph h2{font-size:17px;font-weight:600;}
+  .panel .ph .nav-mini{display:flex;gap:6px;color:var(--muted);}
+  .panel .ph .nav-mini span{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-size:12px;}
+
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;}
+  .cal .d{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:4px;}
+  .cal .n{font-size:13.5px;font-weight:600;padding:9px 0;border-radius:10px;color:var(--ink-soft);}
+  .cal .n.active{background:var(--ink);color:#fff;}
+  .cal .n.soft{background:var(--card-2);}
+
+  /* player (spotify vibe) */
+  .player{
+    border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden;
+    background:linear-gradient(140deg,#6a4ea0 0%,#8a4f8e 55%,#b9854b 130%);
+    box-shadow:var(--shadow);
+  }
+  .player .now{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.85;}
+  .player h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:6px 0 2px;}
+  .player .sub{font-size:12.5px;opacity:.85;}
+  .player .wave{display:flex;align-items:flex-end;gap:3px;height:30px;margin:16px 0 12px;}
+  .player .wave i{flex:1;background:rgba(255,255,255,.55);border-radius:2px;}
+  .player .pbar{height:5px;border-radius:5px;background:rgba(255,255,255,.3);overflow:hidden;}
+  .player .pbar>i{display:block;height:100%;width:38%;background:#fff;border-radius:5px;}
+  .player .ctrls{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:16px;}
+  .player .ctrls .play{width:46px;height:46px;border-radius:50%;background:#fff;color:var(--violet-deep);display:grid;place-items:center;box-shadow:var(--shadow);}
+  .player .ctrls svg{width:18px;height:18px;}
+  .player .ctrls .play svg{width:20px;height:20px;}
+  .player .time{display:flex;justify-content:space-between;font-size:11px;opacity:.8;margin-top:8px;}
+
+  /* friends */
+  .friend{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);}
+  .friend:first-of-type{border-top:none;}
+  .friend .fa{width:40px;height:40px;border-radius:50%;flex:none;background:linear-gradient(135deg,#caa46a,#9a6c39);}
+  .friend .fa.b{background:linear-gradient(135deg,#6a5a9c,#3f3566);}
+  .friend .fn{font-size:13.5px;font-weight:600;}
+  .friend .ft{font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.45;margin-top:2px;}
+  .friend .fc{font-size:11px;color:var(--gold-deep);margin-top:5px;}
+  .friend .fc s{color:var(--muted);}
+
+  .note{margin-top:26px;font-size:12px;color:var(--muted);text-align:center;}
+  @media(max-width:1050px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo serif">E</div>
+    <nav class="nav">
+      <a class="active" title="Panorama"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></a>
+      <a title="Biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h7v15H4zM13 5h7v15h-7z"/></svg></a>
+      <a title="Áudio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></a>
+      <a title="Salvos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v16l-6-4-6 4z"/></svg></a>
+      <a title="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></svg></a>
+    </nav>
+    <div class="bottom"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg></div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        Buscar livros, resumos ou autores…
+      </div>
+      <div class="spacer"></div>
+      <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/></svg></div>
+      <div class="user"><span>Rafael</span><div class="avatar">R</div></div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div>
+        <section class="hero">
+          <div>
+            <div class="hello-tag">Bem-vindo de volta</div>
+            <h1 class="serif">Boa leitura,<br>Rafael</h1>
+            <p>Você parou em uma boa parte. Retome de onde estava ou peça uma nova sugestão à curadoria Essência.</p>
+            <button class="btn">Continuar leitura
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+
+          <div class="reading-card">
+            <div class="label">Lendo agora</div>
+            <h3 class="serif">A Essência dos Binários</h3>
+            <div class="author">Luna Varella</div>
+            <div class="book-spread">
+              <div class="quote">"Liberdade é pouco. O que eu desejo ainda não tem nome."</div>
+            </div>
+            <div class="progress-row"><span>Progresso</span><span><b>154</b> / 300 págs</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </section>
+
+        <div class="section-head"><h2 class="serif">Populares agora</h2><a href="#">Ver biblioteca →</a></div>
+        <div class="covers">
+          <div class="cover">
+            <div class="art c1"><span class="kicker">Fantasia</span><span class="ttl">Fogo &amp; Sangue</span></div>
+            <div class="meta"><div class="name">Fogo &amp; Sangue</div><div class="sub">G. R. R. Martin</div></div>
+          </div>
+          <div class="cover">
+            <div class="art c2"><span class="kicker">Aventura</span><span class="ttl">Bestas Fantásticas</span></div>
+            <div class="meta"><div class="name">Bestas Fantásticas</div><div class="sub">Vol. II</div></div>
+          </div>
+          <div class="cover">
+            <div class="art c3"><span class="kicker">Épico</span><span class="ttl">O Mundo de Gelo</span></div>
+            <div class="meta"><div class="name">O Mundo de Gelo</div><div class="sub">Vol. III</div></div>
+          </div>
+          <div class="cover">
+            <div class="art c4"><span class="kicker">Drama</span><span class="ttl">O Nome do Vento</span></div>
+            <div class="meta"><div class="name">O Nome do Vento</div><div class="sub">Patrick Rothfuss</div></div>
+          </div>
+        </div>
+
+        <div class="section-head"><h2 class="serif">Nova coleção</h2><a href="#">Ver todas →</a></div>
+        <div class="collection">
+          <div class="stack"></div>
+          <div class="info"><b>Uma Lenda de Gelo e Fogo</b><p>8 capítulos cada volume · resumo em texto e áudio</p></div>
+          <div class="vol">2 vol</div>
+        </div>
+      </div>
+
+      <!-- RIGHT RAIL -->
+      <aside class="rail">
+        <div class="panel">
+          <div class="ph"><h2 class="serif">Agenda de leitura</h2>
+            <div class="nav-mini"><span>‹</span><span>›</span></div>
+          </div>
+          <div class="cal">
+            <div class="d">Dom</div><div class="d">Seg</div><div class="d">Ter</div><div class="d">Qua</div><div class="d">Qui</div><div class="d">Sex</div><div class="d">Sáb</div>
+            <div class="n">11</div><div class="n">12</div><div class="n active">13</div><div class="n soft">14</div><div class="n">15</div><div class="n soft">16</div><div class="n">17</div>
+          </div>
+        </div>
+
+        <div class="player">
+          <div class="now">▶ Tocando agora · audiobook</div>
+          <h3>Cartas ao Horizonte Interno</h3>
+          <div class="sub">Clarice em Essência · 26 min</div>
+          <div class="wave">
+            <i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:35%"></i><i style="height:85%"></i><i style="height:45%"></i><i style="height:65%"></i><i style="height:30%"></i><i style="height:80%"></i><i style="height:50%"></i><i style="height:70%"></i><i style="height:40%"></i><i style="height:60%"></i>
+          </div>
+          <div class="pbar"><i></i></div>
+          <div class="time"><span>9:48</span><span>26:00</span></div>
+          <div class="ctrls">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-9 6 9 6z"/></svg>
+            <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><h2 class="serif">Amigos leitores</h2></div>
+          <div class="friend">
+            <div class="fa"></div>
+            <div>
+              <div class="fn">Roberto Jordão</div>
+              <div class="ft">"Que capítulo delicioso e mágico! Transporta o leitor pro mundo da história."</div>
+              <div class="fc">✓ Capítulo 5: <s>Viela Diagonal</s> · há 2 min</div>
+            </div>
+          </div>
+          <div class="friend">
+            <div class="fa b"></div>
+            <div>
+              <div class="fn">Ana Henrique</div>
+              <div class="ft">"Terminei o capítulo ontem à noite e já quero o próximo."</div>
+              <div class="fc">A ler · há 1 h</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <p class="note">Mockup estático · Essência dos Livros — direção de layout para o Panorama</p>
+  </main>
+</div>
+</body>
+</html>

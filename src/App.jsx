@@ -5,10 +5,13 @@ import LibraryPage from "./pages/Library.jsx";
 import BookDetailsPage from "./pages/BookDetails.jsx";
 import ChatbotPage from "./pages/Chatbot.jsx";
 import SettingsPage from "./pages/Settings.jsx";
-import CompoundInterestPage from "./pages/CompoundInterest.jsx";
 import LoginPage from "./pages/auth/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import BookCreatePage from "./pages/BookCreate.jsx";
+import JourneysPage from "./pages/Journeys.jsx";
+import JourneyDetailPage from "./pages/JourneyDetail.jsx";
+import MuralPage from "./pages/Mural.jsx";
+import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 
 function App() {
   return (
@@ -19,12 +22,16 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="jornadas" element={<JourneysPage />} />
+            <Route path="jornadas/:slug" element={<JourneyDetailPage />} />
+            <Route path="mural" element={<MuralPage />} />
+            <Route path="memorias-cinematicas" element={<CinematicMemoriesPage />} />
             <Route path="biblioteca" element={<LibraryPage />} />
             <Route path="biblioteca/:bookId" element={<BookDetailsPage />} />
             <Route path="biblioteca/novo" element={<BookCreatePage />} />
+            <Route path="biblioteca/:bookId/editar" element={<BookCreatePage />} />
             <Route path="assistente" element={<ChatbotPage />} />
             <Route path="configuracoes" element={<SettingsPage />} />
-            <Route path="juros-compostos" element={<CompoundInterestPage />} />
 
             {/* Rotas antigas mantidas temporariamente para compatibilidade */}
             <Route path="chatbot" element={<Navigate to="/assistente" replace />} />
@@ -37,4 +44,3 @@ function App() {
 }
 
 export default App;
-

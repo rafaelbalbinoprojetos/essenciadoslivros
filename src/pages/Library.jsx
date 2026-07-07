@@ -1,10 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion as Motion } from "framer-motion";
+import { Swords, Compass, Heart, Drama, Lightbulb, Scroll, Cpu, Sparkles } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import BookLink from "../components/BookLink.jsx";
+
+const chipContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+};
+const chipItemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 22 } },
+};
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
-import { buildAudioSource } from "../utils/media.js";
+import { buildAudioSource, openResolvedMedia, resolveAudioSource, resolvePdfSource } from "../utils/media.js";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
+import BookCard from "../components/BookCard.jsx";
+import { useEngagement } from "../hooks/useEngagement.js";
+import { hasCinematicExperience } from "../services/narratives.js";
 
 const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
 const COVER_POOL = Object.values(coverManifest).filter(Boolean);
@@ -16,14 +30,22 @@ function coverFromPool(index) {
 }
 
 const CATEGORY_ITEMS = [
-  { id: "acao", label: "Ação", icon: "⚔️" },
-  { id: "aventura", label: "Aventura", icon: "🧭" },
-  { id: "romance", label: "Romance", icon: "💌" },
-  { id: "drama", label: "Drama", icon: "🎭" },
-  { id: "filosofia", label: "Filosofia", icon: "☯" },
-  { id: "biografia", label: "Biografia", icon: "📜" },
-  { id: "tecnico", label: "Técnico", icon: "🧠" },
-  { id: "fantasia", label: "Fantasia", icon: "✨" },
+  { id: "acao", label: "Ação", icon: Swords, gradient: "linear-gradient(150deg,#c25a4d,#7a2f37)" },
+  { id: "aventura", label: "Aventura", icon: Compass, gradient: "linear-gradient(150deg,#cd8f4c,#7c4c22)" },
+  { id: "romance", label: "Romance", icon: Heart, gradient: "linear-gradient(150deg,#c75b87,#722f5a)" },
+  { id: "drama", label: "Drama", icon: Drama, gradient: "linear-gradient(150deg,#7d60ab,#3f3566)" },
+  { id: "filosofia", label: "Filosofia", icon: Lightbulb, gradient: "linear-gradient(150deg,#5c7f8c,#2f4a55)" },
+  { id: "biografia", label: "Biografia", icon: Scroll, gradient: "linear-gradient(150deg,#b48b50,#6f5225)" },
+  { id: "tecnico", label: "Técnico", icon: Cpu, gradient: "linear-gradient(150deg,#6b809d,#34435f)" },
+  { id: "fantasia", label: "Fantasia", icon: Sparkles, gradient: "linear-gradient(150deg,#8d6dc2,#4a3a86)" },
+];
+
+const FLOW_ACCENTS = [
+  { glow: "rgba(118,93,255,0.34)", solid: "#7b5dff" },
+  { glow: "rgba(214,162,92,0.34)", solid: "#d6a25c" },
+  { glow: "rgba(199,91,135,0.34)", solid: "#c75b87" },
+  { glow: "rgba(92,127,140,0.34)", solid: "#5c7f8c" },
+  { glow: "rgba(205,143,76,0.34)", solid: "#cd8f4c" },
 ];
 
 const FALLBACK_FLOW_BOOKS = [
@@ -104,10 +126,10 @@ const CONTENT_RAIL_TEMPLATES = [
     keywords: ["liderança", "gestão", "time", "times", "empresa", "startup"],
   },
   {
-    id: "investimentos",
-    title: "Investimento e finanças",
-    subtitle: "Narrativas sobre dinheiro consciente e riqueza sustentável",
-    keywords: ["investimento", "finanças", "capital", "economia"],
+    id: "ficcao-cientifica",
+    title: "Ficção científica e futuros",
+    subtitle: "Mundos especulativos, tecnologia e novas fronteiras",
+    keywords: ["ficção científica", "sci-fi", "distopia", "futuro", "tecnologia"],
   },
   {
     id: "autoajuda",
@@ -180,7 +202,7 @@ const FALLBACK_LIST_SECTIONS = [
 ];
 
 function pickCover(book, fallbackIndex = 0) {
-  return ensureCoverSrc(book?.capa_url, coverFromPool(fallbackIndex));
+  return ensureCoverSrc(book?.capa_url || book?.capa_cinematica_url, coverFromPool(fallbackIndex));
 }
 
 function handleCoverFallback(event) {
@@ -206,6 +228,7 @@ function mapBookToFlowCard(book, fallbackIndex = 0) {
     cover: pickCover(book, fallbackIndex),
     pdf_url: book.pdf_url,
     audio_url: book.audio_url,
+    hasNarrative: hasCinematicExperience(book),
   };
 }
 
@@ -220,6 +243,7 @@ function mapBookToSectionCard(book, fallbackIndex = 0) {
     cover: pickCover(book, fallbackIndex),
     pdf_url: book.pdf_url,
     audio_url: book.audio_url,
+    hasNarrative: hasCinematicExperience(book),
     minutes: book.duracao_audio ? Number(book.duracao_audio) : null,
     destaque: Boolean(book.destaque),
   };
@@ -436,6 +460,17 @@ export default function LibraryPage() {
   const contentRails = useMemo(() => buildContentRails(books), [books]);
   const playlistTracks = useMemo(() => buildPlaylistFromBooks(books), [books]);
   const catalogBooksById = useMemo(() => new Map(books.map((book) => [book.id, book])), [books]);
+  const librarySectionIds = useMemo(() => {
+    const ids = [];
+    listSections.forEach((section) => {
+      section.books.forEach((book) => {
+        const id = book.detailsId ?? (books.length > 0 ? book.id : null);
+        if (id) ids.push(id);
+      });
+    });
+    return ids;
+  }, [listSections, books.length]);
+  const engagement = useEngagement(librarySectionIds);
   const handleStartPlaylist = useCallback(
     (bookId = null) => {
       if (!playlistTracks.length) return;
@@ -452,11 +487,22 @@ export default function LibraryPage() {
     },
     [playlistTracks, startPlaylist],
   );
+  const handlePlayFeaturedAudio = useCallback(async () => {
+    if (!featuredBook.audio_url) return;
+    const source = await resolveAudioSource(featuredBook.audio_url);
+    if (!source) return;
+    startPlaylist([
+      {
+        id: featuredBook.detailsId ?? "featured-book",
+        bookId: featuredBook.detailsId ?? null,
+        title: featuredBook.title ?? "Audiobook Essência",
+        author: featuredBook.author ?? "Autor não informado",
+        cover: featuredBook.cover,
+        source,
+      },
+    ]);
+  }, [featuredBook, startPlaylist]);
   const hasPlaylist = playlistTracks.length > 0;
-  const manualSelectionIds = useMemo(
-    () => new Set(manualSelection.map((track) => track.bookId)),
-    [manualSelection],
-  );
   const handleToggleManualSelection = useCallback(
     (bookId) => {
       if (!bookId) return;
@@ -472,25 +518,6 @@ export default function LibraryPage() {
         const track = mapBookToPlaylistTrack(target, prev.length);
         if (!track) return prev;
         return [...prev, track];
-      });
-    },
-    [catalogBooksById],
-  );
-  const handleAddGroupToSelection = useCallback(
-    (bookIds = []) => {
-      if (!bookIds.length) return;
-      setManualSelection((prev) => {
-        const next = [...prev];
-        bookIds.forEach((id) => {
-          if (!id || next.some((item) => item.bookId === id)) return;
-          const target = catalogBooksById.get(id);
-          if (!target) return;
-          const track = mapBookToPlaylistTrack(target, next.length);
-          if (track) {
-            next.push(track);
-          }
-        });
-        return next;
       });
     },
     [catalogBooksById],
@@ -548,10 +575,12 @@ export default function LibraryPage() {
   }, [flowBooks, flowCount, flowIndex]);
 
   const activeFlowCard = flowBooks[flowIndex] ?? flowBooks[0] ?? null;
+  const flowAccent =
+    FLOW_ACCENTS[((flowIndex % FLOW_ACCENTS.length) + FLOW_ACCENTS.length) % FLOW_ACCENTS.length];
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)]">
-      <main className="space-y-10">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] xl:gap-12">
+      <main className="min-w-0 space-y-10 xl:pr-2">
         <section className="flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 shadow-[0_30px_70px_-60px_rgba(15,10,35,0.8)]">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.7)]">Gestão editorial</p>
@@ -607,41 +636,67 @@ export default function LibraryPage() {
         )}
         
       <section className="relative w-full overflow-hidden">
-  <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
-    Navegue por estilos
-  </p>
+  <div className="flex items-center justify-between gap-3">
+    <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
+      Navegue por estilos
+    </p>
+    <span className="hidden text-[11px] font-medium text-[rgb(var(--text-secondary))] sm:inline">Arraste para ver mais →</span>
+  </div>
 
   {/* container fixo que impede o scroll global */}
-  <div className="relative -mx-4 sm:mx-0">
-    {/* faixa rolável isolada */}
-    <div
-      className="mt-4 flex w-[calc(100vw-2rem)] sm:w-full gap-3 overflow-x-auto rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[color:rgba(var(--surface-card),0.7)] px-4 py-4 backdrop-blur scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-thumb-rounded-full"
+  <div className="relative">
+    {/* faixa rolável isolada com glassmorphismo */}
+    <Motion.div
+      variants={chipContainerVariants}
+      initial="hidden"
+      animate="show"
+      className="mt-4 flex w-full max-w-full gap-5 overflow-x-auto rounded-[28px] border border-[rgba(186,123,79,0.18)] bg-[color:rgba(var(--surface-card),0.55)] px-6 py-6 backdrop-blur-xl shadow-[0_30px_70px_-55px_rgba(40,25,10,0.85)] scrollbar-thin scrollbar-thumb-[rgba(186,123,79,0.25)] scrollbar-thumb-rounded-full"
       style={{
         scrollSnapType: "x mandatory",
         WebkitOverflowScrolling: "touch",
       }}
     >
-      {CATEGORY_ITEMS.map((category, index) => (
-        <button
-          key={category.id}
-          type="button"
-          className="group flex flex-col flex-shrink-0 items-center gap-2 rounded-full px-4 py-2 text-[0.8rem] font-medium text-[rgb(var(--text-primary))] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(214,162,92,0.7)] snap-start"
-          style={{
-            background:
-              index === 0
-                ? "linear-gradient(145deg, rgba(214,162,92,0.35), rgba(118,93,255,0.15))"
-                : "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
-          }}
-        >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(249,215,142,0.15)] text-lg text-[rgb(var(--text-primary))] shadow-inner shadow-white/5">
-            {category.icon}
-          </span>
-          <span className="font-serif text-sm">{category.label}</span>
-        </button>
-      ))}
-      </div>
+      {CATEGORY_ITEMS.map((category, index) => {
+        const active = index === 0;
+        return (
+          <Motion.button
+            key={category.id}
+            type="button"
+            variants={chipItemVariants}
+            whileHover={{ y: -6 }}
+            whileTap={{ scale: 0.95 }}
+            className="group relative flex flex-shrink-0 snap-start flex-col items-center gap-2.5 rounded-2xl px-1 py-1 focus-visible:outline-none"
+          >
+            <span
+              className={`relative flex h-16 w-16 items-center justify-center rounded-2xl text-2xl text-white transition-shadow duration-300 group-hover:shadow-[0_22px_34px_-14px_rgba(40,25,10,0.6)] ${
+                active
+                  ? "ring-2 ring-[rgba(214,162,92,0.85)] ring-offset-2 ring-offset-[rgba(var(--surface-card),0.55)] shadow-[0_22px_34px_-14px_rgba(40,25,10,0.6)]"
+                  : "ring-1 ring-white/10"
+              }`}
+              style={{ background: category.gradient }}
+            >
+              <span className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/25 to-transparent" aria-hidden="true" />
+              {React.createElement(category.icon, {
+                className: "relative h-7 w-7 drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]",
+                strokeWidth: 1.75,
+              })}
+            </span>
+            <span
+              className={`font-serif text-sm transition ${
+                active
+                  ? "font-semibold text-[rgb(var(--text-primary))]"
+                  : "text-[rgb(var(--text-secondary))] group-hover:text-[rgb(var(--text-primary))]"
+              }`}
+            >
+              {category.label}
+            </span>
+            {active && (
+              <span className="absolute -bottom-1.5 h-1 w-7 rounded-full bg-[rgb(var(--color-accent-primary))]" aria-hidden="true" />
+            )}
+          </Motion.button>
+        );
+      })}
+      </Motion.div>
     </div>
 </section>
 
@@ -761,13 +816,19 @@ export default function LibraryPage() {
 
 
 <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[rgba(12,10,22,0.9)] px-6 py-10 text-white shadow-[0_45px_90px_-60px_rgba(5,3,20,0.95)]">
-  {/* Fundo iluminado */}
+  {/* Fundo iluminado — reage à cor da capa ativa */}
   <div className="pointer-events-none absolute inset-0">
-    <div className="absolute -left-20 top-10 h-60 w-60 rounded-full bg-[rgba(118,93,255,0.25)] blur-[110px]" />
-    <div className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[rgba(214,162,92,0.22)] blur-[120px]" />
+    <div
+      className="absolute -left-20 top-10 h-60 w-60 rounded-full blur-[110px] transition-colors duration-700"
+      style={{ background: flowAccent.glow }}
+    />
+    <div
+      className="absolute right-0 bottom-0 h-72 w-72 rounded-full blur-[120px] transition-colors duration-700"
+      style={{ background: flowAccent.glow }}
+    />
   </div>
 
-  <div className="relative grid items-start gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+  <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
     {/* SEÇÃO DE TEXTO E CONTROLES */}
     <div className="space-y-6">
       <p className="text-xs uppercase tracking-[0.5em] text-white/50">Flow Essência</p>
@@ -801,6 +862,32 @@ export default function LibraryPage() {
             {activeFlowCard?.summary}
           </p>
         </div>
+      </div>
+
+      {/* CTA primário */}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => activeFlowCard && setSelectedFlow(activeFlowCard)}
+          className="inline-flex items-center gap-2 rounded-2xl px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          style={{ backgroundColor: flowAccent.solid, boxShadow: `0 18px 34px -14px ${flowAccent.glow}` }}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Começar a ler
+        </button>
+        <button
+          type="button"
+          onClick={() => activeFlowCard && setSelectedFlow(activeFlowCard)}
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/25 px-6 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4" aria-hidden="true">
+            <path d="M3 18v-5a9 9 0 0118 0v5" strokeLinecap="round" />
+            <path d="M19 16h2v3a2 2 0 01-2 2h-1v-5zM5 16H3v3a2 2 0 002 2h1v-5z" />
+          </svg>
+          Ouvir resumo
+        </button>
       </div>
 
       {/* Botões e indicadores */}
@@ -844,32 +931,31 @@ export default function LibraryPage() {
 
       {/* Coverflow */}
       <div
-        className="relative mx-auto w-full max-w-[520px] h-[360px] sm:h-[340px] lg:h-[320px]
-                   -translate-y-[10px] sm:-translate-y-[60px] md:-translate-y-[100px] lg:-translate-y-[160px]"
+        className="relative mx-auto h-[320px] w-full max-w-[460px]"
         style={{
-          perspective: "900px",
-          perspectiveOrigin: "50% 40%",
+          perspective: "1000px",
+          perspectiveOrigin: "50% 50%",
         }}
       >
         {flowDeck.map((card) => {
           const distance = Math.abs(card.relative);
           const isActive = card.relative === 0;
-          const translateX = `${card.relative * 120}px`;
-          const translateZ = 240 - distance * 80;
-          const rotateY = card.relative * -28;
-          const scale = isActive ? 1 : 0.85;
-          const opacity = Math.max(0, 0.8 - distance * 0.28);
+          const translateX = `${card.relative * 94}px`;
+          const translateZ = 200 - distance * 64;
+          const rotateY = card.relative * -22;
+          const scale = isActive ? 1 : 0.86;
+          const opacity = distance > 2 ? 0 : Math.max(0, 0.9 - distance * 0.26);
 
           return (
             <article
               key={card.id}
               className="absolute left-1/2 top-1/2 h-[260px] sm:h-[240px] lg:h-[260px] 
-                         w-[170px] sm:w-[160px] lg:w-[170px]
+                         w-[195px] sm:w-[180px] lg:w-[195px]
                          -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden 
                          rounded-[28px] border border-white/10 bg-black/40 
                          shadow-[0_25px_45px_-25px_rgba(0,0,0,0.8)] transition-all"
               style={{
-                transform: `translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                transform: `translate(-50%, -50%) translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                 opacity,
                 zIndex: 50 - distance,
                 transition:
@@ -887,7 +973,7 @@ export default function LibraryPage() {
                   <img
                     src={card.cover}
                     alt={card.title}
-                    className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
+                    className="h-full w-full object-contain pt-2 brightness-[0.97] contrast-[1.08]"
                     draggable={false}
                     onError={handleCoverFallback}
                   />
@@ -896,7 +982,7 @@ export default function LibraryPage() {
                 <img
                   src={card.cover}
                   alt={card.title}
-                  className="h-full w-full object-cover brightness-[0.97] contrast-[1.08]"
+                  className="h-full w-full object-contain pt-2 brightness-[0.97] contrast-[1.08]"
                   draggable={false}
                   onError={handleCoverFallback}
                 />
@@ -914,12 +1000,12 @@ export default function LibraryPage() {
             <div className="w-full lg:w-1/3">
               <BookLink
                 bookId={featuredBook.detailsId}
-                className="mx-auto block h-[360px] w-[240px] rounded-[24px] shadow-xl lg:h-[360px] lg:w-[240px]"
+                className="mx-auto block h-[360px] w-[270px] rounded-[24px] bg-black/5 shadow-xl lg:h-[360px] lg:w-[270px]"
               >
                 <img
                   src={featuredBook.cover}
                   alt={featuredBook.title}
-                  className="h-full w-full rounded-[24px] object-cover"
+                  className="h-full w-full rounded-[24px] object-contain pt-2"
                   onError={handleCoverFallback}
                 />
               </BookLink>
@@ -943,24 +1029,22 @@ export default function LibraryPage() {
               <p className="text-base leading-relaxed text-[rgb(var(--text-primary))]">{featuredBook.sinopse}</p>
               <div className="flex flex-wrap gap-3 text-sm">
                 {featuredBook.pdf_url && (
-                  <a
-                    href={featuredBook.pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => openResolvedMedia(featuredBook.pdf_url, resolvePdfSource)}
                     className="inline-flex items-center gap-2 rounded-2xl bg-[color:rgb(var(--color-accent-primary))] px-4 py-2 font-semibold text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.35)] transition hover:bg-[color:rgb(var(--color-accent-dark))]"
                   >
                     Ler PDF →
-                  </a>
+                  </button>
                 )}
                 {buildAudioSource(featuredBook.audio_url) && (
-                  <a
-                    href={buildAudioSource(featuredBook.audio_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={handlePlayFeaturedAudio}
                     className="inline-flex items-center gap-2 rounded-2xl border border-[rgba(0,0,0,0.08)] px-4 py-2 font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
                   >
                     Ouvir áudio
-                  </a>
+                  </button>
                 )}
                 {featuredBook.detailsId ? (
                   <Link
@@ -988,64 +1072,32 @@ export default function LibraryPage() {
               </div>
               <button className="text-sm font-semibold text-[color:rgb(var(--color-accent-dark))]">Ver todos →</button>
             </header>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
               {section.books.map((book, idx) => {
                 const detailsId = book.detailsId ?? (books.length > 0 ? book.id : null);
-                const hasLiveCatalog = Boolean(detailsId);
-                const CardTag = hasLiveCatalog ? Link : "article";
-                const cardProps = {
-                  className:
-                    "group relative block overflow-hidden rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-4 shadow-[0_25px_60px_-40px_rgba(10,8,30,0.6)] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--color-accent-primary),0.5)]",
-                };
-                if (hasLiveCatalog) {
-                  cardProps.to = `/biblioteca/${detailsId}`;
-                }
                 return (
-                  <CardTag key={book.id ?? `${section.id}-${idx}`} {...cardProps}>
-                    <img
-                      src={book.cover}
-                      alt={book.title}
-                      className="h-44 w-full rounded-2xl object-cover"
-                      draggable={false}
-                      loading="lazy"
-                      onError={handleCoverFallback}
-                    />
-                    <div className="mt-4 space-y-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
-                          {book.genero ?? (idx === 0 ? "Atual" : "Descoberta")}
-                        </p>
-                        <h4 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{book.title}</h4>
-                        <p className="text-sm text-[rgb(var(--text-secondary))]">{book.author}</p>
-                      </div>
-                      {book.sinopse && <p className="text-sm text-[rgb(var(--text-secondary))] line-clamp-3">{book.sinopse}</p>}
-                      <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                      {book.pdf_url && (
-                        <a
-                          href={book.pdf_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
-                          >
-                            Abrir PDF
-                          </a>
-                        )}
-                      {buildAudioSource(book.audio_url) && (
-                        <a
-                          href={buildAudioSource(book.audio_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] px-3 py-1 text-[rgb(var(--text-primary))] hover:bg-white/10"
-                        >
-                          Ouvir áudio
-                        </a>
-                      )}
-                      {!book.pdf_url && !buildAudioSource(book.audio_url) && (
-                        <span className="text-[rgb(var(--text-secondary))]">Atualize o título com PDF ou áudio.</span>
-                      )}
-                      </div>
-                    </div>
-                  </CardTag>
+                  <BookCard
+                    key={book.id ?? `${section.id}-${idx}`}
+                    book={{
+                      id: detailsId,
+                      title: book.title,
+                      author: book.author,
+                      category: book.genero ?? (idx === 0 ? "Atual" : "Descoberta"),
+                      cover: book.cover,
+                      synopsis: book.sinopse ?? book.summary,
+                      hasPdf: Boolean(book.pdf_url),
+                      hasAudio: Boolean(book.audio_url),
+                      hasNarrative: Boolean(book.hasNarrative),
+                      pdfUrl: book.pdf_url,
+                      audioUrl: book.audio_url,
+                      isNew: false,
+                    }}
+                    likeCount={detailsId ? engagement.likeCounts[detailsId] || 0 : 0}
+                    liked={detailsId ? engagement.liked.has(detailsId) : false}
+                    saved={detailsId ? engagement.saved.has(detailsId) : false}
+                    onToggleLike={detailsId ? engagement.toggleLike : undefined}
+                    onToggleSave={detailsId ? engagement.toggleSave : undefined}
+                  />
                 );
               })}
             </div>
@@ -1086,12 +1138,12 @@ export default function LibraryPage() {
                     >
                       <div
                         className="w-full overflow-hidden rounded-[22px] bg-black/10"
-                        style={{ aspectRatio: "9 / 16" }}
+                        style={{ aspectRatio: "3 / 4" }}
                       >
                         <img
                           src={card.cover}
                           alt={card.title}
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                          className="h-full w-full object-contain pt-2"
                           onError={handleCoverFallback}
                         />
                       </div>
@@ -1179,8 +1231,8 @@ export default function LibraryPage() {
         )}
       </main>
 
-      <aside className="space-y-6 xl:sticky xl:top-24">
-        <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.8)] p-5 backdrop-blur">
+      <aside className="space-y-6 xl:sticky xl:top-24 xl:border-l xl:border-[rgba(186,123,79,0.18)] xl:pl-12">
+        <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
           <header className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Mais bem avaliados</p>
@@ -1194,7 +1246,7 @@ export default function LibraryPage() {
                 <img
                   src={book.cover}
                   alt={book.title}
-                  className="h-16 w-12 rounded-xl object-cover"
+                  className="h-16 w-12 rounded-xl object-contain"
                   draggable={false}
                   onError={handleCoverFallback}
                 />
@@ -1234,7 +1286,7 @@ export default function LibraryPage() {
                 <img
                   src={item.cover}
                   alt={item.title}
-                  className="h-24 w-20 rounded-2xl object-cover"
+                  className="h-24 w-[72px] rounded-2xl object-contain"
                   draggable={false}
                   onError={handleCoverFallback}
                 />
@@ -1252,7 +1304,7 @@ export default function LibraryPage() {
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 backdrop-blur">
+        <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
           <header className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Suas estatísticas</p>
@@ -1292,7 +1344,7 @@ export default function LibraryPage() {
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-5 backdrop-blur">
+        <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
           <header className="mb-4">
             <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Atividades recentes</p>
             <p className="text-xs text-[rgb(var(--text-secondary))]">Linha do tempo Essência</p>
@@ -1323,7 +1375,7 @@ export default function LibraryPage() {
                 <img
                   src={selectedFlow.cover}
                   alt={selectedFlow.title}
-                  className="h-48 w-36 rounded-2xl object-cover"
+                  className="h-48 w-36 rounded-2xl object-contain"
                   onError={handleCoverFallback}
                 />
               </BookLink>

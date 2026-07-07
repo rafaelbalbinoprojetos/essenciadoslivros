@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       ? "wav"
       : "webm";
 
-    const file = await OpenAI.toFile(buffer, `granaapp-audio.${extension}`);
+    const file = await OpenAI.toFile(buffer, `essencia-audio.${extension}`);
 
     const transcription = await openai.audio.transcriptions.create({
       file,
