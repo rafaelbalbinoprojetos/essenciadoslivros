@@ -22,14 +22,6 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { ensureCoverSrc } from "../utils/covers.js";
 import { hasCinematicExperience } from "../services/narratives.js";
 
-const HERO_FLOW_ACCENTS = [
-  { glow: "rgba(118,93,255,0.34)", solid: "#7b5dff" },
-  { glow: "rgba(214,162,92,0.34)", solid: "#d6a25c" },
-  { glow: "rgba(199,91,135,0.34)", solid: "#c75b87" },
-  { glow: "rgba(92,127,140,0.34)", solid: "#5c7f8c" },
-  { glow: "rgba(205,143,76,0.34)", solid: "#cd8f4c" },
-];
-
 function getNarrative(book) {
   return Array.isArray(book?.narrativa) ? book.narrativa[0] : book?.narrativa;
 }
@@ -119,7 +111,6 @@ export default function DashboardPage() {
   }, [books, cinematicBooks]);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroBook = heroBooks[heroIndex] ?? heroBooks[0] ?? null;
-  const heroAccent = HERO_FLOW_ACCENTS[heroIndex % HERO_FLOW_ACCENTS.length];
   const heroDeck = useMemo(() => {
     if (!heroBooks.length) return [];
     const half = Math.floor(heroBooks.length / 2);
@@ -194,11 +185,22 @@ export default function DashboardPage() {
       )}
 
       {heroBook && (
-        <section className="relative min-h-[580px] overflow-hidden rounded-[34px] border border-white/10 bg-[#0d0b0a] text-white shadow-[0_45px_100px_-58px_rgba(20,12,8,0.92)]">
+        <section className="relative min-h-[580px] overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)]">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-20 top-10 h-72 w-72 rounded-full blur-[120px] transition-colors duration-700" style={{ background: heroAccent.glow }} />
-            <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full blur-[130px] transition-colors duration-700" style={{ background: heroAccent.glow }} />
-            <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(8,7,6,0.78),rgba(13,11,10,0.92)_58%,rgba(13,11,10,0.98))]" />
+            <AnimatePresence mode="sync">
+              <Motion.img
+                key={`panorama-ambient-${heroBook.id}`}
+                src={coverOf(heroBook, hasCinematicExperience(heroBook))}
+                alt=""
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.18 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-3xl"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_31%_48%,rgba(191,137,63,0.2),transparent_38%),radial-gradient(circle_at_82%_15%,rgba(213,176,106,0.07),transparent_28%),linear-gradient(100deg,rgba(8,6,4,0.56),rgba(8,6,4,0.9)_58%,rgba(8,6,4,0.98))]" />
+            <div className="absolute inset-x-[8%] top-0 h-px bg-gradient-to-r from-transparent via-[#d5b06a]/40 to-transparent" />
           </div>
 
           <div className="relative grid min-h-[580px] min-w-0 lg:grid-cols-[minmax(340px,1fr)_minmax(0,1.18fr)]">
