@@ -12,7 +12,7 @@ export async function salvarOuAtualizarBEU({ obraId, payload, versao = "1.0" }) 
   const { data: existente } = await supabaseAdmin
     .from("obras_payloads_universais")
     .select("id")
-    .eq("livro_id", obraId)
+    .eq("obra_id", obraId)
     .eq("versao", versao)
     .maybeSingle();
 
@@ -35,7 +35,7 @@ export async function salvarOuAtualizarBEU({ obraId, payload, versao = "1.0" }) 
   const { data, error } = await supabaseAdmin
     .from("obras_payloads_universais")
     .insert({
-      livro_id: obraId,
+      obra_id: obraId,
       versao,
       tipo_obra: payload?.identificacao?.tipo_obra || "livro",
       payload,
