@@ -13,6 +13,8 @@ import JourneyDetailPage from "./pages/JourneyDetail.jsx";
 import MuralPage from "./pages/Mural.jsx";
 import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
+import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
+
 
 function App() {
   return (
@@ -33,7 +35,9 @@ function App() {
             <Route path="biblioteca/novo" element={<BookCreatePage />} />
             <Route path="biblioteca/:bookId/editar" element={<BookCreatePage />} />
             <Route path="assistente" element={<ChatbotPage />} />
+            <Route path="engine" element={<EngineSolicitarObra />} />
             <Route path="configuracoes" element={<SettingsPage />} />
+            
 
             {/* Rotas antigas mantidas temporariamente para compatibilidade */}
             <Route path="chatbot" element={<Navigate to="/assistente" replace />} />
