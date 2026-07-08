@@ -1,4 +1,4 @@
-import { executarEtapaPipeline } from "./pipelineExecutor.js";
+import { executarEtapaPipeline } from "../../server/engine/pipelineExecutor.js";
 
 export default async function handler(req, res) {
   try {

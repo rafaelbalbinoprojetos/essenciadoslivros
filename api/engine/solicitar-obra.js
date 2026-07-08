@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "./supabaseAdmin.js";
+import { supabaseAdmin } from "../../server/engine/supabaseAdmin.js";
 
 export default async function handler(req, res) {
   try {
