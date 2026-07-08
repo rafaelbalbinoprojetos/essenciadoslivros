@@ -125,6 +125,8 @@ async function buscarCamposCurador({ versao }) {
 
 function montarPromptCurador({ agente, contexto, campos }) {
   const contratoCampos = montarContratoCampos(campos);
+  const universoBanco = contexto?.classificacao?.universo?.nome || null;
+  const franquiaBanco = contexto?.classificacao?.franquia?.nome || null;
 
   return `
 Você está executando a etapa curador_beu da Essência Engine.
@@ -146,6 +148,13 @@ REGRAS DE VERDADE E SEGURANÇA EDITORIAL
 - Não escreva markdown fora do JSON final.
 - Não inclua comentários fora do JSON.
 - Preserve o idioma pt-BR.
+
+REGRA DE PRIORIDADE DO BANCO
+- Se contexto.classificacao.universo existir, use exatamente o nome informado pelo banco, sem traduzir, corrigir, normalizar ou criar variações.
+- Se contexto.classificacao.franquia existir, use exatamente o nome informado pelo banco, sem traduzir, corrigir, normalizar ou criar variações.
+- Só infira universo ou franquia quando o respectivo valor não existir no contexto.
+- Universo informado pelo banco: ${universoBanco ? `"${universoBanco}"` : "null"}
+- Franquia informada pelo banco: ${franquiaBanco ? `"${franquiaBanco}"` : "null"}
 
 CAMPOS PRIORITÁRIOS DESTA ETAPA
 Dê atenção especial para enriquecer, quando houver base confiável:
