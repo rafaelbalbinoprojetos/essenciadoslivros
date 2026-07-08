@@ -12,6 +12,7 @@ import JourneysPage from "./pages/Journeys.jsx";
 import JourneyDetailPage from "./pages/JourneyDetail.jsx";
 import MuralPage from "./pages/Mural.jsx";
 import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
+import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="jornadas/:slug" element={<JourneyDetailPage />} />
             <Route path="mural" element={<MuralPage />} />
             <Route path="memorias-cinematicas" element={<CinematicMemoriesPage />} />
+            <Route path="encontro-inesperado" element={<UnexpectedEncounterPage />} />
             <Route path="biblioteca" element={<LibraryPage />} />
             <Route path="biblioteca/:bookId" element={<BookDetailsPage />} />
             <Route path="biblioteca/novo" element={<BookCreatePage />} />

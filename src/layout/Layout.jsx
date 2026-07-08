@@ -14,6 +14,7 @@ import {
   LogOut,
   Route as RouteIcon,
   LayoutGrid,
+  Dices,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu.jsx";
 import ThemeMenu from "../components/ThemeMenu.jsx";
@@ -37,6 +38,7 @@ const ICON_MAP = {
   journeys: RouteIcon,
   library: BookOpen,
   mural: LayoutGrid,
+  "unexpected-encounter": Dices,
   catalog: BookOpen,
   assistant: Sparkles,
   settings: SettingsIcon,

@@ -35,6 +35,13 @@ export const NAV_LINKS = [
     description: "Todo o acervo com busca e filtro",
   },
   {
+    id: "unexpected-encounter",
+    to: "/encontro-inesperado",
+    label: "Encontro Inesperado",
+    shortLabel: "Encontro",
+    description: "Deixe o acervo escolher você",
+  },
+  {
     id: "catalog",
     to: "/biblioteca/novo",
     label: "Cadastro de Títulos",
@@ -62,6 +69,7 @@ export const MOBILE_NAV_ALLOWED_PATHS = [
   "/jornadas",
   "/biblioteca",
   "/memorias-cinematicas",
+  "/encontro-inesperado",
   "/biblioteca/novo",
   "/assistente",
 ];
