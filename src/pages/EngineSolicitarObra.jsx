@@ -18,6 +18,8 @@ export default function EngineSolicitarObra() {
     setResultadoCurador(null);
 
     try {
+      console.log("[ENGINE] iniciando solicitar-obra");
+
       const response = await fetch("/api/engine/solicitar-obra", {
         method: "POST",
         headers: {
@@ -30,6 +32,7 @@ export default function EngineSolicitarObra() {
       });
 
       const data = await response.json();
+      console.log("[ENGINE] resposta solicitar-obra", data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data?.error || "Erro ao solicitar obra.");
@@ -48,6 +51,7 @@ export default function EngineSolicitarObra() {
       setCriandoObra(false);
       setExecutandoCurador(true);
       curadorFoiIniciado = true;
+      console.log("[ENGINE] iniciando executar-etapa", data.livro?.id);
 
       const etapaResponse = await fetch("/api/engine/executar-etapa", {
         method: "POST",
@@ -61,6 +65,7 @@ export default function EngineSolicitarObra() {
       });
 
       const etapaData = await etapaResponse.json();
+      console.log("[ENGINE] resposta executar-etapa", etapaData);
       setResultadoCurador(etapaData);
 
       if (!etapaResponse.ok || etapaData?.ok === false) {
@@ -69,6 +74,7 @@ export default function EngineSolicitarObra() {
 
       toast.success("Curador IA executado em modo Engine!");
     } catch (error) {
+      console.error("[ENGINE] erro no fluxo", error);
       toast.error(error.message);
       if (curadorFoiIniciado) {
         setResultadoCurador((atual) => atual || {
