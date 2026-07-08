@@ -167,21 +167,66 @@ function criarNarrativaCinematicaMock({ contexto }) {
   const titulo = contexto?.obra?.titulo || "A Obra";
   const tituloApresentacao = String(titulo).toUpperCase();
 
-  return `[CENA 01 — EMOÇÃO: CONTEMPLAÇÃO / SAUDADE]
+  return `O CONVITE
+
+Narração seca
+Esta não é a história inteira.
+É apenas aquilo que ainda retorna quando tudo fica em silêncio.
+Talvez seja pouco.
+Talvez seja exatamente o que restou.
+
+Aforismo
+Há mundos que não terminam quando viramos a última página.
+Eles apenas aprendem a viver dentro da memória.
+
+[music drops away completely]
+
+[silence]
+
+[lower voice]
+
+Se possível...
+
+utilize fones de ouvido.
+
+[music drops away completely]
+
+[silence]
+
+O mundo fala através de uma porta entreaberta.
+
+ESSÊNCIA DOS LIVROS APRESENTA...
+
+${tituloApresentacao}
+
+[music drops away completely]
+
+[long silence]
+
+
+[CENA 01 — EMOÇÃO: CONTEMPLAÇÃO / SAUDADE]
 
 ESTILO SUNO
-[Brazilian Portuguese, reflective cinematic narration, slow strings, distant piano, nostalgic ambience, silence]
+[Brazilian Portuguese, reflective cinematic narration, slow strings, distant piano, nostalgic ambience]
 
-[Intenção dramática: abrir a experiência como uma lembrança que retorna devagar]
+[Intenção dramática: iniciar a experiência como uma lembrança que ainda não sabe se quer ser contada]
 [Símbolo central: a porta]
 
 Houve um tempo em que esta história ainda não tinha se tornado memória.
 
-Ela era apenas um chamado discreto... uma mudança no ar... a sensação de que algo antigo estava prestes a atravessar a vida de alguém.
+Acho que era só uma mudança no ar.
+
+Nada acontecia por alguns instantes.
+
+Só havia luz parada, madeira antiga e um silêncio que parecia esperar por alguém.
+
+Talvez seja assim que as grandes histórias começam.
+
+Não com grandeza.
+
+Com uma pequena abertura.
 
 [long silence]
-
-ESSÊNCIA DOS LIVROS APRESENTA... ${tituloApresentacao}
 
 
 [CENA 02 — EMOÇÃO: ESPERANÇA CAUTELOSA]
@@ -196,7 +241,19 @@ Anos depois, o que permanece não é a sequência exata dos acontecimentos.
 
 Permanece a sensação.
 
-O instante em que o mundo pareceu maior do que antes... e alguém, sem saber se estava pronto, começou a caminhar.`;
+O instante em que o mundo pareceu maior do que antes.
+
+Se não me falha a memória, havia algo simples ali.
+
+Um som baixo.
+
+Um cheiro de caminho.
+
+Uma espécie de esperança cautelosa, como quem ainda não sabe se merece atravessar a própria porta.
+
+[silence]
+
+E talvez ninguém saiba.`;
 }
 
 function criarConteudoUsuario({ contexto, schema, promptMontado }) {
