@@ -9,6 +9,7 @@ import {
   falharExecucaoAgente,
 } from "./execucaoService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
+import { montarPromptAgente } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
 const DEFINICOES_ETAPAS = {
@@ -146,6 +147,15 @@ async function executarCuradorBEU({ obraId }) {
       versao_beu: ENGINE_CONFIG.versaoBEU,
     };
 
+    const promptMontado = await montarPromptAgente({
+      agente,
+      contexto,
+      tipoEtapa,
+    });
+
+    entrada.prompt_montado = Boolean(promptMontado);
+    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
+
     await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
     await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
 
@@ -168,6 +178,7 @@ async function executarCuradorBEU({ obraId }) {
       agente,
       contexto,
       schema: null,
+      promptMontado,
     });
 
     const custoEstimado = calcularCustoEstimado({

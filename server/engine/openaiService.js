@@ -93,7 +93,25 @@ function criarBEUMock({ contexto, agente }) {
   };
 }
 
-function criarMensagens({ agente, contexto, schema }) {
+function criarConteudoUsuario({ contexto, schema, promptMontado }) {
+  if (promptMontado) return promptMontado;
+
+  return JSON.stringify(
+    {
+      contexto,
+      schema,
+      instrucoes: {
+        idioma: "pt-BR",
+        formato: "JSON válido",
+        nao_inventar_fatos: true,
+      },
+    },
+    null,
+    2,
+  );
+}
+
+function criarMensagens({ agente, contexto, schema, promptMontado }) {
   return [
     {
       role: "system",
@@ -101,27 +119,15 @@ function criarMensagens({ agente, contexto, schema }) {
     },
     {
       role: "user",
-      content: JSON.stringify(
-        {
-          contexto,
-          schema,
-          instrucoes: {
-            idioma: "pt-BR",
-            formato: "JSON válido",
-            nao_inventar_fatos: true,
-          },
-        },
-        null,
-        2,
-      ),
+      content: criarConteudoUsuario({ contexto, schema, promptMontado }),
     },
   ];
 }
 
-async function executarChatCompletions({ agente, contexto, schema }) {
+async function executarChatCompletions({ agente, contexto, schema, promptMontado }) {
   const modelo = agente.modelo || ENGINE_CONFIG.modeloDefault;
   const temperatura = Number(agente.temperatura ?? 0.3);
-  const mensagens = criarMensagens({ agente, contexto, schema });
+  const mensagens = criarMensagens({ agente, contexto, schema, promptMontado });
   const inicio = Date.now();
 
   const resposta = await getOpenAIClient().chat.completions.create({
@@ -183,6 +189,7 @@ export async function executarAgenteOpenAI({
   contexto,
   schema = null,
   modo = "chat_completions",
+  promptMontado = null,
 }) {
   if (!agente) {
     throw new Error("Agente é obrigatório.");
@@ -200,6 +207,11 @@ export async function executarAgenteOpenAI({
     throw new Error(`Modo OpenAI ainda não implementado: ${modo}`);
   }
 
-  engineStep("Curador IA", "→", { modo, modelo: agente.modelo || ENGINE_CONFIG.modeloDefault });
-  return executarChatCompletions({ agente, contexto, schema });
+  engineStep("Curador IA", "→", {
+    modo,
+    modelo: agente.modelo || ENGINE_CONFIG.modeloDefault,
+    prompt_montado: Boolean(promptMontado),
+  });
+
+  return executarChatCompletions({ agente, contexto, schema, promptMontado });
 }
