@@ -10,6 +10,7 @@ export const ENGINE_CONFIG = {
   mock: parseBoolean(process.env.ENGINE_MOCK, true),
   debug: parseBoolean(process.env.ENGINE_DEBUG, true),
   saveLogs: parseBoolean(process.env.ENGINE_SAVE_LOGS, false),
+  narrativaTeste: parseBoolean(process.env.ENGINE_NARRATIVA_TESTE, false),
   modeloDefault: process.env.ENGINE_MODELO_DEFAULT || "gpt-4.1-mini",
   versaoBEU: process.env.ENGINE_VERSAO_BEU || "1.0",
   logsDir: process.env.ENGINE_LOGS_DIR || "logs",
@@ -26,4 +27,8 @@ export function isEngineDebugEnabled() {
 
 export function shouldSaveEngineLogs() {
   return ENGINE_CONFIG.saveLogs === true;
+}
+
+export function isNarrativaTesteEnabled() {
+  return ENGINE_CONFIG.narrativaTeste === true;
 }

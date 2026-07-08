@@ -34,6 +34,21 @@ const CAMPOS_PRIORITARIOS_DIRETOR_CRIATIVO = [
   "sonoro.direcao_musical",
 ];
 
+const CARDAPIO_EMOCOES_CINEMATICAS = [
+  "FESTIVO / ALEGRIA",
+  "TERNURA / INTIMIDADE",
+  "CONTEMPLAÇÃO / SAUDADE",
+  "TENSÃO / MEDO CRESCENTE",
+  "SOMBRIO / PESO",
+  "HORROR / PAVOR",
+  "DEVASTAÇÃO / PERDA",
+  "GRANDEZA MELANCÓLICA",
+  "ESPERANÇA CAUTELOSA",
+  "BELEZA QUE DÓI",
+  "EXAUSTÃO / FIM",
+  "DESCONFORTO MORAL",
+];
+
 function primeiroValor(row, nomes, fallback = null) {
   for (const nome of nomes) {
     if (row?.[nome] !== undefined && row?.[nome] !== null && row?.[nome] !== "") {
@@ -312,6 +327,115 @@ Exemplo:
 `.trim();
 }
 
+function montarPromptNarrativaCinematica({ agente, contexto, beuAtual }) {
+  const tituloObra = contexto?.obra?.titulo || beuAtual?.identificacao?.titulo || "[NOME DA OBRA]";
+  const narrativaTeste = ENGINE_CONFIG.narrativaTeste === true;
+  const quantidadeCenas = narrativaTeste
+    ? "Criar exatamente 3 cenas. Este é um modo de teste para validar custo, formato e qualidade antes da versão completa."
+    : "Criar entre 12 e 14 cenas.";
+  const avisoTeste = narrativaTeste
+    ? `
+MODO DE TESTE ATIVO
+- ENGINE_NARRATIVA_TESTE está ativo.
+- Gere somente 3 cenas.
+- Preserve o mesmo padrão de qualidade, formato e densidade emocional da versão completa.
+- Não mencione que é teste na saída final.
+`
+    : "";
+
+  return `
+Você está executando a etapa narrativa_cinematica da Essência Engine.
+
+Agente: ${agente?.nome || agente?.slug || "narrador-cinematico"}
+Versão BEU: ${ENGINE_CONFIG.versaoBEU}
+
+MISSÃO
+Transformar a BEU completa da obra em uma experiência narrativa cinematográfica textual no padrão Essência dos Livros.
+
+${avisoTeste}
+
+A saída deve ser SOMENTE o roteiro final em texto simples.
+Não retorne JSON.
+Não use markdown.
+Não use tabelas.
+Não gere PDF.
+Não gere HTML.
+Não gere prompt de imagem.
+Não gere música.
+
+PRINCÍPIO DRAMÁTICO
+- A narrativa deve parecer lembrança, não resumo.
+- O narrador fala muitos anos depois.
+- Priorize interpretação sobre descrição.
+- Aproximadamente 45% memória narrativa e 55% interpretação.
+- Não substitua a obra original.
+- Não escreva como câmera.
+- Não escreva como roteirista.
+- Escreva em português brasileiro.
+- Use economia da beleza: frases com respiro, pausas e densidade.
+- Use contemplação, memória imperfeita, perguntas sem resposta e respiração.
+
+ESTRUTURA OBRIGATÓRIA
+- ${quantidadeCenas}
+- A primeira cena é sempre o Convite.
+- Após o convite, incluir a frase de apresentação usando o título real:
+ESSÊNCIA DOS LIVROS APRESENTA... ${String(tituloObra).toUpperCase()}
+- Cada cena deve ter uma emoção dominante.
+- Cada cena deve conter ESTILO SUNO em colchetes.
+- Cada cena deve conter intenção dramática.
+- Cada cena deve conter símbolo central.
+
+FORMATO OBRIGATÓRIO DE CADA CENA
+[CENA 01 — EMOÇÃO: nome da emoção]
+
+ESTILO SUNO
+[bloco completo do estilo em colchetes, sempre incluindo Brazilian Portuguese]
+
+[Intenção dramática: uma linha]
+[Símbolo central: uma palavra ou expressão curta]
+
+Narrativa da cena
+
+COMANDOS SONOROS PERMITIDOS
+Use comandos curtos e expressivos, como:
+[silence]
+[long silence]
+[music drops away completely]
+[lower voice]
+[soft warm background enters]
+
+Não use comandos longos demais.
+
+CARDÁPIO DE EMOÇÕES PERMITIDO
+${CARDAPIO_EMOCOES_CINEMATICAS.map((emocao) => `- ${emocao}`).join("\n")}
+
+ORIENTAÇÃO DE ESTILO SUNO POR EMOÇÃO
+- FESTIVO / ALEGRIA: [Brazilian Portuguese, warm cinematic narration, gentle celebratory folk textures, light percussion, soft strings]
+- TERNURA / INTIMIDADE: [Brazilian Portuguese, intimate spoken narration, soft piano, warm pads, close voice, delicate silence]
+- CONTEMPLAÇÃO / SAUDADE: [Brazilian Portuguese, reflective cinematic narration, slow strings, distant piano, nostalgic ambience]
+- TENSÃO / MEDO CRESCENTE: [Brazilian Portuguese, tense spoken narration, low drones, restrained pulses, growing silence]
+- SOMBRIO / PESO: [Brazilian Portuguese, somber cinematic narration, low cello, dark ambient texture, heavy pauses]
+- HORROR / PAVOR: [Brazilian Portuguese, whisper-like narration, dissonant drones, sudden silence, fragile breath]
+- DEVASTAÇÃO / PERDA: [Brazilian Portuguese, mournful narration, sparse piano, distant strings, music drops away completely]
+- GRANDEZA MELANCÓLICA: [Brazilian Portuguese, grand melancholic cinematic narration, low brass, wide strings, solemn pacing]
+- ESPERANÇA CAUTELOSA: [Brazilian Portuguese, restrained hopeful narration, soft warm background enters, gentle piano, quiet strings]
+- BELEZA QUE DÓI: [Brazilian Portuguese, poetic cinematic narration, aching strings, fragile piano, luminous melancholy]
+- EXAUSTÃO / FIM: [Brazilian Portuguese, tired reflective narration, slow fading ambience, low voice, long silence]
+- DESCONFORTO MORAL: [Brazilian Portuguese, uneasy intimate narration, minimal pulses, ambiguous harmony, unresolved silence]
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU COMPLETA
+Use a BEU como base da experiência. Não contradiga os fatos já estabelecidos.
+${JSON.stringify(beuAtual, null, 2)}
+
+SAÍDA FINAL
+Retorne apenas o roteiro textual completo, começando diretamente por:
+[CENA 01 — EMOÇÃO: ...]
+`.trim();
+}
+
 export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual = null }) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
@@ -333,6 +457,10 @@ export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual
     diretor_criativo: {
       responsavel: "Diretor Criativo",
       montar: ({ campos }) => montarPromptDiretorCriativo({ agente, contexto, campos, beuAtual }),
+    },
+    narrativa_cinematica: {
+      responsavel: "Narrador Cinemático",
+      montar: () => montarPromptNarrativaCinematica({ agente, contexto, beuAtual }),
     },
   };
 

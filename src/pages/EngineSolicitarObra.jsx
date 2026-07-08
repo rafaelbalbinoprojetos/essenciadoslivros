@@ -8,11 +8,13 @@ export default function EngineSolicitarObra() {
   const [executandoCurador, setExecutandoCurador] = useState(false);
   const [executandoEditor, setExecutandoEditor] = useState(false);
   const [executandoDiretor, setExecutandoDiretor] = useState(false);
+  const [executandoNarrativa, setExecutandoNarrativa] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
   const [resultadoEditor, setResultadoEditor] = useState(null);
   const [resultadoDiretor, setResultadoDiretor] = useState(null);
+  const [resultadoNarrativa, setResultadoNarrativa] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
 
   async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
@@ -26,10 +28,12 @@ export default function EngineSolicitarObra() {
     const isCurador = tipoEtapa === "curador_beu";
     const isEditor = tipoEtapa === "editor_beu";
     const isDiretor = tipoEtapa === "diretor_criativo";
+    const isNarrativa = tipoEtapa === "narrativa_cinematica";
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
     if (isDiretor) setExecutandoDiretor(true);
+    if (isNarrativa) setExecutandoNarrativa(true);
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -51,6 +55,7 @@ export default function EngineSolicitarObra() {
       if (isCurador) setResultadoCurador(data);
       if (isEditor) setResultadoEditor(data);
       if (isDiretor) setResultadoDiretor(data);
+      if (isNarrativa) setResultadoNarrativa(data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -71,12 +76,14 @@ export default function EngineSolicitarObra() {
       if (isCurador) setResultadoCurador((atual) => atual || fallback);
       if (isEditor) setResultadoEditor((atual) => atual || fallback);
       if (isDiretor) setResultadoDiretor((atual) => atual || fallback);
+      if (isNarrativa) setResultadoNarrativa((atual) => atual || fallback);
 
       return null;
     } finally {
       if (isCurador) setExecutandoCurador(false);
       if (isEditor) setExecutandoEditor(false);
       if (isDiretor) setExecutandoDiretor(false);
+      if (isNarrativa) setExecutandoNarrativa(false);
     }
   }
 
@@ -131,11 +138,13 @@ export default function EngineSolicitarObra() {
     setExecutandoCurador(false);
     setExecutandoEditor(false);
     setExecutandoDiretor(false);
+    setExecutandoNarrativa(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
     setResultadoDiretor(null);
+    setResultadoNarrativa(null);
     setResultadoAtualizacao(null);
 
     try {
@@ -191,11 +200,12 @@ export default function EngineSolicitarObra() {
       setExecutandoCurador(false);
       setExecutandoEditor(false);
       setExecutandoDiretor(false);
+      setExecutandoNarrativa(false);
       setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || atualizandoDados;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -254,13 +264,15 @@ export default function EngineSolicitarObra() {
                   ? "Executando editor..."
                   : executandoDiretor
                     ? "Executando diretor criativo..."
-                    : atualizandoDados
-                      ? "Atualizando dados..."
-                      : "Solicitar obra"}
+                    : executandoNarrativa
+                      ? "Gerando narrativa cinematográfica..."
+                      : atualizandoDados
+                        ? "Atualizando dados..."
+                        : "Solicitar obra"}
           </button>
         </form>
 
-        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || atualizandoDados) && (
+        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || atualizandoDados) && (
           <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
@@ -284,6 +296,12 @@ export default function EngineSolicitarObra() {
               <span>Executando diretor criativo</span>
               <span className={executandoDiretor ? "text-amber-300" : resultadoDiretor ? "text-emerald-300" : "text-zinc-500"}>
                 {executandoDiretor ? "em andamento" : resultadoDiretor ? "concluído" : "aguardando"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Gerando narrativa cinematográfica</span>
+              <span className={executandoNarrativa ? "text-amber-300" : resultadoNarrativa ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoNarrativa ? "em andamento" : resultadoNarrativa ? "concluído" : "manual"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -339,12 +357,36 @@ export default function EngineSolicitarObra() {
                   >
                     Atualizar dados ausentes
                   </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("narrativa_cinematica")}
+                    className="rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10 disabled:opacity-60"
+                  >
+                    Gerar Narrativa Cinematográfica
+                  </button>
                 </div>
               </div>
             )}
             <pre className="bg-black border border-zinc-800 rounded-2xl p-5 overflow-auto text-sm text-emerald-300">
               {JSON.stringify(resultadoCriacao, null, 2)}
             </pre>
+            {resultadoCriacao?.livro?.id && resultadoCriacao.existente !== true && (
+              <div className="mt-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4 text-sm text-purple-100">
+                <p className="font-semibold">Narrativa Cinematográfica</p>
+                <p className="mt-1 text-purple-100/75">
+                  Esta etapa é manual e usa a BEU já enriquecida pelo Curador, Editor e Diretor Criativo.
+                </p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => executarEtapaManual("narrativa_cinematica")}
+                  className="mt-4 rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10 disabled:opacity-60"
+                >
+                  Gerar Narrativa Cinematográfica
+                </button>
+              </div>
+            )}
           </section>
         )}
 
@@ -389,6 +431,25 @@ export default function EngineSolicitarObra() {
             <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoAtualizacao.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
               {JSON.stringify(resultadoAtualizacao, null, 2)}
             </pre>
+          </section>
+        )}
+
+        {resultadoNarrativa && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da narrativa_cinematica
+            </h2>
+            {resultadoNarrativa.ok && typeof resultadoNarrativa.saida === "string" ? (
+              <textarea
+                readOnly
+                value={resultadoNarrativa.saida}
+                className="min-h-[520px] w-full rounded-2xl border border-purple-900 bg-black p-5 text-sm leading-7 text-purple-100 outline-none"
+              />
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoNarrativa, null, 2)}
+              </pre>
+            )}
           </section>
         )}
       </div>

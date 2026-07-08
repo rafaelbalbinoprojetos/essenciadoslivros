@@ -163,6 +163,42 @@ function criarDiretorCriativoMock({ contexto, agente }) {
   };
 }
 
+function criarNarrativaCinematicaMock({ contexto }) {
+  const titulo = contexto?.obra?.titulo || "A Obra";
+  const tituloApresentacao = String(titulo).toUpperCase();
+
+  return `[CENA 01 — EMOÇÃO: CONTEMPLAÇÃO / SAUDADE]
+
+ESTILO SUNO
+[Brazilian Portuguese, reflective cinematic narration, slow strings, distant piano, nostalgic ambience, silence]
+
+[Intenção dramática: abrir a experiência como uma lembrança que retorna devagar]
+[Símbolo central: a porta]
+
+Houve um tempo em que esta história ainda não tinha se tornado memória.
+
+Ela era apenas um chamado discreto... uma mudança no ar... a sensação de que algo antigo estava prestes a atravessar a vida de alguém.
+
+[long silence]
+
+ESSÊNCIA DOS LIVROS APRESENTA... ${tituloApresentacao}
+
+
+[CENA 02 — EMOÇÃO: ESPERANÇA CAUTELOSA]
+
+ESTILO SUNO
+[Brazilian Portuguese, restrained hopeful narration, soft warm background enters, gentle piano, quiet strings, lower voice]
+
+[Intenção dramática: revelar que toda jornada começa antes da coragem parecer possível]
+[Símbolo central: o primeiro passo]
+
+Anos depois, o que permanece não é a sequência exata dos acontecimentos.
+
+Permanece a sensação.
+
+O instante em que o mundo pareceu maior do que antes... e alguém, sem saber se estava pronto, começou a caminhar.`;
+}
+
 function criarConteudoUsuario({ contexto, schema, promptMontado }) {
   if (promptMontado) return promptMontado;
 
@@ -198,13 +234,14 @@ async function executarChatCompletions({ agente, contexto, schema, promptMontado
   const modelo = agente.modelo || ENGINE_CONFIG.modeloDefault;
   const temperatura = Number(agente.temperatura ?? 0.3);
   const mensagens = criarMensagens({ agente, contexto, schema, promptMontado });
+  const saidaTextual = agente.formato_saida === "text";
   const inicio = Date.now();
 
   const resposta = await getOpenAIClient().chat.completions.create({
     model: modelo,
     temperature: temperatura,
     messages: mensagens,
-    response_format: { type: "json_object" },
+    ...(saidaTextual ? {} : { response_format: { type: "json_object" } }),
   });
 
   const fim = Date.now();
@@ -212,6 +249,20 @@ async function executarChatCompletions({ agente, contexto, schema, promptMontado
 
   if (!conteudo) {
     throw new Error("A OpenAI não retornou conteúdo.");
+  }
+
+  if (saidaTextual) {
+    return {
+      saida: conteudo,
+      modelo,
+      provider: "openai",
+      modo: "chat_completions",
+      tempo_ms: fim - inicio,
+      tokens_input: resposta.usage?.prompt_tokens ?? null,
+      tokens_output: resposta.usage?.completion_tokens ?? null,
+      tokens_total: resposta.usage?.total_tokens ?? null,
+      resposta_bruta: conteudo,
+    };
   }
 
   let json;
@@ -242,6 +293,7 @@ async function executarMock({ agente, contexto, tipoEtapa }) {
   const saida = {
     editor_beu: () => criarEditorMock({ contexto, agente }),
     diretor_criativo: () => criarDiretorCriativoMock({ contexto, agente }),
+    narrativa_cinematica: () => criarNarrativaCinematicaMock({ contexto, agente }),
   }[tipoEtapa]?.() ?? criarBEUMock({ contexto, agente });
 
   return {
@@ -253,7 +305,7 @@ async function executarMock({ agente, contexto, tipoEtapa }) {
     tokens_input: 0,
     tokens_output: 0,
     tokens_total: 0,
-    resposta_bruta: JSON.stringify(saida),
+    resposta_bruta: typeof saida === "string" ? saida : JSON.stringify(saida),
   };
 }
 
