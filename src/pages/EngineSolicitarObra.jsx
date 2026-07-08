@@ -11,10 +11,68 @@ export default function EngineSolicitarObra() {
   const [resultadoCurador, setResultadoCurador] = useState(null);
   const [resultadoEditor, setResultadoEditor] = useState(null);
 
+  async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
+    const obraId = obraIdParam || resultadoCriacao?.livro?.id;
+
+    if (!obraId) {
+      toast.error("Nenhuma obra selecionada para executar a etapa.");
+      return null;
+    }
+
+    const isCurador = tipoEtapa === "curador_beu";
+    const isEditor = tipoEtapa === "editor_beu";
+
+    if (isCurador) setExecutandoCurador(true);
+    if (isEditor) setExecutandoEditor(true);
+
+    try {
+      console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
+
+      const response = await fetch("/api/engine/executar-etapa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          obraId,
+          tipoEtapa,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("[ENGINE] resposta executar-etapa", { tipoEtapa, data });
+
+      if (isCurador) setResultadoCurador(data);
+      if (isEditor) setResultadoEditor(data);
+
+      if (!response.ok || data?.ok === false) {
+        throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
+      }
+
+      toast.success(`${tipoEtapa} executado com sucesso!`);
+      return data;
+    } catch (error) {
+      console.error("[ENGINE] erro ao executar etapa", { tipoEtapa, error });
+      toast.error(error.message);
+
+      const fallback = {
+        ok: false,
+        etapa: tipoEtapa,
+        error: error.message,
+      };
+
+      if (isCurador) setResultadoCurador((atual) => atual || fallback);
+      if (isEditor) setResultadoEditor((atual) => atual || fallback);
+
+      return null;
+    } finally {
+      if (isCurador) setExecutandoCurador(false);
+      if (isEditor) setExecutandoEditor(false);
+    }
+  }
+
   async function solicitarObra(e) {
     e.preventDefault();
-    let curadorFoiIniciado = false;
-    let editorFoiIniciado = false;
     setCriandoObra(true);
     setExecutandoCurador(false);
     setExecutandoEditor(false);
@@ -44,7 +102,7 @@ export default function EngineSolicitarObra() {
       }
 
       setResultadoCriacao(data);
-      toast.success("Obra criada como rascunho!");
+      toast.success(data.existente ? "Obra já existe no catálogo." : "Obra criada como rascunho!");
       setTitulo("");
 
       const obraId = data?.livro?.id;
@@ -53,74 +111,20 @@ export default function EngineSolicitarObra() {
         throw new Error("Obra criada, mas o id não foi retornado pela API.");
       }
 
+      if (data.existente === true) {
+        console.log("[ENGINE] obra existente, pipeline automática não será executada", obraId);
+        setCriandoObra(false);
+        return;
+      }
+
       setCriandoObra(false);
-      setExecutandoCurador(true);
-      curadorFoiIniciado = true;
-      console.log("[ENGINE] iniciando executar-etapa", data.livro?.id);
-
-      const etapaResponse = await fetch("/api/engine/executar-etapa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          obraId,
-          tipoEtapa: "curador_beu",
-        }),
-      });
-
-      const etapaData = await etapaResponse.json();
-      console.log("[ENGINE] resposta executar-etapa", etapaData);
-      setResultadoCurador(etapaData);
-
-      if (!etapaResponse.ok || etapaData?.ok === false) {
-        throw new Error(etapaData.error || "Erro ao executar curador_beu.");
+      const curador = await executarEtapaManual("curador_beu", obraId);
+      if (curador?.ok) {
+        await executarEtapaManual("editor_beu", obraId);
       }
-
-      toast.success("Curador IA executado em modo Engine!");
-
-      setExecutandoCurador(false);
-      setExecutandoEditor(true);
-      editorFoiIniciado = true;
-      console.log("[ENGINE] iniciando editor-beu", obraId);
-
-      const editorResponse = await fetch("/api/engine/executar-etapa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          obraId,
-          tipoEtapa: "editor_beu",
-        }),
-      });
-
-      const editorData = await editorResponse.json();
-      console.log("[ENGINE] resposta editor-beu", editorData);
-      setResultadoEditor(editorData);
-
-      if (!editorResponse.ok || editorData?.ok === false) {
-        throw new Error(editorData.error || "Erro ao executar editor_beu.");
-      }
-
-      toast.success("Editor IA executado em modo Engine!");
     } catch (error) {
       console.error("[ENGINE] erro no fluxo", error);
       toast.error(error.message);
-      if (curadorFoiIniciado) {
-        setResultadoCurador((atual) => atual || {
-          ok: false,
-          etapa: "curador_beu",
-          error: error.message,
-        });
-      }
-      if (editorFoiIniciado) {
-        setResultadoEditor((atual) => atual || {
-          ok: false,
-          etapa: "editor_beu",
-          error: error.message,
-        });
-      }
     } finally {
       setCriandoObra(false);
       setExecutandoCurador(false);
@@ -217,6 +221,32 @@ export default function EngineSolicitarObra() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
               Resultado da criação da obra
             </h2>
+            {resultadoCriacao.existente === true && (
+              <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+                <p className="font-semibold">Obra já existe no catálogo.</p>
+                <p className="mt-1 text-amber-100/75">
+                  A pipeline automática não foi executada. Use os botões abaixo se quiser reprocessar manualmente.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("curador_beu")}
+                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60"
+                  >
+                    Reprocessar Curador
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("editor_beu")}
+                    className="rounded-xl border border-amber-500/60 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/10 disabled:opacity-60"
+                  >
+                    Reprocessar Editor
+                  </button>
+                </div>
+              </div>
+            )}
             <pre className="bg-black border border-zinc-800 rounded-2xl p-5 overflow-auto text-sm text-emerald-300">
               {JSON.stringify(resultadoCriacao, null, 2)}
             </pre>
