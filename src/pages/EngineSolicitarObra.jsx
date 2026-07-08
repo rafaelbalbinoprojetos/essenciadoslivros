@@ -31,8 +31,8 @@ export default function EngineSolicitarObra() {
 
       const data = await response.json();
 
-      if (!data.ok) {
-        throw new Error(data.error || "Erro ao solicitar obra.");
+      if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Erro ao solicitar obra.");
       }
 
       setResultadoCriacao(data);
@@ -45,6 +45,7 @@ export default function EngineSolicitarObra() {
         throw new Error("Obra criada, mas o id não foi retornado pela API.");
       }
 
+      setCriandoObra(false);
       setExecutandoCurador(true);
       curadorFoiIniciado = true;
 
@@ -62,7 +63,7 @@ export default function EngineSolicitarObra() {
       const etapaData = await etapaResponse.json();
       setResultadoCurador(etapaData);
 
-      if (!etapaData.ok) {
+      if (!etapaResponse.ok || etapaData?.ok === false) {
         throw new Error(etapaData.error || "Erro ao executar curador_beu.");
       }
 
