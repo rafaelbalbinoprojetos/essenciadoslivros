@@ -567,39 +567,149 @@ ${narrativaCinematica || "Não existe narrativa cinematográfica concluída para
 
 function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }) {
   return `
-Você é o diretor de arte cinematográfico da Essência dos Livros.
+Você é o diretor de arte responsável pelos Pôsteres Editoriais Cinemáticos da Essência dos Livros.
 
 TAREFA
-Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. Não gere a imagem. Não explique decisões. Não apresente alternativas.
+Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. O prompt deve orientar a criação de uma composição editorial completa. Não gere a imagem. Não explique decisões. Não apresente alternativas.
 
-OBJETIVO VISUAL
-Criar a capa emocional da Memória Cinematográfica da obra. A imagem deve condensar a lembrança que permaneceu, não resumir a trama. Ela deve parecer um frame impossível de um filme preservado pela memória: autoral, atmosférico, emocional e imediatamente reconhecível pela essência da obra.
+OBJETIVO EDITORIAL
+Criar um Pôster Editorial Cinemático premium que pareça simultaneamente material oficial da Essência dos Livros, documento de museu, arquivo curatorial, edição especial e peça colecionável. O resultado nunca deve parecer apenas uma ilustração, wallpaper, frame isolado ou arte promocional genérica.
 
-ELEMENTOS A INTERPRETAR
-- tema central;
-- símbolo principal;
-- emoção dominante;
-- objeto principal;
-- paleta;
-- paisagem sonora e sensorial traduzida visualmente;
-- cena mais marcante da narrativa cinematográfica;
-- detalhe sobrevivente e atmosfera emocional.
+O pôster deve transformar a memória da obra em uma narrativa visual rica em informação, com hierarquia editorial, elementos documentais, objetos físicos e uma cena central simbólica. A composição deve ser reconhecida como parte da mesma coleção Essência dos Livros sem repetir mecanicamente o layout de outras obras.
 
-DIREÇÃO OBRIGATÓRIA
-- Formato vertical de capa cinematográfica premium.
-- Uma única ideia visual dominante e um único ponto focal.
-- Escolher a cena mais marcante pela força emocional, não pela escala da ação.
-- Traduzir som, cheiro, temperatura, textura e silêncio por luz, matéria, clima e profundidade.
-- Usar o símbolo principal de forma narrativa, sem transformá-lo em ícone decorativo.
-- Preservar espaço de respiro e leitura clara em miniatura.
-- Iluminação cinematográfica motivada, atmosfera volumétrica sutil e profundidade fotográfica.
-- Personagens, quando indispensáveis, devem ser tratados como figuras narrativas e não como retratos promocionais.
-- Não copiar pôsteres, key art, capas oficiais, logotipos protegidos ou rostos de atores reais.
-- Não inventar fatos, personagens, cenários ou símbolos ausentes da BEU e da narrativa.
-- Evitar montagem de múltiplos personagens, excesso de texto, estética genérica de streaming, ação gratuita e fantasia visual desconectada da obra.
+FONTES EDITORIAIS
+Consuma toda a BEU e a narrativa cinematográfica disponível. Os módulos produzidos pelo Curador, Editor e Diretor Criativo fazem parte da BEU e devem ser tratados em conjunto. Priorize coerência entre fatos, interpretação emocional, direção sensorial, símbolos, paleta e legado. Não invente informações ausentes.
+
+CENA DE IMPACTO
+Antes de montar o pôster, analise integralmente a BEU e a narrativa cinematográfica e escolha uma única cena-símbolo da obra.
+
+Não escolha a cena mais bonita.
+Não escolha automaticamente a cena mais famosa ou óbvia.
+Escolha a cena com maior força emocional, choque visual, tensão, mistério, catarse ou presença na memória coletiva.
+
+A cena escolhida deve ser:
+- visualmente forte;
+- emocionalmente carregada;
+- reconhecível para fãs;
+- intrigante para quem não conhece;
+- capaz de condensar a essência da obra em uma imagem;
+- sustentável pelos fatos, símbolos e acontecimentos presentes nas fontes editoriais.
+
+Para quem conhece a obra, a imagem deve provocar reconhecimento visceral.
+Para quem não conhece, deve provocar a pergunta: “o que está acontecendo aqui?”
+
+Use como referência de intensidade e função narrativa, nunca como conteúdo fixo:
+- God of War III: Kratos segurando a cabeça de Hélio — fúria divina e queda dos deuses;
+- The Last of Us: Joel carregando Ellie — amor e violência moral;
+- O Hobbit: Bilbo diante de Smaug ou a mão encontrando o anel no escuro — fascínio, risco e destino;
+- Harry Potter e o Prisioneiro de Azkaban: o Patrono no lago ou Sirius entre sombra e injustiça — revelação e catarse;
+- Shadow of the Colossus: o protagonista pequeno diante do colosso — grandeza, condenação e mistério;
+- Bloodborne: o caçador ensanguentado sob a lua pálida em Yharnam — horror, fascínio e memória visual.
+- The Last of Us part 2: Close no rosto de Ellie que está gritando com seus olhos ceios de lágrimas — dor da perda e raiva;
+- The Witcher 3; Geralt segurando uma cabeça de hipogrifo escorrendo sangue;
+
+Esses exemplos calibram apenas o nível de impacto. Nunca os reutilize em outra obra.
+
+A cena deve causar impacto imediato por meio de pelo menos uma destas respostas: surpresa, emoção, medo, fascínio, arrepio, curiosidade ou catarse.
+
+DECISÕES AUTÔNOMAS
+Analise os dados e decida especificamente para esta obra:
+- a Cena de Impacto e a razão editorial objetiva de sua escolha;
+- a emoção dominante dessa cena;
+- o símbolo e o objeto principal;
+- os objetos e artefatos secundários;
+- uma frase de impacto curta, original e coerente, sem usar citação atribuída à obra;
+- a quantidade, formato, dimensão e posição dos painéis editoriais;
+- a organização visual e a hierarquia de leitura;
+- a paleta, iluminação, atmosfera, materiais e acabamento;
+- quais fotografias, mapas, documentos, manuscritos, plantas, símbolos ou evidências de arquivo realmente contribuem;
+- quais objetos físicos dialogam com a narrativa.
+
+Não use uma grade fixa. Cada decisão deve nascer da natureza da obra. Obras literárias, biografias, jogos, filmes, eventos históricos e conteúdos técnicos exigem soluções próprias.
+
+ARQUITETURA DO PÔSTER
+Construa uma composição vertical premium e editorialmente legível contendo, de maneira adaptável:
+
+1. CABEÇALHO
+- selo editorial “ESSÊNCIA DOS LIVROS”;
+- identificação coerente da coleção ou edição;
+- título da obra em destaque;
+- subtítulo somente quando existir ou for editorialmente necessário.
+
+2. ELEMENTO CENTRAL
+- Cena de Impacto escolhida como núcleo emocional e visual;
+- composição cinematográfica, autoral e narrativa;
+- símbolo ou objeto principal integrado organicamente;
+- tensão visual, mistério ou catarse capazes de interromper o olhar;
+- força visual sem transformar a peça em wallpaper.
+
+3. PAINÉIS EDITORIAIS
+Crie a quantidade e o arranjo adequados à obra. Use textos curtos derivados dos dados, podendo abordar:
+- legado;
+- conceito curatorial;
+- tom emocional;
+- símbolos;
+- direção narrativa;
+- contexto relevante.
+
+Os painéis devem parecer parte de uma edição especial ou arquivo de museu, nunca componentes de uma interface digital.
+
+4. RODAPÉ E PLACA DE IDENTIFICAÇÃO
+Inclua uma placa editorial ou arquivística com os dados disponíveis:
+- título;
+- obra original;
+- autor ou criador;
+- ano;
+- divisão do arquivo;
+- código de catálogo coerente e sistemático.
+
+Omitir dados factuais ausentes em vez de inventá-los. O código de catálogo pode ser uma identificação editorial derivada do título, tipo e ano, sem se apresentar como dado histórico real.
+
+5. ELEMENTOS SECUNDÁRIOS
+Distribua de forma seletiva fotografias, mapas, documentos, manuscritos, plantas, símbolos e artefatos relacionados à obra. Eles devem ampliar a leitura editorial, não apenas preencher espaços.
+
+6. OBJETOS FÍSICOS
+Quando fizer sentido, integre objetos como bússolas, pergaminhos, armas, flores, livros, medalhas, moedas, relógios, cartas ou outros itens específicos da obra. Use somente objetos sustentados pela BEU ou pela narrativa. Eles devem projetar sombras, ocupar profundidades diferentes e conversar com a cena central.
+
+IDENTIDADE VISUAL
+- linguagem de pôster editorial premium, material de arquivo, documento de museu e peça colecionável;
+- materiais táteis, microtexturas, profundidade fotográfica e iluminação curatorial cinematográfica;
+- tipografia editorial sofisticada e hierarquia clara;
+- textos curtos, legíveis e corretamente posicionados;
+- identidade Essência dos Livros consistente, mas composição singular;
+- equilíbrio entre densidade informacional e áreas de respiro;
+- paisagem sonora, cheiros, temperatura, silêncio e emoção traduzidos visualmente em luz, textura, clima e matéria.
+
+RESTRIÇÕES
+- A Cena de Impacto não pode ser substituída por uma imagem apenas bonita, limpa ou decorativa.
+- Nunca produzir apenas uma cena ilustrativa ou um wallpaper.
+- Nunca produzir apenas uma arte promocional convencional.
+- Nunca copiar capas, pôsteres, key art, logotipos protegidos ou rostos de atores reais.
+- Nunca inventar fatos, personagens, lugares, datas, símbolos ou citações.
+- Não usar montagem genérica de personagens, estética de streaming, interface digital ou layout de template.
+- Não sobrecarregar a composição com ornamentos sem função narrativa.
+- Não forçar a mesma quantidade de painéis, objetos ou fotografias em todas as obras.
+- Não permitir que elementos editoriais escondam o núcleo emocional da composição.
 
 FORMATO DA RESPOSTA
-Retorne somente o prompt final de imagem, em texto corrido detalhado. Inclua composição, enquadramento, luz, atmosfera, paleta, materiais, símbolo, emoção e restrições negativas. Não use introdução, justificativa ou conclusão.
+Retorne somente o prompt final para a IA de imagem, completo e operacional. O próprio prompt final deve declarar claramente:
+- qual é a Cena de Impacto escolhida;
+- por que ela foi escolhida;
+- emoção dominante;
+- símbolo central;
+- composição visual;
+- elemento principal e elementos secundários;
+- caixas editoriais e seus textos curtos;
+- título e selo “ESSÊNCIA DOS LIVROS”;
+- painéis laterais;
+- placa de arquivo;
+- tom emocional;
+- frase curta de impacto.
+
+Depois, detalhe materiais, enquadramento, iluminação, atmosfera, paleta, tipografia, hierarquia e restrições negativas. Não use introdução externa, justificativa do processo, análise ou alternativas: entregue apenas o prompt que será usado pela IA de imagem.
+
+REGRA DE GENERALIZAÇÃO
+Não utilize valores fixos dentro do prompt final, exceto a marca “ESSÊNCIA DOS LIVROS”. Títulos, subtítulos, frases, caixas, dados, códigos, objetos e textos específicos devem ser gerados dinamicamente e alimentados exclusivamente pelo contexto, pela BEU e pela Narrativa Cinematográfica. O motor deve funcionar com qualquer obra sem ajustes manuais.
 
 CONTEXTO DA OBRA
 ${JSON.stringify(contexto, null, 2)}
@@ -608,7 +718,7 @@ BEU COMPLETA
 ${JSON.stringify(beuAtual, null, 2)}
 
 NARRATIVA CINEMATOGRÁFICA
-${narrativaCinematica || "Não existe narrativa cinematográfica concluída. Baseie a capa exclusivamente na BEU e no contexto."}
+${narrativaCinematica || "Não existe narrativa cinematográfica concluída. Construa o pôster exclusivamente com a BEU e o contexto, sem inventar conteúdo ausente."}
 `.trim();
 }
 
