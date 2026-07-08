@@ -18,6 +18,13 @@ const CAMPOS_PRIORITARIOS_CURADOR = [
   "editorial.curiosidades",
 ];
 
+const CAMPOS_PRIORITARIOS_EDITOR = [
+  "emocional.tema_central",
+  "emocional.curva_emocional",
+  "essencia.aforismo",
+  "essencia.narrador",
+];
+
 function primeiroValor(row, nomes, fallback = null) {
   for (const nome of nomes) {
     if (row?.[nome] !== undefined && row?.[nome] !== null && row?.[nome] !== "") {
@@ -28,18 +35,18 @@ function primeiroValor(row, nomes, fallback = null) {
   return fallback;
 }
 
-function textoIncluiCurador(valor) {
+function textoIncluiResponsavel(valor, responsavel) {
   if (!valor) return false;
 
   if (Array.isArray(valor)) {
-    return valor.some((item) => textoIncluiCurador(item));
+    return valor.some((item) => textoIncluiResponsavel(item, responsavel));
   }
 
   if (typeof valor === "object") {
-    return Object.values(valor).some((item) => textoIncluiCurador(item));
+    return Object.values(valor).some((item) => textoIncluiResponsavel(item, responsavel));
   }
 
-  return String(valor).toLowerCase().includes("curador");
+  return String(valor).toLowerCase().includes(String(responsavel).toLowerCase());
 }
 
 function pertenceVersao(row, versao) {
@@ -106,7 +113,7 @@ function montarContratoCampos(campos) {
     .join("\n\n");
 }
 
-async function buscarCamposCurador({ versao }) {
+async function buscarCamposPorResponsavel({ versao, responsavel }) {
   const { data, error } = await supabaseAdmin
     .from("beu_campos")
     .select("*")
@@ -118,7 +125,7 @@ async function buscarCamposCurador({ versao }) {
 
   return (data || [])
     .filter((row) => pertenceVersao(row, versao))
-    .filter((row) => textoIncluiCurador(row.quem_preenche))
+    .filter((row) => textoIncluiResponsavel(row.quem_preenche, responsavel))
     .map(normalizarCampo)
     .sort((a, b) => String(a.modulo).localeCompare(String(b.modulo)) || a.ordem - b.ordem);
 }
@@ -180,7 +187,63 @@ Exemplo de organização esperada:
 `.trim();
 }
 
-export async function montarPromptAgente({ agente, contexto, tipoEtapa }) {
+function montarPromptEditor({ agente, contexto, campos, beuAtual }) {
+  const contratoCampos = montarContratoCampos(campos);
+
+  return `
+Você está executando a etapa editor_beu da Essência Engine.
+
+Agente: ${agente?.nome || agente?.slug || "editor-ia"}
+Versão BEU: ${ENGINE_CONFIG.versaoBEU}
+
+OBJETIVO
+Enriquecer a BEU objetiva criada pelo Curador com interpretação editorial, emocional e simbólica.
+A saída deve ser elegante, profunda e objetiva, em português brasileiro.
+
+REGRAS DO EDITOR
+- Não altere campos factuais do Curador.
+- Não modifique identificacao, classificacao, autoria, narrativa ou editorial.
+- Não invente fatos novos.
+- Interprete a obra com profundidade sem transformar interpretação em fato.
+- Não gere PDF.
+- Não gere roteiro cinematográfico.
+- Não gere prompt de imagem.
+- Responda somente JSON válido.
+- Retorne somente os módulos permitidos ao Editor.
+- Módulos permitidos: emocional, essencia, legado.
+- Se não houver base suficiente para algum campo interpretativo, use null ou [] conforme o tipo esperado.
+
+CAMPOS PRIORITÁRIOS DESTA ETAPA
+Preencha especialmente:
+${CAMPOS_PRIORITARIOS_EDITOR.map((campo) => `- ${campo}`).join("\n")}
+
+CONTRATO DE CAMPOS PERMITIDOS AO EDITOR
+${contratoCampos || "Nenhum campo específico foi encontrado. Gere apenas emocional, essencia e legado com os campos prioritários."}
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU ATUAL GERADA PELO CURADOR
+Use esta BEU como base. Preserve os fatos e não reescreva módulos factuais.
+${JSON.stringify(beuAtual, null, 2)}
+
+FORMATO DE RESPOSTA
+Retorne apenas um objeto JSON contendo somente módulos permitidos.
+Exemplo:
+{
+  "emocional": {
+    "tema_central": null,
+    "curva_emocional": []
+  },
+  "essencia": {
+    "aforismo": null,
+    "narrador": null
+  }
+}
+`.trim();
+}
+
+export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual = null }) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
   }
@@ -189,13 +252,29 @@ export async function montarPromptAgente({ agente, contexto, tipoEtapa }) {
     throw new Error("contexto é obrigatório para montar o prompt.");
   }
 
-  if (tipoEtapa !== "curador_beu") {
+  const configs = {
+    curador_beu: {
+      responsavel: "Curador",
+      montar: ({ campos }) => montarPromptCurador({ agente, contexto, campos }),
+    },
+    editor_beu: {
+      responsavel: "Editor",
+      montar: ({ campos }) => montarPromptEditor({ agente, contexto, campos, beuAtual }),
+    },
+  };
+
+  const config = configs[tipoEtapa];
+
+  if (!config) {
     return null;
   }
 
-  const campos = await buscarCamposCurador({ versao: ENGINE_CONFIG.versaoBEU });
+  const campos = await buscarCamposPorResponsavel({
+    versao: ENGINE_CONFIG.versaoBEU,
+    responsavel: config.responsavel,
+  });
   const modulos = [...agruparPorModulo(campos).keys()];
-  const promptMontado = montarPromptCurador({ agente, contexto, campos });
+  const promptMontado = config.montar({ campos });
 
   engineStep("PromptBuilder", "✓", {
     tipoEtapa,

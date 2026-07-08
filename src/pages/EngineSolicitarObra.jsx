@@ -6,16 +6,21 @@ export default function EngineSolicitarObra() {
   const [tipoObra, setTipoObra] = useState("livro");
   const [criandoObra, setCriandoObra] = useState(false);
   const [executandoCurador, setExecutandoCurador] = useState(false);
+  const [executandoEditor, setExecutandoEditor] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
+  const [resultadoEditor, setResultadoEditor] = useState(null);
 
   async function solicitarObra(e) {
     e.preventDefault();
     let curadorFoiIniciado = false;
+    let editorFoiIniciado = false;
     setCriandoObra(true);
     setExecutandoCurador(false);
+    setExecutandoEditor(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
+    setResultadoEditor(null);
 
     try {
       console.log("[ENGINE] iniciando solicitar-obra");
@@ -73,6 +78,32 @@ export default function EngineSolicitarObra() {
       }
 
       toast.success("Curador IA executado em modo Engine!");
+
+      setExecutandoCurador(false);
+      setExecutandoEditor(true);
+      editorFoiIniciado = true;
+      console.log("[ENGINE] iniciando editor-beu", obraId);
+
+      const editorResponse = await fetch("/api/engine/executar-etapa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          obraId,
+          tipoEtapa: "editor_beu",
+        }),
+      });
+
+      const editorData = await editorResponse.json();
+      console.log("[ENGINE] resposta editor-beu", editorData);
+      setResultadoEditor(editorData);
+
+      if (!editorResponse.ok || editorData?.ok === false) {
+        throw new Error(editorData.error || "Erro ao executar editor_beu.");
+      }
+
+      toast.success("Editor IA executado em modo Engine!");
     } catch (error) {
       console.error("[ENGINE] erro no fluxo", error);
       toast.error(error.message);
@@ -83,13 +114,21 @@ export default function EngineSolicitarObra() {
           error: error.message,
         });
       }
+      if (editorFoiIniciado) {
+        setResultadoEditor((atual) => atual || {
+          ok: false,
+          etapa: "editor_beu",
+          error: error.message,
+        });
+      }
     } finally {
       setCriandoObra(false);
       setExecutandoCurador(false);
+      setExecutandoEditor(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador;
+  const loading = criandoObra || executandoCurador || executandoEditor;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -144,11 +183,13 @@ export default function EngineSolicitarObra() {
               ? "Criando obra..."
               : executandoCurador
                 ? "Executando curador..."
-                : "Solicitar obra"}
+                : executandoEditor
+                  ? "Executando editor..."
+                  : "Solicitar obra"}
           </button>
         </form>
 
-        {(criandoObra || executandoCurador) && (
+        {(criandoObra || executandoCurador || executandoEditor) && (
           <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
@@ -160,6 +201,12 @@ export default function EngineSolicitarObra() {
               <span>Executando curador</span>
               <span className={executandoCurador ? "text-amber-300" : resultadoCurador ? "text-emerald-300" : "text-zinc-500"}>
                 {executandoCurador ? "em andamento" : resultadoCurador ? "concluído" : "aguardando"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Executando editor</span>
+              <span className={executandoEditor ? "text-amber-300" : resultadoEditor ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoEditor ? "em andamento" : resultadoEditor ? "concluído" : "aguardando"}
               </span>
             </div>
           </div>
@@ -183,6 +230,17 @@ export default function EngineSolicitarObra() {
             </h2>
             <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoCurador.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
               {JSON.stringify(resultadoCurador, null, 2)}
+            </pre>
+          </section>
+        )}
+
+        {resultadoEditor && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da execução editor_beu
+            </h2>
+            <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoEditor.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
+              {JSON.stringify(resultadoEditor, null, 2)}
             </pre>
           </section>
         )}

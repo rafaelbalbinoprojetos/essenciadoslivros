@@ -93,6 +93,36 @@ function criarBEUMock({ contexto, agente }) {
   };
 }
 
+function criarEditorMock({ contexto, agente }) {
+  const titulo = contexto?.obra?.titulo || "esta obra";
+
+  return {
+    emocional: {
+      tema_central:
+        `A travessia interior de ${titulo}: uma leitura sobre amadurecimento, pertencimento e coragem diante do desconhecido.`,
+      curva_emocional: [
+        "chamado",
+        "hesitação",
+        "descoberta",
+        "perda de inocência",
+        "retorno transformado",
+      ],
+    },
+    essencia: {
+      aforismo:
+        "Toda jornada verdadeira começa quando o conforto deixa de ser suficiente.",
+      narrador:
+        "Uma voz curatorial serena, literária e retrospectiva, capaz de observar a aventura como memória e símbolo.",
+    },
+    metadados_engine: {
+      agente: agente?.slug || "editor-ia",
+      modelo: "mock-engine",
+      gerado_em: new Date().toISOString(),
+      mock: true,
+    },
+  };
+}
+
 function criarConteudoUsuario({ contexto, schema, promptMontado }) {
   if (promptMontado) return promptMontado;
 
@@ -165,11 +195,13 @@ async function executarChatCompletions({ agente, contexto, schema, promptMontado
   };
 }
 
-async function executarMock({ agente, contexto }) {
-  engineStep("Curador IA", "→", { modo: "mock" });
+async function executarMock({ agente, contexto, tipoEtapa }) {
+  engineStep(agente?.nome || agente?.slug || "Agente IA", "→", { modo: "mock", tipoEtapa });
   engineStep("Mock", "✓", "OpenAI não será chamada nesta execução.");
 
-  const saida = criarBEUMock({ contexto, agente });
+  const saida = tipoEtapa === "editor_beu"
+    ? criarEditorMock({ contexto, agente })
+    : criarBEUMock({ contexto, agente });
 
   return {
     saida,
@@ -190,6 +222,7 @@ export async function executarAgenteOpenAI({
   schema = null,
   modo = "chat_completions",
   promptMontado = null,
+  tipoEtapa = null,
 }) {
   if (!agente) {
     throw new Error("Agente é obrigatório.");
@@ -200,14 +233,14 @@ export async function executarAgenteOpenAI({
   }
 
   if (isEngineMockEnabled()) {
-    return executarMock({ agente, contexto });
+    return executarMock({ agente, contexto, tipoEtapa });
   }
 
   if (modo !== "chat_completions") {
     throw new Error(`Modo OpenAI ainda não implementado: ${modo}`);
   }
 
-  engineStep("Curador IA", "→", {
+  engineStep(agente?.nome || agente?.slug || "Agente IA", "→", {
     modo,
     modelo: agente.modelo || ENGINE_CONFIG.modeloDefault,
     prompt_montado: Boolean(promptMontado),
