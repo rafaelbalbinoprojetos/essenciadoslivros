@@ -122,7 +122,9 @@ export default function UnexpectedEncounterPage() {
       <div className="relative grid min-h-[calc(100vh-9rem)] lg:grid-cols-[330px_minmax(0,1fr)]">
         <aside className="relative z-30 border-b border-[#d5b06a]/15 bg-black/25 p-7 backdrop-blur-sm lg:border-b-0 lg:border-r lg:p-10">
           <p className="text-[9px] font-bold uppercase tracking-[0.42em] text-[#d5b06a]">Deixe o acervo escolher você</p>
-          <h1 className="mt-5 font-display text-4xl font-semibold uppercase leading-[0.95] text-[#f8efdf] sm:text-5xl">Encontro<br />inesperado</h1>
+          <h1 className="mt-5 max-w-[260px] font-display text-[2.35rem] font-semibold uppercase leading-[0.92] tracking-[-0.04em] text-[#f8efdf] sm:text-[2.85rem] lg:text-[3rem]">
+            Encontro<br />inesperado
+          </h1>
           <div className="mt-6 h-px w-36 bg-gradient-to-r from-[#d5b06a]/80 to-transparent" />
           <p className="mt-6 max-w-xs text-sm leading-6 text-[#d5c7b3]/75">Um passeio pelas estantes do Essência. Você não escolhe a obra. Ela pode escolher você.</p>
 
