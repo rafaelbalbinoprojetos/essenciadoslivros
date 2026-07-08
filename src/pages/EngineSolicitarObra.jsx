@@ -4,13 +4,18 @@ import toast from "react-hot-toast";
 export default function EngineSolicitarObra() {
   const [titulo, setTitulo] = useState("");
   const [tipoObra, setTipoObra] = useState("livro");
-  const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState(null);
+  const [criandoObra, setCriandoObra] = useState(false);
+  const [executandoCurador, setExecutandoCurador] = useState(false);
+  const [resultadoCriacao, setResultadoCriacao] = useState(null);
+  const [resultadoCurador, setResultadoCurador] = useState(null);
 
   async function solicitarObra(e) {
     e.preventDefault();
-    setLoading(true);
-    setResultado(null);
+    let curadorFoiIniciado = false;
+    setCriandoObra(true);
+    setExecutandoCurador(false);
+    setResultadoCriacao(null);
+    setResultadoCurador(null);
 
     try {
       const response = await fetch("/api/engine/solicitar-obra", {
@@ -30,15 +35,54 @@ export default function EngineSolicitarObra() {
         throw new Error(data.error || "Erro ao solicitar obra.");
       }
 
-      setResultado(data);
+      setResultadoCriacao(data);
       toast.success("Obra criada como rascunho!");
       setTitulo("");
+
+      const obraId = data?.livro?.id;
+
+      if (!obraId) {
+        throw new Error("Obra criada, mas o id não foi retornado pela API.");
+      }
+
+      setExecutandoCurador(true);
+      curadorFoiIniciado = true;
+
+      const etapaResponse = await fetch("/api/engine/executar-etapa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          obraId,
+          tipoEtapa: "curador_beu",
+        }),
+      });
+
+      const etapaData = await etapaResponse.json();
+      setResultadoCurador(etapaData);
+
+      if (!etapaData.ok) {
+        throw new Error(etapaData.error || "Erro ao executar curador_beu.");
+      }
+
+      toast.success("Curador IA executado em modo Engine!");
     } catch (error) {
       toast.error(error.message);
+      if (curadorFoiIniciado) {
+        setResultadoCurador((atual) => atual || {
+          ok: false,
+          etapa: "curador_beu",
+          error: error.message,
+        });
+      }
     } finally {
-      setLoading(false);
+      setCriandoObra(false);
+      setExecutandoCurador(false);
     }
   }
+
+  const loading = criandoObra || executandoCurador;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -89,14 +133,51 @@ export default function EngineSolicitarObra() {
             disabled={loading}
             className="w-full rounded-xl bg-amber-500 text-black font-semibold py-3 hover:bg-amber-400 disabled:opacity-60"
           >
-            {loading ? "Criando obra..." : "Solicitar obra"}
+            {criandoObra
+              ? "Criando obra..."
+              : executandoCurador
+                ? "Executando curador..."
+                : "Solicitar obra"}
           </button>
         </form>
 
-        {resultado && (
-          <pre className="mt-6 bg-black border border-zinc-800 rounded-2xl p-5 overflow-auto text-sm text-emerald-300">
-            {JSON.stringify(resultado, null, 2)}
-          </pre>
+        {(criandoObra || executandoCurador) && (
+          <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
+            <div className="flex items-center justify-between">
+              <span>Criando obra</span>
+              <span className={criandoObra ? "text-amber-300" : "text-emerald-300"}>
+                {criandoObra ? "em andamento" : resultadoCriacao ? "concluído" : "aguardando"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Executando curador</span>
+              <span className={executandoCurador ? "text-amber-300" : resultadoCurador ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoCurador ? "em andamento" : resultadoCurador ? "concluído" : "aguardando"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {resultadoCriacao && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da criação da obra
+            </h2>
+            <pre className="bg-black border border-zinc-800 rounded-2xl p-5 overflow-auto text-sm text-emerald-300">
+              {JSON.stringify(resultadoCriacao, null, 2)}
+            </pre>
+          </section>
+        )}
+
+        {resultadoCurador && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da execução curador_beu
+            </h2>
+            <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoCurador.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
+              {JSON.stringify(resultadoCurador, null, 2)}
+            </pre>
+          </section>
         )}
       </div>
     </div>
