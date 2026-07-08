@@ -38,6 +38,16 @@ const DEFINICOES_ETAPAS = {
     agenteSlug: "narrador-cinematico",
     executor: executarNarrativaCinematica,
   },
+  heritage_prompt: {
+    ordem: 5,
+    agenteSlug: "heritage-prompt",
+    executor: executarPromptImagem,
+  },
+  capa_cinematica_prompt: {
+    ordem: 6,
+    agenteSlug: "capa-cinematica-prompt",
+    executor: executarPromptImagem,
+  },
 };
 
 const ETAPAS_SUPORTADAS = new Set(Object.keys(DEFINICOES_ETAPAS));
@@ -137,6 +147,24 @@ async function falharEtapaPipeline({ etapaId, erro }) {
   }
 
   return data;
+}
+
+async function buscarUltimaNarrativaCinematica(obraId) {
+  const { data, error } = await supabaseAdmin
+    .from("ai_pipeline_etapas")
+    .select("saida")
+    .eq("obra_id", obraId)
+    .eq("tipo_etapa", "narrativa_cinematica")
+    .eq("status", "concluido")
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Erro ao buscar narrativa cinematográfica: ${error.message}`);
+  }
+
+  return typeof data?.saida === "string" ? data.saida : null;
 }
 
 async function executarCuradorBEU({ obraId }) {
@@ -712,6 +740,122 @@ async function executarNarrativaCinematica({ obraId }) {
   }
 }
 
+async function executarPromptImagem({ obraId, tipoEtapa }) {
+  let execucao = null;
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+
+    const agente = await buscarAgentePorSlug(definicao.agenteSlug);
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    const beuAtual = beuAtualRegistro.payload;
+    const narrativaCinematica = await buscarUltimaNarrativaCinematica(obraId);
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      agente_slug: agente.slug,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      mock: ENGINE_CONFIG.mock,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      narrativa_cinematica_disponivel: Boolean(narrativaCinematica),
+      persistencia: "ai_pipeline_etapas.saida",
+    };
+
+    const promptMontado = await montarPromptAgente({
+      agente,
+      contexto,
+      tipoEtapa,
+      beuAtual,
+      narrativaCinematica,
+    });
+
+    entrada.prompt_montado = Boolean(promptMontado);
+    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    execucao = await criarExecucaoAgente({
+      agenteId: agente.id,
+      obraId,
+      contexto,
+      entrada,
+      modelo: agente.modelo,
+    });
+
+    const resultado = await executarAgenteOpenAI({
+      agente,
+      contexto,
+      schema: null,
+      promptMontado,
+      tipoEtapa,
+    });
+    const custoEstimado = calcularCustoEstimado({
+      modelo: resultado.modelo,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
+    await concluirExecucaoAgente({
+      execucaoId: execucao.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    engineStep("Pipeline concluída", "✓", { obraId, tipoEtapa });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tokens: {
+        input: resultado.tokens_input,
+        output: resultado.tokens_output,
+        total: resultado.tokens_total,
+      },
+      saida: resultado.saida,
+      mock: resultado.modo === "mock",
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (execucao?.id) await falharExecucaoAgente({ execucaoId: execucao.id, erro });
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
 export async function executarEtapaPipeline({ obraId, tipoEtapa }) {
   if (!obraId) {
     throw new Error("obraId é obrigatório.");
@@ -731,5 +875,5 @@ export async function executarEtapaPipeline({ obraId, tipoEtapa }) {
     throw new Error(`Executor não implementado para etapa: ${tipoEtapa}`);
   }
 
-  return definicao.executor({ obraId });
+  return definicao.executor({ obraId, tipoEtapa });
 }

@@ -135,7 +135,7 @@ Estrutura obrigatória:
 
 O aforismo, o mundo que fala e a apresentação vêm no payload da obra.
 
-Após o Convite, gerar obrigatoriamente:
+Após o Convite, gerar obrigatoriamente em uma linha separada onde deve conter exclusivamente:
 ESSÊNCIA DOS LIVROS APRESENTA... [NOME DA OBRA]
 
 ━━━ NARRADOR ━━━
@@ -515,7 +515,110 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
   );
 }
 
-export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual = null }) {
+function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
+  return `
+Você é o diretor de arte da Heritage Collection da Essência dos Livros.
+
+TAREFA
+Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. Não gere a imagem. Não explique decisões. Não apresente alternativas.
+
+OBJETIVO VISUAL
+Projetar uma peça vertical premium com aparência de arquivo histórico preservado, museu editorial e coleção patrimonial. A composição deve parecer construída fisicamente com materiais reais, iluminação curatorial e profundidade fotográfica — nunca um card digital genérico.
+
+CONTEÚDO A INTERPRETAR
+- título e título original;
+- autor, criador ou estúdio responsável;
+- ano e contexto histórico;
+- legado cultural e editorial;
+- objeto principal como artefato hero;
+- paleta cromática;
+- tom emocional;
+- curiosidades verificáveis presentes na BEU;
+- artefatos de apoio coerentes com a obra;
+- detalhes arquivísticos;
+- placa de museu com identidade Essência Heritage Collection.
+
+DIREÇÃO OBRIGATÓRIA
+- Formato vertical de capa editorial, composição frontal e legível.
+- Objeto principal central com importância museológica.
+- Artefatos de apoio distribuídos como evidências de arquivo, sem poluição visual.
+- Materiais táteis: papel envelhecido, madeira, metal, couro, tecido, vidro ou pedra somente quando coerentes.
+- Iluminação de museu, sombras naturais, microtexturas e acabamento fotográfico premium.
+- Hierarquia clara entre título, objeto principal, informações curatoriais e placa inferior.
+- Detalhes arquivísticos podem incluir código de catálogo, data, local, selos, carimbos, notas manuscritas e etiquetas, apenas quando coerentes.
+- A placa de museu deve conter título, autoria/criação, ano e código de catálogo, sem inventar fatos ausentes.
+- Não copiar pôsteres, capas oficiais, logotipos protegidos ou o rosto de pessoas reais.
+- Não inventar informações factuais. Quando um dado não existir, omita-o visualmente.
+- Evitar estética de colagem amadora, interface digital, mockup vazio, excesso de ornamentos e texto ilegível.
+
+FORMATO DA RESPOSTA
+Retorne somente o prompt final de imagem, em texto corrido detalhado. Inclua composição, materiais, iluminação, lente/enquadramento, paleta, elementos, tipografia editorial e restrições negativas. Não use introdução, justificativa ou conclusão.
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU COMPLETA
+${JSON.stringify(beuAtual, null, 2)}
+
+NARRATIVA CINEMATOGRÁFICA DISPONÍVEL
+${narrativaCinematica || "Não existe narrativa cinematográfica concluída para esta obra."}
+`.trim();
+}
+
+function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }) {
+  return `
+Você é o diretor de arte cinematográfico da Essência dos Livros.
+
+TAREFA
+Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. Não gere a imagem. Não explique decisões. Não apresente alternativas.
+
+OBJETIVO VISUAL
+Criar a capa emocional da Memória Cinematográfica da obra. A imagem deve condensar a lembrança que permaneceu, não resumir a trama. Ela deve parecer um frame impossível de um filme preservado pela memória: autoral, atmosférico, emocional e imediatamente reconhecível pela essência da obra.
+
+ELEMENTOS A INTERPRETAR
+- tema central;
+- símbolo principal;
+- emoção dominante;
+- objeto principal;
+- paleta;
+- paisagem sonora e sensorial traduzida visualmente;
+- cena mais marcante da narrativa cinematográfica;
+- detalhe sobrevivente e atmosfera emocional.
+
+DIREÇÃO OBRIGATÓRIA
+- Formato vertical de capa cinematográfica premium.
+- Uma única ideia visual dominante e um único ponto focal.
+- Escolher a cena mais marcante pela força emocional, não pela escala da ação.
+- Traduzir som, cheiro, temperatura, textura e silêncio por luz, matéria, clima e profundidade.
+- Usar o símbolo principal de forma narrativa, sem transformá-lo em ícone decorativo.
+- Preservar espaço de respiro e leitura clara em miniatura.
+- Iluminação cinematográfica motivada, atmosfera volumétrica sutil e profundidade fotográfica.
+- Personagens, quando indispensáveis, devem ser tratados como figuras narrativas e não como retratos promocionais.
+- Não copiar pôsteres, key art, capas oficiais, logotipos protegidos ou rostos de atores reais.
+- Não inventar fatos, personagens, cenários ou símbolos ausentes da BEU e da narrativa.
+- Evitar montagem de múltiplos personagens, excesso de texto, estética genérica de streaming, ação gratuita e fantasia visual desconectada da obra.
+
+FORMATO DA RESPOSTA
+Retorne somente o prompt final de imagem, em texto corrido detalhado. Inclua composição, enquadramento, luz, atmosfera, paleta, materiais, símbolo, emoção e restrições negativas. Não use introdução, justificativa ou conclusão.
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU COMPLETA
+${JSON.stringify(beuAtual, null, 2)}
+
+NARRATIVA CINEMATOGRÁFICA
+${narrativaCinematica || "Não existe narrativa cinematográfica concluída. Baseie a capa exclusivamente na BEU e no contexto."}
+`.trim();
+}
+
+export async function montarPromptAgente({
+  agente,
+  contexto,
+  tipoEtapa,
+  beuAtual = null,
+  narrativaCinematica = null,
+}) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
   }
@@ -540,6 +643,14 @@ export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual
     narrativa_cinematica: {
       responsavel: "Narrador Cinemático",
       montar: () => montarPromptNarrativaCinematicaEssencia({ agente, contexto, beuAtual }),
+    },
+    heritage_prompt: {
+      responsavel: "Heritage Prompt",
+      montar: () => montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }),
+    },
+    capa_cinematica_prompt: {
+      responsavel: "Capa Cinemática Prompt",
+      montar: () => montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }),
     },
   };
 

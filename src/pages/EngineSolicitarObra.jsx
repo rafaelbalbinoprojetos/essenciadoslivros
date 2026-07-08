@@ -9,12 +9,16 @@ export default function EngineSolicitarObra() {
   const [executandoEditor, setExecutandoEditor] = useState(false);
   const [executandoDiretor, setExecutandoDiretor] = useState(false);
   const [executandoNarrativa, setExecutandoNarrativa] = useState(false);
+  const [executandoHeritagePrompt, setExecutandoHeritagePrompt] = useState(false);
+  const [executandoCapaPrompt, setExecutandoCapaPrompt] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
   const [resultadoEditor, setResultadoEditor] = useState(null);
   const [resultadoDiretor, setResultadoDiretor] = useState(null);
   const [resultadoNarrativa, setResultadoNarrativa] = useState(null);
+  const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
+  const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
 
   async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
@@ -29,11 +33,15 @@ export default function EngineSolicitarObra() {
     const isEditor = tipoEtapa === "editor_beu";
     const isDiretor = tipoEtapa === "diretor_criativo";
     const isNarrativa = tipoEtapa === "narrativa_cinematica";
+    const isHeritagePrompt = tipoEtapa === "heritage_prompt";
+    const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
     if (isDiretor) setExecutandoDiretor(true);
     if (isNarrativa) setExecutandoNarrativa(true);
+    if (isHeritagePrompt) setExecutandoHeritagePrompt(true);
+    if (isCapaPrompt) setExecutandoCapaPrompt(true);
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -56,6 +64,8 @@ export default function EngineSolicitarObra() {
       if (isEditor) setResultadoEditor(data);
       if (isDiretor) setResultadoDiretor(data);
       if (isNarrativa) setResultadoNarrativa(data);
+      if (isHeritagePrompt) setResultadoHeritagePrompt(data);
+      if (isCapaPrompt) setResultadoCapaPrompt(data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -77,6 +87,8 @@ export default function EngineSolicitarObra() {
       if (isEditor) setResultadoEditor((atual) => atual || fallback);
       if (isDiretor) setResultadoDiretor((atual) => atual || fallback);
       if (isNarrativa) setResultadoNarrativa((atual) => atual || fallback);
+      if (isHeritagePrompt) setResultadoHeritagePrompt((atual) => atual || fallback);
+      if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
 
       return null;
     } finally {
@@ -84,6 +96,8 @@ export default function EngineSolicitarObra() {
       if (isEditor) setExecutandoEditor(false);
       if (isDiretor) setExecutandoDiretor(false);
       if (isNarrativa) setExecutandoNarrativa(false);
+      if (isHeritagePrompt) setExecutandoHeritagePrompt(false);
+      if (isCapaPrompt) setExecutandoCapaPrompt(false);
     }
   }
 
@@ -139,12 +153,16 @@ export default function EngineSolicitarObra() {
     setExecutandoEditor(false);
     setExecutandoDiretor(false);
     setExecutandoNarrativa(false);
+    setExecutandoHeritagePrompt(false);
+    setExecutandoCapaPrompt(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
     setResultadoDiretor(null);
     setResultadoNarrativa(null);
+    setResultadoHeritagePrompt(null);
+    setResultadoCapaPrompt(null);
     setResultadoAtualizacao(null);
 
     try {
@@ -201,11 +219,13 @@ export default function EngineSolicitarObra() {
       setExecutandoEditor(false);
       setExecutandoDiretor(false);
       setExecutandoNarrativa(false);
+      setExecutandoHeritagePrompt(false);
+      setExecutandoCapaPrompt(false);
       setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoCapaPrompt || atualizandoDados;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -266,13 +286,17 @@ export default function EngineSolicitarObra() {
                     ? "Executando diretor criativo..."
                     : executandoNarrativa
                       ? "Gerando narrativa cinematográfica..."
+                      : executandoHeritagePrompt
+                        ? "Gerando prompt Heritage..."
+                        : executandoCapaPrompt
+                          ? "Gerando prompt da capa cinematográfica..."
                       : atualizandoDados
                         ? "Atualizando dados..."
                         : "Solicitar obra"}
           </button>
         </form>
 
-        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || atualizandoDados) && (
+        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoCapaPrompt || atualizandoDados) && (
           <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
@@ -302,6 +326,18 @@ export default function EngineSolicitarObra() {
               <span>Gerando narrativa cinematográfica</span>
               <span className={executandoNarrativa ? "text-amber-300" : resultadoNarrativa ? "text-emerald-300" : "text-zinc-500"}>
                 {executandoNarrativa ? "em andamento" : resultadoNarrativa ? "concluído" : "manual"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Gerando prompt Heritage</span>
+              <span className={executandoHeritagePrompt ? "text-amber-300" : resultadoHeritagePrompt ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoHeritagePrompt ? "em andamento" : resultadoHeritagePrompt ? "concluído" : "manual"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Gerando prompt da capa cinematográfica</span>
+              <span className={executandoCapaPrompt ? "text-amber-300" : resultadoCapaPrompt ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoCapaPrompt ? "em andamento" : resultadoCapaPrompt ? "concluído" : "manual"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -365,6 +401,22 @@ export default function EngineSolicitarObra() {
                   >
                     Gerar Narrativa Cinematográfica
                   </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("heritage_prompt")}
+                    className="rounded-xl border border-orange-500/60 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-orange-500/10 disabled:opacity-60"
+                  >
+                    Gerar Prompt Heritage
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("capa_cinematica_prompt")}
+                    className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
+                  >
+                    Gerar Prompt Capa Cinemática
+                  </button>
                 </div>
               </div>
             )}
@@ -385,6 +437,24 @@ export default function EngineSolicitarObra() {
                 >
                   Gerar Narrativa Cinematográfica
                 </button>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("heritage_prompt")}
+                    className="rounded-xl border border-orange-500/60 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-orange-500/10 disabled:opacity-60"
+                  >
+                    Gerar Prompt Heritage
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("capa_cinematica_prompt")}
+                    className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
+                  >
+                    Gerar Prompt Capa Cinemática
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -448,6 +518,44 @@ export default function EngineSolicitarObra() {
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
                 {JSON.stringify(resultadoNarrativa, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoHeritagePrompt && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do heritage_prompt
+            </h2>
+            {resultadoHeritagePrompt.ok && typeof resultadoHeritagePrompt.saida === "string" ? (
+              <textarea
+                readOnly
+                value={resultadoHeritagePrompt.saida}
+                className="min-h-[420px] w-full rounded-2xl border border-orange-900 bg-black p-5 text-sm leading-7 text-orange-100 outline-none"
+              />
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoHeritagePrompt, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoCapaPrompt && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do capa_cinematica_prompt
+            </h2>
+            {resultadoCapaPrompt.ok && typeof resultadoCapaPrompt.saida === "string" ? (
+              <textarea
+                readOnly
+                value={resultadoCapaPrompt.saida}
+                className="min-h-[420px] w-full rounded-2xl border border-fuchsia-900 bg-black p-5 text-sm leading-7 text-fuchsia-100 outline-none"
+              />
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoCapaPrompt, null, 2)}
               </pre>
             )}
           </section>

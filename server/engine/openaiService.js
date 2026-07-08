@@ -256,6 +256,18 @@ Uma espécie de esperança cautelosa, como quem ainda não sabe se merece atrave
 E talvez ninguém saiba.`;
 }
 
+function criarHeritagePromptMock({ contexto }) {
+  const titulo = contexto?.obra?.titulo || "Obra sem título";
+
+  return `Vertical premium museum editorial composition for “${titulo}”, Heritage Collection aesthetic, a central symbolic artifact presented as a preserved historical object, surrounded by restrained archival evidence, aged paper, dark wood, oxidized metal, subtle handwritten notes, catalog labels and an elegant museum plaque at the bottom, warm directional gallery lighting, natural shadows, tactile microtextures, balanced visual hierarchy, sophisticated serif typography, historically respectful atmosphere, photorealistic materials, high detail, frontal composition, no copied cover art, no protected logos, no celebrity likeness, no invented factual text, no digital interface, no amateur collage, no illegible typography.`;
+}
+
+function criarCapaCinematicaPromptMock({ contexto }) {
+  const titulo = contexto?.obra?.titulo || "Obra sem título";
+
+  return `Vertical cinematic memory cover for “${titulo}”, one emotionally dominant scene, a single symbolic object as the focal point, restrained human presence, atmospheric depth, subtle volumetric light, tactile environment, visual silence, melancholic warmth, carefully controlled palette, premium cinematic photography, strong readability at thumbnail size, memory rather than plot summary, no montage, no copied poster art, no official logos, no actor likeness, no generic streaming aesthetic, no excessive text, no unrelated fantasy elements.`;
+}
+
 function criarConteudoUsuario({ contexto, schema, promptMontado }) {
   if (promptMontado) return promptMontado;
 
@@ -351,6 +363,8 @@ async function executarMock({ agente, contexto, tipoEtapa }) {
     editor_beu: () => criarEditorMock({ contexto, agente }),
     diretor_criativo: () => criarDiretorCriativoMock({ contexto, agente }),
     narrativa_cinematica: () => criarNarrativaCinematicaMock({ contexto, agente }),
+    heritage_prompt: () => criarHeritagePromptMock({ contexto }),
+    capa_cinematica_prompt: () => criarCapaCinematicaPromptMock({ contexto }),
   }[tipoEtapa]?.() ?? criarBEUMock({ contexto, agente });
 
   return {
