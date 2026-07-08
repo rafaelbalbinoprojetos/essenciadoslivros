@@ -28,24 +28,24 @@ const MOODS = [
 ];
 
 const COLLAGE_SLOTS = [
-  { left: 4, top: 3, rotate: -14, scale: 0.9 },
-  { left: 19, top: -4, rotate: 11, scale: 1.02 },
-  { left: 36, top: 5, rotate: -7, scale: 1.08 },
-  { left: 55, top: -6, rotate: 15, scale: 0.92 },
-  { left: 73, top: 4, rotate: -9, scale: 1.04 },
-  { left: 87, top: -2, rotate: 12, scale: 0.82 },
-  { left: -3, top: 29, rotate: 13, scale: 0.94 },
-  { left: 14, top: 25, rotate: -10, scale: 1.08 },
-  { left: 32, top: 31, rotate: 7, scale: 0.9 },
-  { left: 48, top: 22, rotate: -4, scale: 1.16 },
-  { left: 67, top: 28, rotate: 12, scale: 0.96 },
-  { left: 84, top: 24, rotate: -13, scale: 1.02 },
-  { left: 3, top: 58, rotate: -11, scale: 0.86 },
-  { left: 20, top: 55, rotate: 8, scale: 1.04 },
-  { left: 39, top: 62, rotate: -15, scale: 0.92 },
-  { left: 56, top: 53, rotate: 6, scale: 1.1 },
-  { left: 75, top: 59, rotate: -8, scale: 0.94 },
-  { left: 90, top: 54, rotate: 14, scale: 0.84 },
+  { left: 4, top: 3, rotate: -42, scale: 0.9 },
+  { left: 19, top: -4, rotate: 88, scale: 1.02 },
+  { left: 36, top: 5, rotate: -18, scale: 1.08 },
+  { left: 55, top: -6, rotate: 176, scale: 0.92 },
+  { left: 73, top: 4, rotate: -68, scale: 1.04 },
+  { left: 87, top: -2, rotate: 38, scale: 0.82 },
+  { left: -3, top: 29, rotate: 94, scale: 0.94 },
+  { left: 14, top: 25, rotate: -29, scale: 1.08 },
+  { left: 32, top: 31, rotate: 47, scale: 0.9 },
+  { left: 48, top: 22, rotate: -8, scale: 1.16 },
+  { left: 67, top: 28, rotate: 132, scale: 0.96 },
+  { left: 84, top: 24, rotate: -46, scale: 1.02 },
+  { left: 3, top: 58, rotate: -96, scale: 0.86 },
+  { left: 20, top: 55, rotate: 24, scale: 1.04 },
+  { left: 39, top: 62, rotate: -174, scale: 0.92 },
+  { left: 56, top: 53, rotate: 52, scale: 1.1 },
+  { left: 75, top: 59, rotate: -34, scale: 0.94 },
+  { left: 90, top: 54, rotate: 103, scale: 0.84 },
 ];
 
 function seededValue(seed, index) {
@@ -80,7 +80,12 @@ export default function UnexpectedEncounterPage() {
 
   const collage = useMemo(() => {
     const ordered = shuffleWithSeed(books, seed).filter((book) => book.id !== encounter?.id);
-    return encounter ? [encounter, ...ordered].slice(0, COLLAGE_SLOTS.length) : ordered.slice(0, COLLAGE_SLOTS.length);
+    const visible = ordered.slice(0, COLLAGE_SLOTS.length - (encounter ? 1 : 0));
+    if (encounter) {
+      const selectedSlot = Math.floor(seededValue(seed, 77) * COLLAGE_SLOTS.length);
+      visible.splice(selectedSlot, 0, encounter);
+    }
+    return visible.slice(0, COLLAGE_SLOTS.length);
   }, [books, encounter, seed]);
 
   const mixArchive = () => setSeed(Date.now() + Math.random() * 100000);
@@ -135,16 +140,18 @@ export default function UnexpectedEncounterPage() {
             {collage.map((book, index) => {
               const slot = COLLAGE_SLOTS[index];
               const selected = book.id === encounter?.id;
+              const left = slot.left + (seededValue(seed, index + 101) - 0.5) * 9;
+              const top = slot.top + (seededValue(seed, index + 211) - 0.5) * 8;
+              const rotation = slot.rotate + (seededValue(seed, index + 307) - 0.5) * 18;
               return (
                 <Link
                   key={`${book.id}-${seed}`}
                   to={`/biblioteca/${book.id}`}
                   title={book.titulo}
-                  className={`group absolute block aspect-[3/4] w-[clamp(105px,13vw,190px)] overflow-hidden rounded-[10px] bg-[#171009] shadow-[0_24px_45px_-20px_rgba(0,0,0,0.95)] transition duration-500 hover:z-50 hover:scale-110 ${selected ? "ring-2 ring-[#e0b75f] ring-offset-4 ring-offset-[#090705]" : "border border-[#d5b06a]/15"}`}
-                  style={{ left: `${slot.left}%`, top: `${slot.top}%`, transform: `rotate(${slot.rotate + seededValue(seed, index) * 5 - 2.5}deg) scale(${slot.scale})`, zIndex: selected ? 40 : 10 + index }}
+                  className={`group absolute block aspect-[3/4] w-[clamp(105px,13vw,190px)] transition duration-500 hover:z-50 hover:scale-110 ${selected ? "drop-shadow-[0_0_20px_rgba(224,183,95,0.72)]" : "drop-shadow-[0_22px_22px_rgba(0,0,0,0.72)]"}`}
+                  style={{ left: `${left}%`, top: `${top}%`, transform: `rotate(${rotation}deg) scale(${slot.scale})`, zIndex: selected ? 40 : 10 + index }}
                 >
                   <img src={ensureCoverSrc(book.capa_url || book.capa_cinematica_url)} alt={book.titulo} className="h-full w-full object-contain brightness-[0.82] saturate-[0.84] transition duration-500 group-hover:brightness-100 group-hover:saturate-100" />
-                  <span className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-amber-100/5" />
                 </Link>
               );
             })}

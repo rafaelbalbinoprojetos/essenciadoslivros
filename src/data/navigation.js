@@ -37,7 +37,7 @@ export const NAV_LINKS = [
   {
     id: "unexpected-encounter",
     to: "/encontro-inesperado",
-    label: "Encontro Inesperado",
+    label: "Encontro",
     shortLabel: "Encontro",
     description: "Deixe o acervo escolher você",
   },
