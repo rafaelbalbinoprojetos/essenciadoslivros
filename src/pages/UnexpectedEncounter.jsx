@@ -46,6 +46,22 @@ const COLLAGE_SLOTS = [
   { left: 56, top: 53, rotate: 52, scale: 1.1 },
   { left: 75, top: 59, rotate: -34, scale: 0.94 },
   { left: 90, top: 54, rotate: 103, scale: 0.84 },
+  { left: 9, top: 14, rotate: 158, scale: 0.72 },
+  { left: 28, top: 11, rotate: -74, scale: 0.78 },
+  { left: 46, top: 8, rotate: 36, scale: 0.68 },
+  { left: 64, top: 13, rotate: -142, scale: 0.76 },
+  { left: 81, top: 15, rotate: 69, scale: 0.7 },
+  { left: 7, top: 43, rotate: -157, scale: 0.74 },
+  { left: 25, top: 39, rotate: 118, scale: 0.69 },
+  { left: 43, top: 45, rotate: -57, scale: 0.8 },
+  { left: 61, top: 40, rotate: 166, scale: 0.72 },
+  { left: 79, top: 44, rotate: -112, scale: 0.77 },
+  { left: 12, top: 72, rotate: 64, scale: 0.68 },
+  { left: 31, top: 69, rotate: -136, scale: 0.75 },
+  { left: 49, top: 73, rotate: 93, scale: 0.7 },
+  { left: 68, top: 68, rotate: -49, scale: 0.79 },
+  { left: 85, top: 71, rotate: 149, scale: 0.69 },
+  { left: 96, top: 38, rotate: -82, scale: 0.66 },
 ];
 
 function seededValue(seed, index) {
