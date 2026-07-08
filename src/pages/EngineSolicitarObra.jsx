@@ -7,9 +7,11 @@ export default function EngineSolicitarObra() {
   const [criandoObra, setCriandoObra] = useState(false);
   const [executandoCurador, setExecutandoCurador] = useState(false);
   const [executandoEditor, setExecutandoEditor] = useState(false);
+  const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
   const [resultadoEditor, setResultadoEditor] = useState(null);
+  const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
 
   async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
     const obraId = obraIdParam || resultadoCriacao?.livro?.id;
@@ -71,14 +73,61 @@ export default function EngineSolicitarObra() {
     }
   }
 
+  async function atualizarDadosAusentes(obraIdParam = null) {
+    const obraId = obraIdParam || resultadoCriacao?.livro?.id;
+
+    if (!obraId) {
+      toast.error("Nenhuma obra selecionada para atualizar.");
+      return null;
+    }
+
+    setAtualizandoDados(true);
+    setResultadoAtualizacao(null);
+
+    try {
+      console.log("[ENGINE] iniciando atualizar-dados-ausentes", obraId);
+
+      const response = await fetch("/api/engine/atualizar-dados-ausentes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ obraId }),
+      });
+
+      const data = await response.json();
+      console.log("[ENGINE] resposta atualizar-dados-ausentes", data);
+      setResultadoAtualizacao(data);
+
+      if (!response.ok || data?.ok === false) {
+        throw new Error(data.error || "Erro ao atualizar dados ausentes.");
+      }
+
+      toast.success(data.atualizado ? "Dados ausentes atualizados." : "Nenhum dado ausente para atualizar.");
+      return data;
+    } catch (error) {
+      console.error("[ENGINE] erro ao atualizar dados ausentes", error);
+      toast.error(error.message);
+      setResultadoAtualizacao((atual) => atual || {
+        ok: false,
+        error: error.message,
+      });
+      return null;
+    } finally {
+      setAtualizandoDados(false);
+    }
+  }
+
   async function solicitarObra(e) {
     e.preventDefault();
     setCriandoObra(true);
     setExecutandoCurador(false);
     setExecutandoEditor(false);
+    setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
+    setResultadoAtualizacao(null);
 
     try {
       console.log("[ENGINE] iniciando solicitar-obra");
@@ -129,10 +178,11 @@ export default function EngineSolicitarObra() {
       setCriandoObra(false);
       setExecutandoCurador(false);
       setExecutandoEditor(false);
+      setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor;
+  const loading = criandoObra || executandoCurador || executandoEditor || atualizandoDados;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -189,11 +239,13 @@ export default function EngineSolicitarObra() {
                 ? "Executando curador..."
                 : executandoEditor
                   ? "Executando editor..."
-                  : "Solicitar obra"}
+                  : atualizandoDados
+                    ? "Atualizando dados..."
+                    : "Solicitar obra"}
           </button>
         </form>
 
-        {(criandoObra || executandoCurador || executandoEditor) && (
+        {(criandoObra || executandoCurador || executandoEditor || atualizandoDados) && (
           <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
@@ -211,6 +263,12 @@ export default function EngineSolicitarObra() {
               <span>Executando editor</span>
               <span className={executandoEditor ? "text-amber-300" : resultadoEditor ? "text-emerald-300" : "text-zinc-500"}>
                 {executandoEditor ? "em andamento" : resultadoEditor ? "concluído" : "aguardando"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Atualizando dados ausentes</span>
+              <span className={atualizandoDados ? "text-amber-300" : resultadoAtualizacao ? "text-emerald-300" : "text-zinc-500"}>
+                {atualizandoDados ? "em andamento" : resultadoAtualizacao ? "concluído" : "aguardando"}
               </span>
             </div>
           </div>
@@ -244,6 +302,14 @@ export default function EngineSolicitarObra() {
                   >
                     Reprocessar Editor
                   </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => atualizarDadosAusentes()}
+                    className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
+                  >
+                    Atualizar dados ausentes
+                  </button>
                 </div>
               </div>
             )}
@@ -271,6 +337,17 @@ export default function EngineSolicitarObra() {
             </h2>
             <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoEditor.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
               {JSON.stringify(resultadoEditor, null, 2)}
+            </pre>
+          </section>
+        )}
+
+        {resultadoAtualizacao && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da atualização de dados ausentes
+            </h2>
+            <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoAtualizacao.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
+              {JSON.stringify(resultadoAtualizacao, null, 2)}
             </pre>
           </section>
         )}
