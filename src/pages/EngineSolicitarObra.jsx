@@ -7,10 +7,12 @@ export default function EngineSolicitarObra() {
   const [criandoObra, setCriandoObra] = useState(false);
   const [executandoCurador, setExecutandoCurador] = useState(false);
   const [executandoEditor, setExecutandoEditor] = useState(false);
+  const [executandoDiretor, setExecutandoDiretor] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
   const [resultadoEditor, setResultadoEditor] = useState(null);
+  const [resultadoDiretor, setResultadoDiretor] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
 
   async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
@@ -23,9 +25,11 @@ export default function EngineSolicitarObra() {
 
     const isCurador = tipoEtapa === "curador_beu";
     const isEditor = tipoEtapa === "editor_beu";
+    const isDiretor = tipoEtapa === "diretor_criativo";
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
+    if (isDiretor) setExecutandoDiretor(true);
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -46,6 +50,7 @@ export default function EngineSolicitarObra() {
 
       if (isCurador) setResultadoCurador(data);
       if (isEditor) setResultadoEditor(data);
+      if (isDiretor) setResultadoDiretor(data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -65,11 +70,13 @@ export default function EngineSolicitarObra() {
 
       if (isCurador) setResultadoCurador((atual) => atual || fallback);
       if (isEditor) setResultadoEditor((atual) => atual || fallback);
+      if (isDiretor) setResultadoDiretor((atual) => atual || fallback);
 
       return null;
     } finally {
       if (isCurador) setExecutandoCurador(false);
       if (isEditor) setExecutandoEditor(false);
+      if (isDiretor) setExecutandoDiretor(false);
     }
   }
 
@@ -123,10 +130,12 @@ export default function EngineSolicitarObra() {
     setCriandoObra(true);
     setExecutandoCurador(false);
     setExecutandoEditor(false);
+    setExecutandoDiretor(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
+    setResultadoDiretor(null);
     setResultadoAtualizacao(null);
 
     try {
@@ -169,7 +178,10 @@ export default function EngineSolicitarObra() {
       setCriandoObra(false);
       const curador = await executarEtapaManual("curador_beu", obraId);
       if (curador?.ok) {
-        await executarEtapaManual("editor_beu", obraId);
+        const editor = await executarEtapaManual("editor_beu", obraId);
+        if (editor?.ok) {
+          await executarEtapaManual("diretor_criativo", obraId);
+        }
       }
     } catch (error) {
       console.error("[ENGINE] erro no fluxo", error);
@@ -178,11 +190,12 @@ export default function EngineSolicitarObra() {
       setCriandoObra(false);
       setExecutandoCurador(false);
       setExecutandoEditor(false);
+      setExecutandoDiretor(false);
       setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || atualizandoDados;
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -239,13 +252,15 @@ export default function EngineSolicitarObra() {
                 ? "Executando curador..."
                 : executandoEditor
                   ? "Executando editor..."
-                  : atualizandoDados
-                    ? "Atualizando dados..."
-                    : "Solicitar obra"}
+                  : executandoDiretor
+                    ? "Executando diretor criativo..."
+                    : atualizandoDados
+                      ? "Atualizando dados..."
+                      : "Solicitar obra"}
           </button>
         </form>
 
-        {(criandoObra || executandoCurador || executandoEditor || atualizandoDados) && (
+        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || atualizandoDados) && (
           <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
@@ -263,6 +278,12 @@ export default function EngineSolicitarObra() {
               <span>Executando editor</span>
               <span className={executandoEditor ? "text-amber-300" : resultadoEditor ? "text-emerald-300" : "text-zinc-500"}>
                 {executandoEditor ? "em andamento" : resultadoEditor ? "concluído" : "aguardando"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Executando diretor criativo</span>
+              <span className={executandoDiretor ? "text-amber-300" : resultadoDiretor ? "text-emerald-300" : "text-zinc-500"}>
+                {executandoDiretor ? "em andamento" : resultadoDiretor ? "concluído" : "aguardando"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -305,6 +326,14 @@ export default function EngineSolicitarObra() {
                   <button
                     type="button"
                     disabled={loading}
+                    onClick={() => executarEtapaManual("diretor_criativo")}
+                    className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/10 disabled:opacity-60"
+                  >
+                    Reprocessar Diretor Criativo
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
                     onClick={() => atualizarDadosAusentes()}
                     className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
                   >
@@ -337,6 +366,17 @@ export default function EngineSolicitarObra() {
             </h2>
             <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoEditor.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
               {JSON.stringify(resultadoEditor, null, 2)}
+            </pre>
+          </section>
+        )}
+
+        {resultadoDiretor && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado da execução diretor_criativo
+            </h2>
+            <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoDiretor.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
+              {JSON.stringify(resultadoDiretor, null, 2)}
             </pre>
           </section>
         )}

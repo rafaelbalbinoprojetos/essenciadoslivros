@@ -1,6 +1,7 @@
 import { buscarAgentePorSlug } from "./agenteService.js";
 import {
   buscarBEUAtual,
+  mergeBEUComModulosPermitidos,
   mergeBEUExistenteComSaidaEditor,
   salvarOuAtualizarBEU,
 } from "./beuService.js";
@@ -26,6 +27,11 @@ const DEFINICOES_ETAPAS = {
     ordem: 2,
     agenteSlug: "editor-ia",
     executor: executarEditorBEU,
+  },
+  diretor_criativo: {
+    ordem: 3,
+    agenteSlug: "diretor-criativo",
+    executor: executarDiretorCriativo,
   },
 };
 
@@ -354,6 +360,156 @@ async function executarEditorBEU({ obraId }) {
 
     await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
     await saveEngineJsonLog({ runId, name: "beu_final", data: beuComEditor });
+
+    await concluirExecucaoAgente({
+      execucaoId: execucao.id,
+      payloadId: payload.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: payload.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    engineStep("Pipeline concluída", "✓", {
+      obraId,
+      tipoEtapa,
+      payloadId: payload.id,
+    });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: payload.id,
+      tokens: {
+        input: resultado.tokens_input,
+        output: resultado.tokens_output,
+        total: resultado.tokens_total,
+      },
+      saida: resultado.saida,
+      mock: resultado.modo === "mock",
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (execucao?.id) {
+      await falharExecucaoAgente({ execucaoId: execucao.id, erro });
+    }
+
+    if (etapa?.id) {
+      await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    }
+
+    throw error;
+  }
+}
+
+async function executarDiretorCriativo({ obraId }) {
+  let execucao = null;
+  let etapa = null;
+  const tipoEtapa = "diretor_criativo";
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", {
+      obraId,
+      tipoEtapa,
+      mock: ENGINE_CONFIG.mock,
+    });
+
+    const agente = await buscarAgentePorSlug(definicao.agenteSlug);
+
+    engineStep("Context Builder", "→");
+    const contexto = await buildContext(obraId);
+    engineStep("Context Builder", "✓");
+
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const beuAtual = beuAtualRegistro.payload;
+    engineStep("BEU atual carregada", "✓", { payloadId: beuAtualRegistro.id });
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      agente_slug: agente.slug,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      mock: ENGINE_CONFIG.mock,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+    };
+
+    const promptMontado = await montarPromptAgente({
+      agente,
+      contexto,
+      tipoEtapa,
+      beuAtual,
+    });
+
+    entrada.prompt_montado = Boolean(promptMontado);
+    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    execucao = await criarExecucaoAgente({
+      agenteId: agente.id,
+      obraId,
+      contexto,
+      entrada,
+      modelo: agente.modelo,
+    });
+
+    const resultado = await executarAgenteOpenAI({
+      agente,
+      contexto,
+      schema: null,
+      promptMontado,
+      tipoEtapa,
+    });
+
+    const beuComDirecao = mergeBEUComModulosPermitidos({
+      beuAtual,
+      saida: resultado.saida,
+      modulosPermitidos: ["sensorial", "visual", "sonoro"],
+    });
+
+    const custoEstimado = calcularCustoEstimado({
+      modelo: resultado.modelo,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+    });
+
+    const payload = await salvarOuAtualizarBEU({
+      obraId,
+      payload: beuComDirecao,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    engineStep("BEU com direção criativa salva", "✓", { payloadId: payload.id });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
+    await saveEngineJsonLog({ runId, name: "beu_final", data: beuComDirecao });
 
     await concluirExecucaoAgente({
       execucaoId: execucao.id,

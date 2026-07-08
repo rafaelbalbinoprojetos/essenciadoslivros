@@ -123,6 +123,46 @@ function criarEditorMock({ contexto, agente }) {
   };
 }
 
+function criarDiretorCriativoMock({ contexto, agente }) {
+  const titulo = contexto?.obra?.titulo || "esta obra";
+
+  return {
+    sensorial: {
+      sons: [
+        "passos sobre terra úmida",
+        "vento atravessando paisagens abertas",
+        "crepitar distante de fogo",
+      ],
+      cheiros: [
+        "madeira antiga",
+        "terra depois da chuva",
+        "papel envelhecido",
+      ],
+    },
+    visual: {
+      objeto_principal: `Um artefato simbólico ligado à jornada de ${titulo}.`,
+      paleta: [
+        "dourado envelhecido",
+        "verde musgo",
+        "marrom couro",
+        "cinza pedra",
+      ],
+    },
+    sonoro: {
+      paisagem_sonora:
+        "Uma ambiência orgânica e contemplativa, com espaços de silêncio, textura de natureza e sensação de jornada antiga.",
+      direcao_musical:
+        "Cordas discretas, sopros graves e percussão leve, evitando triunfo explícito e privilegiando memória, travessia e descoberta.",
+    },
+    metadados_engine: {
+      agente: agente?.slug || "diretor-criativo",
+      modelo: "mock-engine",
+      gerado_em: new Date().toISOString(),
+      mock: true,
+    },
+  };
+}
+
 function criarConteudoUsuario({ contexto, schema, promptMontado }) {
   if (promptMontado) return promptMontado;
 
@@ -199,9 +239,10 @@ async function executarMock({ agente, contexto, tipoEtapa }) {
   engineStep(agente?.nome || agente?.slug || "Agente IA", "→", { modo: "mock", tipoEtapa });
   engineStep("Mock", "✓", "OpenAI não será chamada nesta execução.");
 
-  const saida = tipoEtapa === "editor_beu"
-    ? criarEditorMock({ contexto, agente })
-    : criarBEUMock({ contexto, agente });
+  const saida = {
+    editor_beu: () => criarEditorMock({ contexto, agente }),
+    diretor_criativo: () => criarDiretorCriativoMock({ contexto, agente }),
+  }[tipoEtapa]?.() ?? criarBEUMock({ contexto, agente });
 
   return {
     saida,

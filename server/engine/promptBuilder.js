@@ -25,6 +25,15 @@ const CAMPOS_PRIORITARIOS_EDITOR = [
   "essencia.narrador",
 ];
 
+const CAMPOS_PRIORITARIOS_DIRETOR_CRIATIVO = [
+  "sensorial.sons",
+  "sensorial.cheiros",
+  "visual.objeto_principal",
+  "visual.paleta",
+  "sonoro.paisagem_sonora",
+  "sonoro.direcao_musical",
+];
+
 function primeiroValor(row, nomes, fallback = null) {
   for (const nome of nomes) {
     if (row?.[nome] !== undefined && row?.[nome] !== null && row?.[nome] !== "") {
@@ -243,6 +252,66 @@ Exemplo:
 `.trim();
 }
 
+function montarPromptDiretorCriativo({ agente, contexto, campos, beuAtual }) {
+  const contratoCampos = montarContratoCampos(campos);
+
+  return `
+Você está executando a etapa diretor_criativo da Essência Engine.
+
+Agente: ${agente?.nome || agente?.slug || "diretor-criativo"}
+Versão BEU: ${ENGINE_CONFIG.versaoBEU}
+
+OBJETIVO
+Enriquecer a BEU com direção sensorial, visual e sonora.
+A saída deve orientar futuras etapas criativas sem gerar assets finais agora.
+
+REGRAS DO DIRETOR CRIATIVO
+- Não altere módulos factuais do Curador.
+- Não altere módulos interpretativos do Editor.
+- Não modifique identificacao, classificacao, autoria, narrativa, editorial, emocional, essencia ou legado.
+- Não gere prompt de imagem ainda.
+- Não gere música ainda.
+- Não gere roteiro cinematográfico ainda.
+- Apenas enriqueça os módulos permitidos.
+- Responda somente JSON válido.
+- Retorne somente os módulos permitidos ao Diretor Criativo.
+- Módulos permitidos: sensorial, visual, sonoro.
+- Quando não houver base suficiente, use null ou [] conforme o tipo esperado.
+
+CAMPOS PRIORITÁRIOS DESTA ETAPA
+Preencha especialmente:
+${CAMPOS_PRIORITARIOS_DIRETOR_CRIATIVO.map((campo) => `- ${campo}`).join("\n")}
+
+CONTRATO DE CAMPOS PERMITIDOS AO DIRETOR CRIATIVO
+${contratoCampos || "Nenhum campo específico foi encontrado. Gere apenas sensorial, visual e sonoro com os campos prioritários."}
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU ATUAL
+Use esta BEU como base. Preserve todos os módulos existentes e retorne somente acréscimos de direção sensorial, visual e sonora.
+${JSON.stringify(beuAtual, null, 2)}
+
+FORMATO DE RESPOSTA
+Retorne apenas um objeto JSON contendo somente módulos permitidos.
+Exemplo:
+{
+  "sensorial": {
+    "sons": [],
+    "cheiros": []
+  },
+  "visual": {
+    "objeto_principal": null,
+    "paleta": []
+  },
+  "sonoro": {
+    "paisagem_sonora": null,
+    "direcao_musical": null
+  }
+}
+`.trim();
+}
+
 export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual = null }) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
@@ -260,6 +329,10 @@ export async function montarPromptAgente({ agente, contexto, tipoEtapa, beuAtual
     editor_beu: {
       responsavel: "Editor",
       montar: ({ campos }) => montarPromptEditor({ agente, contexto, campos, beuAtual }),
+    },
+    diretor_criativo: {
+      responsavel: "Diretor Criativo",
+      montar: ({ campos }) => montarPromptDiretorCriativo({ agente, contexto, campos, beuAtual }),
     },
   };
 

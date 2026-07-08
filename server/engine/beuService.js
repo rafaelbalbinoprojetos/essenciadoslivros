@@ -76,20 +76,20 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-export function mergeBEUExistenteComSaidaEditor({ beuAtual, saidaEditor }) {
+export function mergeBEUComModulosPermitidos({ beuAtual, saida, modulosPermitidos }) {
   if (!isPlainObject(beuAtual)) {
     throw new Error("BEU atual inválida para merge.");
   }
 
-  if (!isPlainObject(saidaEditor)) {
-    throw new Error("Saída do Editor inválida para merge.");
+  if (!isPlainObject(saida)) {
+    throw new Error("Saída da etapa inválida para merge.");
   }
 
-  const modulosPermitidos = new Set(["emocional", "essencia", "legado"]);
+  const permitidos = new Set(modulosPermitidos);
   const merged = structuredClone(beuAtual);
 
-  for (const [modulo, valor] of Object.entries(saidaEditor)) {
-    if (!modulosPermitidos.has(modulo)) continue;
+  for (const [modulo, valor] of Object.entries(saida)) {
+    if (!permitidos.has(modulo)) continue;
 
     if (isPlainObject(valor) && isPlainObject(merged[modulo])) {
       merged[modulo] = {
@@ -102,4 +102,12 @@ export function mergeBEUExistenteComSaidaEditor({ beuAtual, saidaEditor }) {
   }
 
   return merged;
+}
+
+export function mergeBEUExistenteComSaidaEditor({ beuAtual, saidaEditor }) {
+  return mergeBEUComModulosPermitidos({
+    beuAtual,
+    saida: saidaEditor,
+    modulosPermitidos: ["emocional", "essencia", "legado"],
+  });
 }
