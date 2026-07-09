@@ -1,6 +1,67 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+const STATUS_CONFIG = {
+  loading: {
+    label: "em andamento",
+    textClass: "text-amber-200",
+    dotClass: "border-amber-300 border-t-transparent animate-spin",
+  },
+  done: {
+    label: "concluído",
+    textClass: "text-emerald-300",
+    dotClass: "border-emerald-400 bg-emerald-400/15 text-emerald-200",
+    icon: "✓",
+  },
+  manual: {
+    label: "manual",
+    textClass: "text-purple-300",
+    dotClass: "border-purple-400 bg-purple-400/10 text-purple-200",
+    icon: "•",
+  },
+  waiting: {
+    label: "aguardando",
+    textClass: "text-zinc-500",
+    dotClass: "border-zinc-700 bg-zinc-900 text-zinc-500",
+    icon: "•",
+  },
+  error: {
+    label: "erro",
+    textClass: "text-red-300",
+    dotClass: "border-red-400 bg-red-400/10 text-red-200",
+    icon: "!",
+  },
+};
+
+function getStepStatus({ active, result, manualWhenIdle = false }) {
+  if (active) return "loading";
+  if (result?.ok === false) return "error";
+  if (result) return "done";
+  if (manualWhenIdle) return "manual";
+  return "waiting";
+}
+
+function EngineProcessStep({ label, status }) {
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.waiting;
+
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-800/70 bg-black/30 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          className={`grid h-5 w-5 flex-none place-items-center rounded-full border text-[11px] font-bold ${config.dotClass}`}
+          aria-hidden="true"
+        >
+          {status === "loading" ? "" : config.icon}
+        </span>
+        <span className="truncate font-medium text-zinc-200">{label}</span>
+      </div>
+      <span className={`shrink-0 text-xs font-semibold uppercase tracking-[0.18em] ${config.textClass}`}>
+        {config.label}
+      </span>
+    </div>
+  );
+}
+
 export default function EngineSolicitarObra() {
   const [titulo, setTitulo] = useState("");
   const [tipoObra, setTipoObra] = useState("livro");
@@ -226,6 +287,64 @@ export default function EngineSolicitarObra() {
   }
 
   const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoCapaPrompt || atualizandoDados;
+  const hasRequestedWork = Boolean(
+    resultadoCriacao
+    || resultadoCurador
+    || resultadoEditor
+    || resultadoDiretor
+    || resultadoNarrativa
+    || resultadoHeritagePrompt
+    || resultadoCapaPrompt
+    || resultadoAtualizacao
+    || loading,
+  );
+  const optionalStepsEnabled = Boolean(resultadoCriacao?.livro?.id);
+  const engineProgressSteps = [
+    {
+      label: "Criando obra",
+      status: getStepStatus({ active: criandoObra, result: resultadoCriacao }),
+    },
+    {
+      label: "Executando curador",
+      status: getStepStatus({ active: executandoCurador, result: resultadoCurador }),
+    },
+    {
+      label: "Executando editor",
+      status: getStepStatus({ active: executandoEditor, result: resultadoEditor }),
+    },
+    {
+      label: "Executando diretor criativo",
+      status: getStepStatus({ active: executandoDiretor, result: resultadoDiretor }),
+    },
+    {
+      label: "Gerando narrativa cinematográfica",
+      status: getStepStatus({
+        active: executandoNarrativa,
+        result: resultadoNarrativa,
+        manualWhenIdle: optionalStepsEnabled,
+      }),
+    },
+    {
+      label: "Gerando prompt Heritage",
+      status: getStepStatus({
+        active: executandoHeritagePrompt,
+        result: resultadoHeritagePrompt,
+        manualWhenIdle: optionalStepsEnabled,
+      }),
+    },
+    {
+      label: "Gerando prompt da capa cinematográfica",
+      status: getStepStatus({
+        active: executandoCapaPrompt,
+        result: resultadoCapaPrompt,
+        manualWhenIdle: optionalStepsEnabled,
+      }),
+    },
+    {
+      label: "Atualizando dados ausentes",
+      status: getStepStatus({ active: atualizandoDados, result: resultadoAtualizacao }),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -296,8 +415,31 @@ export default function EngineSolicitarObra() {
           </button>
         </form>
 
-        {(criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoCapaPrompt || atualizandoDados) && (
-          <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
+        {hasRequestedWork && (
+          <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Pipeline</p>
+                <h2 className="mt-1 text-base font-semibold text-white">Acompanhamento da Engine</h2>
+              </div>
+              {loading ? (
+                <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
+                  processando
+                </span>
+              ) : (
+                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                  pronto
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-3">
+              {engineProgressSteps.map((step) => (
+                <EngineProcessStep key={step.label} label={step.label} status={step.status} />
+              ))}
+            </div>
+
+            <div className="hidden">
             <div className="flex items-center justify-between">
               <span>Criando obra</span>
               <span className={criandoObra ? "text-amber-300" : "text-emerald-300"}>
@@ -345,6 +487,7 @@ export default function EngineSolicitarObra() {
               <span className={atualizandoDados ? "text-amber-300" : resultadoAtualizacao ? "text-emerald-300" : "text-zinc-500"}>
                 {atualizandoDados ? "em andamento" : resultadoAtualizacao ? "concluído" : "aguardando"}
               </span>
+            </div>
             </div>
           </div>
         )}
