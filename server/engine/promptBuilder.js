@@ -640,15 +640,9 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 }
 
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
-  const localHeritageReferenceSource = String.raw`\Essencia-livros\src\image\CAPA_REFERENCIA_HERITAGE`;
-  const heritageReferenceSource = referenciaVisual?.public_url
-    || referenciaVisual?.storage_path
-    || localHeritageReferenceSource;
-
   return `
 TEMPLATE HERITAGE - ESSENCIA DOS LIVROS
-Use a imagem de referencia localizada em:
-${heritageReferenceSource}
+Use a imagem de referencia anexada na etapa de geracao de imagem da Engine.
 
 A imagem de referencia deve funcionar como a BIBLIA VISUAL da colecao "Essencia dos Livros - Heritage Collection".
 
@@ -696,7 +690,7 @@ TAREFA
 Crie um unico prompt textual completo, pronto para ser enviado a uma IA de geracao de imagens. Nao gere a imagem. Nao explique decisoes. Nao apresente alternativas.
 
 REGRAS DE USO DA REFERENCIA
-- O prompt final deve mencionar explicitamente a imagem de referencia acima como referencia visual de estilo.
+- O prompt final deve orientar a IA a usar a imagem de referencia anexada como referencia visual de estilo, sem citar caminho, URL ou arquivo.
 - Use a referencia apenas para linguagem visual, composicao museologica, atmosfera, envelhecimento, luz, textura, hierarquia e sensacao de acervo.
 - Os objetos, titulos, personagens, simbolos e documentos da nova capa devem vir exclusivamente da obra atual.
 
@@ -712,7 +706,6 @@ FORMATO DA RESPOSTA
 Retorne somente o prompt final de imagem, em texto corrido detalhado e preferencialmente em ingles tecnico de direcao de arte. Inclua composicao, materiais, iluminacao, lente/enquadramento, paleta, elementos, tipografia editorial, placa museologica e restricoes negativas.
 
 O prompt final deve incluir:
-- reference image source: ${heritageReferenceSource}
 - work/title;
 - creator/studio/author;
 - year when available;

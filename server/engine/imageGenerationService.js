@@ -11,6 +11,45 @@ const CAPAS_BUCKET = "capas";
 const ENGINE_REFERENCIAS_BUCKET = "engine-referencias";
 const HERITAGE_REFERENCE_PATH = path.join(process.cwd(), "src", "image", "CAPA_REFERENCIA_HERITAGE.png");
 const SUPPORTED_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const PROMPT_REFERENCIA_HERITAGE = `
+You will receive an attached image as the official visual reference for the Engine.
+
+The attached image is NOT the final artwork to be literally edited.
+It is the VISUAL BIBLE of the collection.
+
+Absolute priority:
+1. Use the attached image to learn the visual language.
+2. Use the work prompt only to replace the work, title, artifacts, emotional tone, palette and curatorial data.
+3. Never literally copy the objects from the reference.
+4. Never reduce the composition to a few isolated objects.
+
+The new cover must preserve from the reference:
+- rich documentary density;
+- physical archive table;
+- overlapping papers;
+- crumpled documents;
+- tape, clips, stamps, handwritten notes and handling marks;
+- central object with real wear;
+- leather, paper, metal, wood and dust texture;
+- warm, museum-like, lateral lighting;
+- physical depth with real shadows;
+- lower museum plaque;
+- the feeling of an archive found, preserved and photographed.
+
+The new cover must NOT look like:
+- minimalist cover;
+- clean 3D render;
+- promotional poster;
+- flat digital artwork;
+- catalog with only a few objects;
+- empty composition;
+- generic image with an oversized central object.
+
+Mandatory visual rule:
+The composition must include at least 8 to 12 visible curatorial elements around the main artifact, including documents, notes, maps, studies, photographs or physical fragments related to the work.
+
+The final image must look like a premium editorial photograph of a real historical archive table, belonging to the same collection as the attached reference image.
+`.trim();
 
 let openaiClient = null;
 
@@ -47,6 +86,28 @@ function limitarPromptImagem(prompt) {
   return `${texto.slice(0, limite)}
 
 Preserve all previous Heritage Collection instructions. Prioritize the visual reference image, physical museum archive realism, premium vertical composition, tactile materials, legible editorial typography and the current work data.`;
+}
+
+function limparPromptHeritageParaImagem(prompt = "") {
+  const linhas = String(prompt)
+    .split(/\r?\n/)
+    .filter((linha) => {
+      const normalizada = linha.trim().toLowerCase();
+
+      if (!normalizada) return true;
+      if (normalizada.startsWith("reference image source:")) return false;
+      if (normalizada.startsWith("- reference image source:")) return false;
+      if (normalizada.includes("reference image source")) return false;
+      if (normalizada.includes("use a imagem de referencia localizada em")) return false;
+      if (normalizada.includes("use the active reference image located at")) return false;
+      if (normalizada.includes("src/image/capa_referencia_heritage")) return false;
+      if (normalizada.includes("capa_referencia_heritage")) return false;
+      if (normalizada.includes("engine-referencias")) return false;
+
+      return true;
+    });
+
+  return linhas.join("\n").trim();
 }
 
 function detectarMimeImagem(fileName = "", reportedType = "") {
@@ -203,7 +264,11 @@ export async function gerarImagemHeritageComReferencia({
     };
   }
 
-  const promptFinal = limitarPromptImagem(prompt);
+  const promptDaObra = limparPromptHeritageParaImagem(prompt);
+  const promptFinal = limitarPromptImagem(`${PROMPT_REFERENCIA_HERITAGE}
+
+DADOS DA OBRA:
+${promptDaObra}`);
   const referencia = await carregarReferenciaComoUploadable();
   const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
   const inicio = Date.now();
@@ -220,6 +285,7 @@ export async function gerarImagemHeritageComReferencia({
     prompt: promptFinal,
     size: "1024x1536",
     quality: "high",
+    input_fidelity: "high",
     n: 1,
   });
 
