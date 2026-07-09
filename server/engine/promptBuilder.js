@@ -16,6 +16,17 @@ const CAMPOS_PRIORITARIOS_CURADOR = [
   "narrativa.momentos_essenciais",
   "editorial.contexto_historico",
   "editorial.curiosidades",
+  "heritage.tipo_exibicao",
+  "heritage.legacy_title",
+  "heritage.legacy",
+  "heritage.hero_artifact",
+  "heritage.supporting_artifacts",
+  "heritage.archival_details",
+  "heritage.museum_identification_plaque",
+  "heritage.archive_division",
+  "heritage.emotional_tone",
+  "heritage.color_palette",
+  "heritage.museum_editorial_aesthetic",
 ];
 
 const CAMPOS_PRIORITARIOS_EDITOR = [
@@ -388,6 +399,26 @@ DISTINÇÕES IMPORTANTES
 - Não substitua dados oficiais por traduções livres.
 - Não crie campos fora do contrato; distribua os fatos somente nos caminhos permitidos.
 
+BRIEFING HERITAGE
+Se o contrato permitir campos no modulo heritage, preencha-os para alimentar diretamente a capa "Essencia dos Livros - Heritage Collection".
+O objetivo nao e criar a imagem, mas fornecer um briefing curatorial no estilo de exposicao/museu.
+
+Preencha, quando houver base confiavel:
+- heritage.tipo_exibicao: tipo da obra exibido em ingles, por exemplo Game, Book, Film, Series, Anime, Biography, Historical Work.
+- heritage.legacy_title: frase editorial curta, forte e memoravel sobre o legado da obra, sem fingir citacao oficial.
+- heritage.legacy: 1 frase objetiva sobre relevancia cultural, emocional, historica ou artistica.
+- heritage.hero_artifact: 1 artefato concreto, especifico e fisicamente imaginavel, ligado a obra.
+- heritage.supporting_artifacts: 4 a 7 artefatos de apoio especificos da obra.
+- heritage.archival_details: detalhes de arquivo plausiveis: pagina de diario, mapa, carimbo de estudio, anotacoes, fragmentos, notas de producao, registros curatoriais.
+- heritage.museum_identification_plaque: linhas curtas para placa com ESSENCIA HERITAGE COLLECTION, titulo, tipo de arquivo e codigo editorial.
+- heritage.archive_division: divisao coerente com o tipo, como Interactive Media Heritage Archive, Literary Heritage Archive, Cinematic Heritage Archive, Historical Memory Archive.
+- heritage.emotional_tone: 3 a 5 expressoes curtas de tom emocional.
+- heritage.color_palette: 3 a 6 cores/qualidades cromaticas especificas.
+- heritage.museum_editorial_aesthetic: direcao curta da estetica museologica/editorial.
+
+Para The Last of Us, por exemplo, o hero artifact correto tende a ser emocional e especifico como fita cassete, pingente Firefly, canivete de Ellie, relogio quebrado de Joel ou mapa da QZ; uma mascara generica de quarentena pode ser bonita, mas e menos representativa da obra.
+Para qualquer obra, prefira artefatos com memoria emocional e reconhecimento narrativo, nao objetos genericos do genero.
+
 EXEMPLO DE CALIBRAÇÃO FACTUAL
 Para uma solicitação inequívoca de “God of War 2” como jogo, a resposta não deve tratar seus metadados básicos como desconhecidos. A identificação factual esperada é equivalente a:
 {
@@ -593,6 +624,60 @@ function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
 IMAGE PROMPT UPGRADE - HERITAGE COLLECTION
 Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
 
+HERITAGE MASTER TEMPLATE - USE THIS STRUCTURE WITHOUT CHANGING IT
+Sua resposta final deve ser um unico prompt de imagem seguindo exatamente a estrutura abaixo, adaptada para a obra atual. Nao troque a ordem dos campos. Nao transforme em markdown. Nao acrescente explicacoes antes ou depois.
+
+Create an original premium editorial cover artwork for the "Essência dos Livros – Heritage Collection". A OBRA QUE SERÁ RETRATADA É [WORK_TITLE] DO [CREATOR_OR_STUDIO] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXHIBITION
+[WORK_TYPE]:
+[WORK_TITLE]
+Original Title:
+[ORIGINAL_TITLE]
+[CREATOR_LABEL]:
+[CREATOR_OR_STUDIO]
+Year:
+[YEAR]
+Legacy Title:
+[LEGACY_TITLE]
+Legacy:
+[LEGACY]
+Hero Artifact:
+[HERO_ARTIFACT]
+Supporting Artifacts:
+• [SUPPORTING_ARTIFACT_1]
+• [SUPPORTING_ARTIFACT_2]
+• [SUPPORTING_ARTIFACT_3]
+• [SUPPORTING_ARTIFACT_4]
+• [SUPPORTING_ARTIFACT_5]
+Archival Details:
+[ARCHIVAL_DETAILS]
+Museum Identification Plaque:
+ESSÊNCIA HERITAGE COLLECTION
+[WORK_TITLE_UPPERCASE]
+[ARCHIVE_TYPE]
+CAT. [CATALOG_CODE]
+Archive Division:
+[ARCHIVE_DIVISION]
+Emotional Tone:
+[EMOTIONAL_TONE]
+Color Palette:
+[COLOR_PALETTE]
+Museum editorial aesthetic.
+
+Regras para preencher o template:
+- Substitua todos os placeholders por dados da BEU, do contexto e do briefing heritage.
+- Se um campo heritage existir na BEU, ele tem prioridade sobre uma nova inferencia.
+- Se algum dado factual nao existir, omita ou simplifique sem inventar datas, nomes, estudios, personagens ou documentos falsos.
+- WORK_TYPE deve ser Game, Book, Film, Series, Anime, Biography, Historical Work ou outro tipo curto coerente.
+- CREATOR_LABEL deve ser Developer, Author, Director, Studio, Creator ou equivalente conforme a obra.
+- LEGACY_TITLE deve ser forte, editorial e curto, mas nao deve fingir citacao oficial.
+- HERO_ARTIFACT deve ser o artefato mais emocionalmente representativo da obra, nao o objeto mais generico do genero.
+- SUPPORTING_ARTIFACTS devem ser objetos fisicos especificos da obra; use 4 a 7 itens, mas mantenha pelo menos 5 quando houver base.
+- ARCHIVAL_DETAILS deve soar como acervo de producao, memoria narrativa ou arquivo curatorial plausivel.
+- CATALOG_CODE deve ser editorial e sistematico, derivado de tipo, ano e titulo, sem fingir dado historico real.
+- A composicao visual deve seguir o prompt acima: titulo grande, artefato heroico central, documentos ao redor, supporting artifacts em cards, placa de museu inferior, textura de papel/arquivo e acabamento premium.
+- Preserve o espirito da imagem de referencia gerada por este template: capa editorial densa, museologica, colecionavel, com muitos detalhes organizados, nunca apenas um objeto isolado.
+
 Exhibition brief first:
 - Antes de escrever o prompt visual, levante um briefing curatorial no estilo de exposicao.
 - O prompt final deve comecar com o bloco "EXHIBITION BRIEF" preenchido, usando dados da BEU e conhecimento consolidado da obra sem inventar fatos incertos.
@@ -627,9 +712,9 @@ Resultado esperado:
 Idioma e legibilidade:
 - Escreva o prompt final preferencialmente em ingles tecnico de direcao de arte.
 - Mantenha somente textos essenciais em portugues quando forem marcas ou titulos: "ESSENCIA DOS LIVROS", titulo da obra e, se necessario, uma frase curatorial curta.
-- Limite texto visivel a no maximo 5 areas: selo, titulo, placa de museu, codigo de catalogo e uma nota curta.
+- Permita texto editorial em varias areas organizadas: selo, titulo, legacy, mensagem, archival details, supporting artifacts, notas de arquivo, placa de museu e rodape, desde que a hierarquia seja limpa e legivel.
 - Oriente o gerador a usar typography that is crisp, engraved, correctly spelled, aligned, and readable.
-- Se houver risco de texto ilegivel, prefira placas com linhas discretas e hierarquia visual sem inventar palavras.
+- Se houver risco de texto ilegivel, reduza frases longas e preserve campos curtos, mas nao transforme a capa em objeto isolado minimalista.
 
 Curadoria do artefato:
 - escolha internamente um unico artefato heroico concreto e comprovadamente ligado a obra;
@@ -640,14 +725,14 @@ Curadoria do artefato:
 Composicao obrigatoria:
 - vertical aspect ratio 4:5 or 2:3, high-resolution editorial product photography;
 - camera frontal levemente acima do plano, 50mm or 70mm lens, controlled depth of field;
-- artefato heroico central ocupando 35% a 45% da imagem, totalmente visivel e bem iluminado;
+- artefato heroico central ou levemente descentralizado ocupando 25% a 45% da imagem, totalmente visivel e bem iluminado, cercado por paineis editoriais e supporting artifacts;
 - documentos e evidencias em camadas reais ao redor, com sombras fisicas e oclusao natural;
 - placa inferior em metal, madeira ou papel algodao, com apenas dados factuais disponiveis;
 - espaco negativo suficiente para leitura premium, sem preenchimento automatico;
 - paleta extraida da BEU e da direcao sensorial.
 
 Negativo permanente:
-Inclua no prompt final: no modern UI, no digital dashboard, no flat graphic design, no cheap collage, no random ornaments, no illegible text, no misspelled words, no fake logos, no official cover copy, no copyrighted poster composition, no celebrity likeness, no generic fantasy items, no plastic materials unless justified, no clutter, no floating objects without physical support, no blurry labels, no AI artifacts.
+Inclua no prompt final: no modern UI, no digital dashboard, no flat graphic design, no cheap collage, no random ornaments, no illegible text, no misspelled words, no fake logos, no official cover copy, no copyrighted poster composition, no celebrity likeness, no generic fantasy items, no plastic materials unless justified, no chaotic clutter, no floating objects without physical support, no blurry labels, no AI artifacts.
 
 Formato adicional:
 O prompt final deve ser organizado em blocos curtos: IMAGE PROMPT, ARTIFACT CURATION, COMPOSITION, MATERIALS AND LIGHTING, TYPOGRAPHY, NEGATIVE PROMPT.
