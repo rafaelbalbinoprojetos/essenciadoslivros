@@ -627,6 +627,52 @@ Ignore any older or contradictory Heritage instruction that appears after this b
 Use the CONTEXTO DA OBRA, BEU COMPLETA and NARRATIVA sections at the end only as source data for filling the fields.
 Return only the final image prompt, with all placeholders replaced for the current work.
 
+VISUAL REFERENCE BIBLE
+Use the reference image located at:
+src/image/CAPA_REFERENCIA_HERITAGE.png
+
+The reference image is the VISUAL BIBLE for the "Essencia dos Livros - Heritage Collection".
+
+It defines exclusively:
+- editorial language;
+- museum composition;
+- physical archive atmosphere;
+- documentary density;
+- material aging;
+- lighting;
+- textures;
+- visual hierarchy;
+- the feeling of an object preserved in a historical archive.
+
+Do NOT literally copy the objects from the reference image.
+Do NOT copy the work depicted in the reference image.
+Do NOT repeat exactly the same arrangement of elements.
+Do NOT turn every cover into an identical variation.
+
+The reference image teaches the HOW:
+how the cover should look, breathe, age, illuminate and organize its artifacts.
+
+The API data defines the WHAT:
+work, title, author/studio, year, legacy, central object, secondary artifacts, emotional tone, color palette and museum plaque.
+
+The new cover must look like it belongs to the same visual collection as the reference image, but must be individually curated for the current work.
+
+Always prioritize:
+- central physical object, realistic and marked by use;
+- aged documents with folds, stains, tape, stamps and annotations;
+- premium vertical composition;
+- the appearance of a real curator table or historical archive;
+- tactile materials: old paper, leather, worn metal, wood, fabric, dust and handling marks;
+- warm, soft, directional natural museum lighting;
+- real shadows and subtle object overlap;
+- elegant, readable serif editorial typography;
+- lower museum plaque consistent with the collection.
+
+The result must look like a premium editorial photograph of a real physical archive, not a digital illustration, not promotional poster art and not a generic collage.
+
+Main rule:
+The image must transmit the feeling that the artifacts of the work were found, preserved, cataloged and photographed by an international museum dedicated to cultural memory. The cover must be immediately recognizable as part of the "Essencia dos Livros - Heritage Collection", even without reading the logo, but must never look like a simple copy of the reference image.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ESSENCIA DOS LIVROS — HERITAGE COLLECTION
 MUSEUM EDITORIAL COVER ENGINE
