@@ -641,179 +641,177 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   return `
-TEMPLATE HERITAGE - ESSENCIA DOS LIVROS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-INSTRUÇÃO FIXA — USO DA IMAGEM DE REFERÊNCIA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Uma imagem de referência visual foi anexada a esta requisição.
-
-Essa imagem anexada é a BÍBLIA VISUAL da coleção “Essência dos Livros”.
-
-Ela NÃO é a imagem final.
-Ela NÃO deve ser editada literalmente.
-Ela NÃO deve ter seus objetos copiados.
-Ela NÃO deve ter seu texto, título, obra ou layout reproduzidos exatamente.
-
-A imagem anexada define o COMO.
-O prompt da obra define o O QUÊ.
-
-Antes de gerar a nova capa, estude visualmente a imagem anexada e extraia dela:
-
-• linguagem editorial da coleção;
-• densidade documental;
-• aparência de acervo físico real;
-• composição vertical premium;
-• hierarquia entre título, objeto central, documentos e placa;
-• iluminação quente, suave e museológica;
-• texturas de papel envelhecido, couro, madeira, metal gasto e poeira;
-• sombras reais entre objetos sobrepostos;
-• documentos com dobras, manchas, fitas, grampos, carimbos e anotações;
-• sensação de arquivo histórico preservado;
-• equilíbrio entre riqueza visual e áreas de respiro;
-• integração tipográfica elegante e legível;
-• placa museológica inferior como elemento de identificação da coleção.
-
-A nova imagem deve parecer pertencente à mesma coleção visual da referência, mas deve ser totalmente dedicada à obra atual descrita no prompt.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HIERARQUIA DE PRIORIDADE
+MUSEUM CURATORIAL DIRECTIVE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. A imagem anexada define a identidade visual da coleção.
-2. Este bloco fixo define as regras permanentes da engine.
-3. O prompt da obra define os dados específicos da nova capa.
+Your task is NOT to create a beautiful editorial cover.
 
-Se houver conflito entre estilo visual descrito no prompt da obra e a imagem anexada, priorize a imagem anexada.
+Your task is to curate a museum archive dedicated to the work described below.
 
-Se houver conflito entre o objeto central da referência e o objeto central da obra atual, use o objeto central da obra atual.
+Every visible object must belong to that universe.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REGRAS DE TRANSFORMAÇÃO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nothing should appear simply because it looks aesthetically pleasing.
 
-Crie uma nova capa original, não uma variação literal da referência.
+Every object must answer the question:
 
-Substitua completamente:
-• obra;
-• título;
-• autor, estúdio ou criador;
-• ano;
-• objeto central;
-• artefatos secundários;
-• documentos;
-• anotações;
-• símbolos;
-• placa de identificação;
-• tom emocional;
-• paleta;
-• contexto narrativo.
+"Would a fan immediately recognize this as belonging to this work?"
 
-Preserve da referência:
-• atmosfera editorial;
-• sensação museológica;
-• envelhecimento físico;
-• realismo dos materiais;
-• densidade documental;
-• iluminação;
-• ritmo visual;
-• profundidade por sobreposição;
-• aparência de fotografia de arquivo.
+If the answer is no, do not include it.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-COMPOSIÇÃO OBRIGATÓRIA
+CANONICAL AUTHENTICITY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-A capa deve ser vertical, premium, editorial e fotográfica.
+The Hero Artifact MUST be the official canonical object from the original work.
 
-O artefato principal da obra deve ocupar o centro emocional da composição, mas não deve parecer isolado.
+Never redesign it.
 
-Ao redor dele, inclua entre 8 e 12 elementos curatoriais relacionados à obra, como:
+Never simplify it.
 
-• documentos de produção;
-• mapas;
-• cartas;
-• páginas manuscritas;
-• fotografias ou estudos conceituais;
-• pequenos objetos simbólicos;
-• fragmentos físicos;
-• selos;
-• carimbos;
-• notas de arquivo;
-• rascunhos;
-• etiquetas catalográficas.
+Never replace it with a generic equivalent.
 
-Esses elementos devem parecer colocados fisicamente sobre uma mesa de arquivo, com pequenas sobreposições naturais, sombras reais e imperfeições.
+Faithfully reproduce:
 
-Nada deve parecer flutuante, artificial, digital ou colado sem peso físico.
+• official silhouette
+• proportions
+• materials
+• engravings
+• construction
+• wear
+• iconic details
+• recognizable appearance
+
+The object should immediately be recognized by fans without reading the title.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MATERIAIS E REALISMO
+SUPPORTING ARTIFACTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Todos os objetos devem parecer reais, táteis e preservados por décadas.
+Every supporting artifact must also be canonically associated with the work.
 
-Aplicar:
-• desgaste natural;
-• manchas discretas;
-• cantos amassados;
-• papel amarelado;
-• metal oxidado;
-• couro gasto;
-• madeira escurecida;
-• poeira fina;
-• marcas de manuseio;
-• pequenas imperfeições;
-• textura irregular.
+Choose objects that actually exist inside that universe.
 
-Nenhum objeto deve parecer recém-fabricado, limpo demais, plástico, renderizado ou artificial.
+Examples include:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TIPOGRAFIA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• iconic weapons
+• journals
+• maps
+• letters
+• medallions
+• relics
+• symbols
+• tools
+• sketches
+• production notes
+• important documents
+• recognizable collectibles
+• official concept art
+• meaningful objects directly connected to the narrative
 
-Usar tipografia editorial serifada, elegante e legível.
-
-O título da obra deve ter hierarquia clara, mas integrado naturalmente ao design.
-
-A placa inferior deve conter os dados curatoriais da obra atual, seguindo a linguagem museológica da referência.
-
-Evitar textos longos demais em áreas pequenas.
-
-Textos menores podem parecer manuscritos, carimbados ou anotados, desde que visualmente coerentes.
+Do NOT invent generic replacements.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-NEGATIVO ABSOLUTO
+CANONICAL DOCUMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Não criar capa minimalista.
-Não criar pôster promocional.
-Não criar wallpaper.
-Não criar arte digital genérica.
-Não criar render 3D limpo.
-Não criar composição com poucos objetos.
-Não copiar literalmente a referência.
-Não manter objetos da obra de referência.
-Não usar layout vazio.
-Não usar brilho artificial.
-Não usar neon.
-Não usar UI moderna.
-Não usar elementos sem relação narrativa.
-Não usar objetos genéricos.
-Não deixar o artefato principal sozinho.
-Não gerar aparência de mockup barato.
-Não gerar imagem plana sem sombras físicas.
+Archival documents should never be generic papers.
+
+Generate documents that would naturally exist inside the universe.
+
+Examples:
+
+• character journals
+
+• expedition maps
+
+• handwritten research
+
+• translated runes
+
+• royal letters
+
+• battle reports
+
+• architectural sketches
+
+• creature anatomy studies
+
+• explorer notes
+
+• production archive sheets
+
+Every document should visually reinforce the identity of the work.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OBJETIVO FINAL
+VISUAL STORYTELLING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-A imagem final deve parecer uma fotografia editorial premium de um acervo físico real, pertencente à “Essência dos Livros – Heritage Collection”.
+Every object should tell part of the story.
 
-O visitante deve sentir que os artefatos daquela obra foram encontrados, preservados, catalogados e fotografados por um museu internacional dedicado à memória cultural.
+The viewer should understand the universe before reading the title.
 
-A capa deve ser reconhecível como parte da mesma coleção da imagem de referência, mesmo sendo uma criação completamente nova para a obra atual.
+Each artifact must contribute to the narrative.
 
+Avoid decorative fillers.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORBIDDEN OBJECTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Never generate:
+
+• generic medieval weapons
+
+• generic Viking equipment
+
+• generic fantasy objects
+
+• generic leather bags
+
+• generic maps
+
+• random shields
+
+• random armor
+
+• decorative objects unrelated to the work
+
+• props that only exist to fill empty space
+
+If an object cannot be directly associated with the original work, remove it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COLLECTION CONSISTENCY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The attached reference image defines only the editorial language.
+
+It NEVER defines the objects.
+
+The work description below defines every artifact.
+
+The final image must feel like an authentic museum archive assembled by historians who had complete access to the original universe.
+
+Every visible object should make fans smile because they recognize it instantly.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL QUALITY TEST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before finishing the image, internally verify:
+
+✓ Is every visible object canonically correct?
+
+✓ Would fans recognize every artifact?
+
+✓ Does every document reinforce the narrative?
+
+✓ Is anything generic?
+
+If any generic object remains, replace it with a canonical artifact.
+
+Only deliver the image after every artifact feels authentic to the original work.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DADOS DA OBRA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
