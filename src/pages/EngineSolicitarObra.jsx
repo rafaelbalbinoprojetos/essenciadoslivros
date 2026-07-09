@@ -85,6 +85,7 @@ export default function EngineSolicitarObra() {
   const [executandoDiretor, setExecutandoDiretor] = useState(false);
   const [executandoNarrativa, setExecutandoNarrativa] = useState(false);
   const [executandoHeritagePrompt, setExecutandoHeritagePrompt] = useState(false);
+  const [executandoHeritageImage, setExecutandoHeritageImage] = useState(false);
   const [executandoCapaPrompt, setExecutandoCapaPrompt] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
@@ -93,6 +94,7 @@ export default function EngineSolicitarObra() {
   const [resultadoDiretor, setResultadoDiretor] = useState(null);
   const [resultadoNarrativa, setResultadoNarrativa] = useState(null);
   const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
+  const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
 
@@ -174,6 +176,7 @@ export default function EngineSolicitarObra() {
     const isDiretor = tipoEtapa === "diretor_criativo";
     const isNarrativa = tipoEtapa === "narrativa_cinematica";
     const isHeritagePrompt = tipoEtapa === "heritage_prompt";
+    const isHeritageImage = tipoEtapa === "heritage_image";
     const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
 
     if (isCurador) setExecutandoCurador(true);
@@ -181,6 +184,7 @@ export default function EngineSolicitarObra() {
     if (isDiretor) setExecutandoDiretor(true);
     if (isNarrativa) setExecutandoNarrativa(true);
     if (isHeritagePrompt) setExecutandoHeritagePrompt(true);
+    if (isHeritageImage) setExecutandoHeritageImage(true);
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
 
     try {
@@ -205,6 +209,7 @@ export default function EngineSolicitarObra() {
       if (isDiretor) setResultadoDiretor(data);
       if (isNarrativa) setResultadoNarrativa(data);
       if (isHeritagePrompt) setResultadoHeritagePrompt(data);
+      if (isHeritageImage) setResultadoHeritageImage(data);
       if (isCapaPrompt) setResultadoCapaPrompt(data);
 
       if (!response.ok || data?.ok === false) {
@@ -228,6 +233,7 @@ export default function EngineSolicitarObra() {
       if (isDiretor) setResultadoDiretor((atual) => atual || fallback);
       if (isNarrativa) setResultadoNarrativa((atual) => atual || fallback);
       if (isHeritagePrompt) setResultadoHeritagePrompt((atual) => atual || fallback);
+      if (isHeritageImage) setResultadoHeritageImage((atual) => atual || fallback);
       if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
 
       return null;
@@ -237,6 +243,7 @@ export default function EngineSolicitarObra() {
       if (isDiretor) setExecutandoDiretor(false);
       if (isNarrativa) setExecutandoNarrativa(false);
       if (isHeritagePrompt) setExecutandoHeritagePrompt(false);
+      if (isHeritageImage) setExecutandoHeritageImage(false);
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
     }
   }
@@ -294,6 +301,7 @@ export default function EngineSolicitarObra() {
     setExecutandoDiretor(false);
     setExecutandoNarrativa(false);
     setExecutandoHeritagePrompt(false);
+    setExecutandoHeritageImage(false);
     setExecutandoCapaPrompt(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
@@ -302,6 +310,7 @@ export default function EngineSolicitarObra() {
     setResultadoDiretor(null);
     setResultadoNarrativa(null);
     setResultadoHeritagePrompt(null);
+    setResultadoHeritageImage(null);
     setResultadoCapaPrompt(null);
     setResultadoAtualizacao(null);
 
@@ -360,12 +369,13 @@ export default function EngineSolicitarObra() {
       setExecutandoDiretor(false);
       setExecutandoNarrativa(false);
       setExecutandoHeritagePrompt(false);
+      setExecutandoHeritageImage(false);
       setExecutandoCapaPrompt(false);
       setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoCapaPrompt || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || atualizandoDados;
   const hasRequestedWork = Boolean(
     resultadoCriacao
     || resultadoCurador
@@ -373,6 +383,7 @@ export default function EngineSolicitarObra() {
     || resultadoDiretor
     || resultadoNarrativa
     || resultadoHeritagePrompt
+    || resultadoHeritageImage
     || resultadoCapaPrompt
     || resultadoAtualizacao
     || loading,
@@ -409,6 +420,14 @@ export default function EngineSolicitarObra() {
         active: executandoHeritagePrompt,
         result: resultadoHeritagePrompt,
         manualWhenIdle: optionalStepsEnabled,
+      }),
+    },
+    {
+      label: "Gerando imagem Heritage",
+      status: getStepStatus({
+        active: executandoHeritageImage,
+        result: resultadoHeritageImage,
+        manualWhenIdle: Boolean(resultadoHeritagePrompt?.ok),
       }),
     },
     {
@@ -502,7 +521,9 @@ export default function EngineSolicitarObra() {
                       ? "Gerando narrativa cinematográfica..."
                       : executandoHeritagePrompt
                         ? "Gerando prompt Heritage..."
-                        : executandoCapaPrompt
+                        : executandoHeritageImage
+                          ? "Gerando imagem Heritage..."
+                          : executandoCapaPrompt
                           ? "Gerando prompt da capa cinematográfica..."
                       : atualizandoDados
                         ? "Atualizando dados..."
@@ -735,6 +756,14 @@ export default function EngineSolicitarObra() {
                   <button
                     type="button"
                     disabled={loading}
+                    onClick={() => executarEtapaManual("heritage_image")}
+                    className="rounded-xl border border-yellow-500/60 px-4 py-2 text-sm font-semibold text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-60"
+                  >
+                    Gerar Imagem Heritage
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
                     onClick={() => executarEtapaManual("capa_cinematica_prompt")}
                     className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
                   >
@@ -768,6 +797,14 @@ export default function EngineSolicitarObra() {
                     className="rounded-xl border border-orange-500/60 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-orange-500/10 disabled:opacity-60"
                   >
                     Gerar Prompt Heritage
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("heritage_image")}
+                    className="rounded-xl border border-yellow-500/60 px-4 py-2 text-sm font-semibold text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-60"
+                  >
+                    Gerar Imagem Heritage
                   </button>
                   <button
                     type="button"
@@ -860,6 +897,38 @@ export default function EngineSolicitarObra() {
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
                 {JSON.stringify(resultadoHeritagePrompt, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoHeritageImage && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do heritage_image
+            </h2>
+            {resultadoHeritageImage.ok && resultadoHeritageImage.imagemUrl ? (
+              <div className="rounded-2xl border border-yellow-900 bg-black p-5">
+                <img
+                  src={resultadoHeritageImage.imagemUrl}
+                  alt="Capa Heritage gerada"
+                  className="mx-auto max-h-[720px] rounded-xl border border-zinc-800 object-contain"
+                />
+                <a
+                  href={resultadoHeritageImage.imagemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block truncate text-sm font-semibold text-yellow-200 hover:text-yellow-100"
+                >
+                  {resultadoHeritageImage.imagemUrl}
+                </a>
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-yellow-100">
+                  {JSON.stringify(resultadoHeritageImage, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoHeritageImage, null, 2)}
               </pre>
             )}
           </section>

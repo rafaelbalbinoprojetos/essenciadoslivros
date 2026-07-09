@@ -13,6 +13,7 @@ import {
   criarExecucaoAgente,
   falharExecucaoAgente,
 } from "./execucaoService.js";
+import { gerarImagemHeritageComReferencia } from "./imageGenerationService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { montarPromptAgente } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
@@ -47,6 +48,10 @@ const DEFINICOES_ETAPAS = {
     ordem: 6,
     agenteSlug: "capa-cinematica-prompt",
     executor: executarPromptImagem,
+  },
+  heritage_image: {
+    ordem: 7,
+    executor: executarImagemHeritage,
   },
 };
 
@@ -165,6 +170,24 @@ async function buscarUltimaNarrativaCinematica(obraId) {
   }
 
   return typeof data?.saida === "string" ? data.saida : null;
+}
+
+async function buscarUltimaSaidaEtapa({ obraId, tipoEtapa }) {
+  const { data, error } = await supabaseAdmin
+    .from("ai_pipeline_etapas")
+    .select("saida")
+    .eq("obra_id", obraId)
+    .eq("tipo_etapa", tipoEtapa)
+    .eq("status", "concluido")
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Erro ao buscar saida da etapa ${tipoEtapa}: ${error.message}`);
+  }
+
+  return data?.saida ?? null;
 }
 
 async function executarCuradorBEU({ obraId }) {
@@ -851,6 +874,90 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
     engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
 
     if (execucao?.id) await falharExecucaoAgente({ execucaoId: execucao.id, erro });
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarImagemHeritage({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    const promptHeritage = await buscarUltimaSaidaEtapa({
+      obraId,
+      tipoEtapa: "heritage_prompt",
+    });
+
+    if (typeof promptHeritage !== "string" || !promptHeritage.trim()) {
+      throw new Error("Nenhum prompt Heritage concluido foi encontrado. Gere o prompt Heritage antes da imagem.");
+    }
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      mock: ENGINE_CONFIG.mock,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      prompt_origem: "ai_pipeline_etapas.heritage_prompt.saida",
+      prompt_tamanho_aproximado: promptHeritage.length,
+      persistencia: "storage.capas + livros.capa_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarImagemHeritageComReferencia({
+      obraId,
+      titulo: contexto?.obra?.titulo || "obra",
+      prompt: promptHeritage,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "✓", {
+      obraId,
+      tipoEtapa,
+      imagem_url: resultado.imagem_url,
+    });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      imagemUrl: resultado.imagem_url,
+      storagePath: resultado.storage_path,
+      referenciaVisual: resultado.referencia_visual,
+      mock: resultado.mock,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
     if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
     throw error;
   }
