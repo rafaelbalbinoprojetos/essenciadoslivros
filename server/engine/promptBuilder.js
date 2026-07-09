@@ -640,9 +640,100 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 }
 
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+  const localHeritageReferenceSource = String.raw`\Essencia-livros\src\image\CAPA_REFERENCIA_HERITAGE`;
   const heritageReferenceSource = referenciaVisual?.public_url
     || referenciaVisual?.storage_path
-    || "src/image/CAPA_REFERENCIA_HERITAGE.png";
+    || localHeritageReferenceSource;
+
+  return `
+TEMPLATE HERITAGE - ESSENCIA DOS LIVROS
+Use a imagem de referencia localizada em:
+${heritageReferenceSource}
+
+A imagem de referencia deve funcionar como a BIBLIA VISUAL da colecao "Essencia dos Livros - Heritage Collection".
+
+Ela define exclusivamente:
+- linguagem editorial;
+- composicao museologica;
+- atmosfera de acervo fisico;
+- densidade documental;
+- envelhecimento dos materiais;
+- iluminacao;
+- texturas;
+- hierarquia visual;
+- sensacao de objeto preservado em arquivo historico.
+
+NAO copie literalmente os objetos da imagem de referencia.
+NAO copie a obra retratada na referencia.
+NAO repita exatamente a mesma disposicao dos elementos.
+NAO transforme todas as capas em variacoes identicas.
+
+A imagem de referencia deve ensinar o COMO:
+como a capa deve parecer, respirar, envelhecer, iluminar e organizar seus artefatos.
+
+As informacoes carregadas pela API definem o O QUE:
+obra, titulo, autor/estudio, ano, legado, objeto central, artefatos secundarios, tom emocional, paleta e placa museologica.
+
+A nova capa deve parecer pertencente a mesma colecao visual da imagem de referencia, mas curada individualmente para a obra atual.
+
+Priorize sempre:
+- objeto central fisico, realista e com marcas de uso;
+- documentos envelhecidos com dobras, manchas, fitas, carimbos e anotacoes;
+- composicao vertical premium;
+- aparencia de mesa de curadoria ou arquivo historico real;
+- materiais tateis: papel antigo, couro, metal gasto, madeira, tecido, poeira, marcas de manuseio;
+- iluminacao natural de museu, quente, suave e direcional;
+- sombras reais e sobreposicao sutil entre objetos;
+- tipografia editorial serifada, elegante e legivel;
+- placa inferior museologica consistente com a colecao.
+
+O resultado deve parecer uma fotografia editorial premium de um acervo fisico real, nao uma ilustracao digital, nao um poster promocional e nao uma colagem generica.
+
+Regra principal:
+A imagem deve transmitir a sensacao de que os artefatos da obra foram encontrados, preservados, catalogados e fotografados por um museu internacional dedicado a memoria cultural. A capa deve ser imediatamente reconhecivel como parte da "Essencia dos Livros - Heritage Collection", mesmo sem ler o logotipo, mas nunca deve parecer uma simples copia da imagem de referencia.
+
+TAREFA
+Crie um unico prompt textual completo, pronto para ser enviado a uma IA de geracao de imagens. Nao gere a imagem. Nao explique decisoes. Nao apresente alternativas.
+
+REGRAS DE USO DA REFERENCIA
+- O prompt final deve mencionar explicitamente a imagem de referencia acima como referencia visual de estilo.
+- Use a referencia apenas para linguagem visual, composicao museologica, atmosfera, envelhecimento, luz, textura, hierarquia e sensacao de acervo.
+- Os objetos, titulos, personagens, simbolos e documentos da nova capa devem vir exclusivamente da obra atual.
+
+REGRAS DE CURADORIA DA OBRA
+- Identifique a obra atual a partir do contexto e da BEU.
+- Escolha um unico objeto central fisico, concreto e emocionalmente especifico da obra.
+- Escolha artefatos secundarios fisicos e reconheciveis que reforcem memoria, conflito, personagens, lugares, simbolos ou legado.
+- Defina legado, tom emocional, paleta e placa museologica usando os dados disponiveis.
+- Nao invente fatos, datas, estudios, documentos oficiais, falas ou nomes incertos.
+- Quando faltar dado factual, simplifique ou omita visualmente.
+
+FORMATO DA RESPOSTA
+Retorne somente o prompt final de imagem, em texto corrido detalhado e preferencialmente em ingles tecnico de direcao de arte. Inclua composicao, materiais, iluminacao, lente/enquadramento, paleta, elementos, tipografia editorial, placa museologica e restricoes negativas.
+
+O prompt final deve incluir:
+- reference image source: ${heritageReferenceSource}
+- work/title;
+- creator/studio/author;
+- year when available;
+- legacy;
+- central hero artifact;
+- supporting artifacts;
+- archival documents/details;
+- emotional tone;
+- color palette;
+- museum identification plaque;
+- negative prompt.
+
+CONTEXTO DA OBRA
+${JSON.stringify(contexto, null, 2)}
+
+BEU COMPLETA
+${JSON.stringify(beuAtual, null, 2)}
+
+NARRATIVA CINEMATOGRAFICA DISPONIVEL
+${narrativaCinematica || "Nao existe narrativa cinematografica concluida para esta obra."}
+`.trim();
 
   return `
 ABSOLUTE PRIORITY - HERITAGE MUSEUM ENGINE
