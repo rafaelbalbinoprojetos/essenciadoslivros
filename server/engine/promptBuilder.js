@@ -621,6 +621,238 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
   return `
+ABSOLUTE PRIORITY - HERITAGE MUSEUM ENGINE
+Use ONLY the engine below to create the final image prompt.
+Ignore any older or contradictory Heritage instruction that appears after this block.
+Use the CONTEXTO DA OBRA, BEU COMPLETA and NARRATIVA sections at the end only as source data for filling the fields.
+Return only the final image prompt, with all placeholders replaced for the current work.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESSENCIA DOS LIVROS — HERITAGE COLLECTION
+MUSEUM EDITORIAL COVER ENGINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXHIBITION
+
+Work:
+{{WORK}}
+
+Original Title:
+{{ORIGINAL_TITLE}}
+
+Creator / Studio / Author:
+{{CREATOR}}
+
+Year:
+{{YEAR}}
+
+Legacy Title:
+{{LEGACY_TITLE}}
+
+Legacy:
+{{LEGACY}}
+
+Hero Artifact:
+{{HERO_ARTIFACT}}
+
+Supporting Artifacts:
+• {{ARTIFACT_1}}
+• {{ARTIFACT_2}}
+• {{ARTIFACT_3}}
+• {{ARTIFACT_4}}
+• {{ARTIFACT_5}}
+
+Archival Details:
+{{ARCHIVAL_DETAILS}}
+
+Museum Identification Plaque:
+
+ESSENCIA HERITAGE COLLECTION
+
+{{WORK}}
+
+{{ARCHIVE_TYPE}}
+
+CAT. {{CATALOG_CODE}}
+
+Archive Division:
+{{ARCHIVE_DIVISION}}
+
+Emotional Tone:
+{{EMOTIONAL_TONE}}
+
+Color Palette:
+{{COLOR_PALETTE}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EDITORIAL DESIGN LANGUAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create an original premium editorial museum catalog cover.
+
+This is NOT a movie poster.
+This is NOT promotional artwork.
+This is NOT concept art.
+This is NOT a collage.
+
+The image must resemble the front cover of a premium exhibition catalog curated by an international museum dedicated to preserving the cultural legacy of this work.
+
+The entire composition should communicate memory, preservation, history and emotional legacy before spectacle.
+
+Every object must feel intentionally curated by a museum conservator.
+
+The image should evoke the feeling of discovering an archival collection forgotten for decades.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISUAL HIERARCHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The Hero Artifact is the visual anchor.
+
+Every supporting artifact exists only to reinforce its meaning.
+
+Never allow supporting artifacts to compete for attention.
+
+Use elegant negative space.
+
+The composition should breathe naturally.
+
+Objects should appear intentionally placed rather than randomly scattered.
+
+The viewer's eye should naturally travel through the composition without visual confusion.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EDITORIAL STYLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Premium museum publication.
+Luxury exhibition catalog.
+Editorial graphic design.
+High-end printed book.
+Archival collection.
+Museum documentation.
+Collector's edition.
+Historical preservation.
+Elegant visual hierarchy.
+Minimal but rich.
+Sophisticated.
+Timeless.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MATERIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Natural paper textures.
+Aged archival documents.
+Museum conservation materials.
+Embossed paper.
+Subtle stains.
+Pressed notes.
+Library cards.
+Editorial annotations.
+Typewritten fragments.
+Handwritten observations.
+Museum stamps.
+Catalog references.
+Everything should feel physically real.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TYPOGRAPHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Classic editorial typography.
+Elegant serif fonts.
+Museum-quality layout.
+Perfect alignment.
+Excellent spacing.
+Strong visual hierarchy.
+Highly legible.
+Looks professionally typeset.
+Typography is part of the design, never merely overlaid.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIGHTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Soft museum lighting.
+Subtle shadows.
+Natural directional light.
+Warm archival atmosphere.
+Refined texture definition.
+Elegant contrast.
+No dramatic cinematic lighting.
+No exaggerated highlights.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COLOR LANGUAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Respect the provided color palette.
+Low saturation.
+Printed editorial appearance.
+Museum conservation aesthetic.
+Avoid excessive contrast.
+Avoid oversaturated colors.
+Everything should resemble a premium printed publication.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPOSITION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Vertical composition.
+Balanced editorial grid.
+Natural object arrangement.
+Large central Hero Artifact.
+Supporting artifacts positioned with visual rhythm.
+Museum identification plaque positioned naturally near the bottom.
+Objects should overlap subtly to create depth without clutter.
+The page should resemble a carefully designed editorial spread condensed into a single cover.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUALITY TARGET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When viewed from a distance,
+the image should immediately resemble an authentic museum publication.
+
+Only after approaching should the viewer begin discovering the numerous archival details hidden throughout the composition.
+
+The overall impression must be elegant, collectible, emotional and timeless.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEGATIVE PROMPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+No movie poster.
+No promotional layout.
+No concept art.
+No floating objects.
+No random clutter.
+No digital interface.
+No modern UI.
+No fantasy effects.
+No glowing magic unless essential to the work.
+No cheap collage.
+No AI artifacts.
+No unreadable typography.
+No misspelled text.
+No plastic materials.
+No excessive ornamentation.
+No visual chaos.
+No watermark.
+No logos unrelated to the work.
+Prioritize editorial elegance over visual spectacle.
+
+FIELD FILLING RULES
+- Replace every {{FIELD}} with information from the current work.
+- If heritage fields exist in BEU, use them first.
+- If a fact is uncertain, omit or simplify it instead of inventing.
+- HERO_ARTIFACT must be emotionally specific to the work, not generic to the genre.
+- Supporting artifacts must be concrete, physical, and tied to characters, places, memory, conflict, symbols or legacy.
+- For The Last of Us, for example, a cassette tape, Firefly pendant, Ellie's switchblade, Joel's broken watch and Boston QZ map are stronger than a generic quarantine mask.
+- For each new work, find equivalent emotionally specific artifacts.
+- Keep the final prompt in the structure above. Do not add external commentary.
+
 IMAGE PROMPT UPGRADE - HERITAGE COLLECTION
 Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
 
