@@ -1,5 +1,14 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext.jsx";
+import heritageReferenceFallback from "../image/CAPA_REFERENCIA_HERITAGE.png";
+import {
+  ENGINE_REFERENCE_TYPES,
+  getEngineReferencesByType,
+  replaceEngineReference,
+  updateEngineReferenceUsage,
+} from "../services/engineReferences.js";
+import { isAdminUser } from "../utils/admin.js";
 
 const STATUS_CONFIG = {
   loading: {
@@ -63,8 +72,13 @@ function EngineProcessStep({ label, status }) {
 }
 
 export default function EngineSolicitarObra() {
+  const { user } = useAuth();
+  const isAdmin = isAdminUser(user);
   const [titulo, setTitulo] = useState("");
   const [tipoObra, setTipoObra] = useState("livro");
+  const [engineReferences, setEngineReferences] = useState({});
+  const [referencesLoading, setReferencesLoading] = useState(true);
+  const [referenceUploading, setReferenceUploading] = useState(null);
   const [criandoObra, setCriandoObra] = useState(false);
   const [executandoCurador, setExecutandoCurador] = useState(false);
   const [executandoEditor, setExecutandoEditor] = useState(false);
@@ -81,6 +95,71 @@ export default function EngineSolicitarObra() {
   const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
+
+  const loadEngineReferences = useCallback(async () => {
+    setReferencesLoading(true);
+
+    try {
+      const references = await getEngineReferencesByType();
+      setEngineReferences(references);
+    } catch (error) {
+      console.error("[ENGINE] erro ao carregar referencias visuais", error);
+      toast.error("Nao foi possivel carregar as referencias visuais da Engine.");
+    } finally {
+      setReferencesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEngineReferences();
+  }, [loadEngineReferences]);
+
+  async function handleReferenceUpload(tipo, event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    setReferenceUploading(tipo);
+
+    try {
+      const nextReference = await replaceEngineReference({
+        tipo,
+        file,
+        userId: user?.id,
+        usarComoReferencia: true,
+      });
+
+      setEngineReferences((current) => ({
+        ...current,
+        [tipo]: nextReference,
+      }));
+      toast.success("Referencia visual atualizada.");
+    } catch (error) {
+      console.error("[ENGINE] erro ao trocar referencia visual", error);
+      toast.error(error.message || "Erro ao trocar referencia visual.");
+    } finally {
+      setReferenceUploading(null);
+    }
+  }
+
+  async function handleReferenceUsageChange(tipo, checked) {
+    const currentReference = engineReferences[tipo];
+
+    if (!currentReference?.id) return;
+
+    try {
+      const nextReference = await updateEngineReferenceUsage(currentReference.id, checked);
+      setEngineReferences((current) => ({
+        ...current,
+        [tipo]: nextReference,
+      }));
+      toast.success(checked ? "Referencia ativada para criacao." : "Referencia desativada para criacao.");
+    } catch (error) {
+      console.error("[ENGINE] erro ao atualizar uso da referencia", error);
+      toast.error(error.message || "Erro ao atualizar referencia visual.");
+    }
+  }
 
   async function executarEtapaManual(tipoEtapa, obraIdParam = null) {
     const obraId = obraIdParam || resultadoCriacao?.livro?.id;
@@ -345,6 +424,22 @@ export default function EngineSolicitarObra() {
       status: getStepStatus({ active: atualizandoDados, result: resultadoAtualizacao }),
     },
   ];
+  const referenceCards = [
+    {
+      tipo: ENGINE_REFERENCE_TYPES.heritage,
+      title: "Capa referencia Heritage",
+      description: "Biblia visual da colecao Heritage Collection.",
+      fallbackUrl: heritageReferenceFallback,
+      fallbackLabel: "Fallback local: CAPA_REFERENCIA_HERITAGE.png",
+    },
+    {
+      tipo: ENGINE_REFERENCE_TYPES.cinematica,
+      title: "Capa referencia Cinematica",
+      description: "Referencia visual para capa de apresentacao de audio.",
+      fallbackUrl: null,
+      fallbackLabel: "Nenhuma referencia cinematica cadastrada.",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white p-8">
@@ -414,6 +509,91 @@ export default function EngineSolicitarObra() {
                         : "Solicitar obra"}
           </button>
         </form>
+
+        <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">
+                Referencias visuais
+              </p>
+              <h2 className="mt-1 text-base font-semibold text-white">Capas de referencia da Engine</h2>
+            </div>
+            {referencesLoading && (
+              <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
+                carregando
+              </span>
+            )}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {referenceCards.map((card) => {
+              const currentReference = engineReferences[card.tipo];
+              const imageUrl = currentReference?.public_url || card.fallbackUrl;
+              const isUploading = referenceUploading === card.tipo;
+              const usesReference = currentReference
+                ? Boolean(currentReference.usar_como_referencia)
+                : Boolean(card.fallbackUrl);
+
+              return (
+                <div key={card.tipo} className="rounded-xl border border-zinc-800 bg-black/35 p-4">
+                  <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={card.title}
+                        className="aspect-[4/5] w-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid aspect-[4/5] place-items-center px-6 text-center text-sm text-zinc-500">
+                        Nenhuma imagem cadastrada
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-zinc-100">{card.title}</h3>
+                    <p className="mt-1 text-sm text-zinc-400">{card.description}</p>
+                    <p className="mt-2 truncate text-xs text-zinc-500">
+                      {currentReference?.nome || card.fallbackLabel}
+                    </p>
+                  </div>
+
+                  <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
+                    <input
+                      type="checkbox"
+                      checked={usesReference}
+                      disabled={!currentReference || Boolean(referenceUploading) || referencesLoading}
+                      onChange={(event) => handleReferenceUsageChange(card.tipo, event.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-700 bg-black text-amber-500 focus:ring-amber-500"
+                    />
+                    Usar como referencia para criar imagem
+                  </label>
+
+                  <label className={`mt-4 block w-full rounded-xl border px-4 py-3 text-center text-sm font-semibold transition ${
+                    isAdmin
+                      ? "cursor-pointer border-amber-500/60 text-amber-100 hover:bg-amber-500/10"
+                      : "cursor-not-allowed border-zinc-800 text-zinc-500"
+                  }`}>
+                    {isUploading ? "Enviando..." : "Trocar imagem"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/avif"
+                      disabled={!isAdmin || Boolean(referenceUploading)}
+                      onChange={(event) => handleReferenceUpload(card.tipo, event)}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {!isAdmin && (
+                    <p className="mt-2 text-xs text-zinc-500">
+                      Apenas administradores podem trocar referencias.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         {hasRequestedWork && (
           <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-300">

@@ -6,6 +6,7 @@ export const BUCKETS = {
   audios: "audios", // privado
   pdfs: "pdfs", // privado
   narrativas: "narrativas", // privado, múltiplas cenas por obra
+  engineReferencias: "engine-referencias",
 };
 
 // Normaliza o nome do arquivo para um caminho seguro de Storage.

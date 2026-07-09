@@ -322,6 +322,26 @@ async function buscarCamposPorResponsavel({ versao, responsavel }) {
     .sort((a, b) => String(a.modulo).localeCompare(String(b.modulo)) || a.ordem - b.ordem);
 }
 
+async function buscarReferenciaVisualAtiva(tipo) {
+  const { data, error } = await supabaseAdmin
+    .from("engine_referencias_imagem")
+    .select("tipo,nome,bucket,storage_path,public_url,usar_como_referencia,ativo")
+    .eq("tipo", tipo)
+    .eq("ativo", true)
+    .eq("usar_como_referencia", true)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[PromptBuilder] referencia visual nao encontrada", {
+      tipo,
+      error: error.message,
+    });
+    return null;
+  }
+
+  return data || null;
+}
+
 function montarPromptCurador({ agente, contexto, campos }) {
   const contratoCampos = montarContratoCampos(campos);
   const universoBanco = contexto?.classificacao?.universo?.nome || null;
@@ -619,17 +639,25 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
   );
 }
 
-function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
+function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+  const heritageReferenceSource = referenciaVisual?.public_url
+    || referenciaVisual?.storage_path
+    || "src/image/CAPA_REFERENCIA_HERITAGE.png";
+
   return `
 ABSOLUTE PRIORITY - HERITAGE MUSEUM ENGINE
 Use ONLY the engine below to create the final image prompt.
 Ignore any older or contradictory Heritage instruction that appears after this block.
 Use the CONTEXTO DA OBRA, BEU COMPLETA and NARRATIVA sections at the end only as source data for filling the fields.
 Return only the final image prompt, with all placeholders replaced for the current work.
+The final image prompt MUST explicitly mention this active reference image source as style reference only:
+${heritageReferenceSource}
 
 VISUAL REFERENCE BIBLE
-Use the reference image located at:
-src/image/CAPA_REFERENCIA_HERITAGE.png
+Use the active reference image located at:
+${heritageReferenceSource}
+
+If the image generation tool supports image references, attach/use this image as a visual style reference. Use it only for style, layout language, material behavior, lighting, texture, hierarchy and museum atmosphere.
 
 The reference image is the VISUAL BIBLE for the "Essencia dos Livros - Heritage Collection".
 
@@ -1063,10 +1091,26 @@ ${narrativaCinematica || "Não existe narrativa cinematográfica concluída para
 `.trim();
 }
 
-function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }) {
+function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+  const cinematicReferenceSource = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
+  const cinematicReferenceBlock = cinematicReferenceSource
+    ? `
+ACTIVE VISUAL REFERENCE
+The final image prompt MUST explicitly mention this active reference image source as style reference only:
+${cinematicReferenceSource}
+
+If the image generation tool supports image references, attach/use this image only for collection language, editorial hierarchy, lighting, texture, object density and premium presentation style. Do not copy its depicted work, objects or exact layout.
+`
+    : `
+ACTIVE VISUAL REFERENCE
+No active cinematic reference image is registered. Build the final prompt from the BEU, narrative and collection language without claiming an external reference image.
+`;
+
   return `
 IMAGE PROMPT UPGRADE - AUDIO PRESENTATION COVER
 Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
+
+${cinematicReferenceBlock}
 
 Resultado esperado:
 - Gere um prompt final para imagem vertical premium de apresentacao de audio narrativo.
@@ -1435,11 +1479,23 @@ export async function montarPromptAgente({
     },
     heritage_prompt: {
       responsavel: "Heritage Prompt",
-      montar: () => montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }),
+      tipoReferenciaVisual: "heritage",
+      montar: ({ referenciaVisual }) => montarPromptHeritage({
+        contexto,
+        beuAtual,
+        narrativaCinematica,
+        referenciaVisual,
+      }),
     },
     capa_cinematica_prompt: {
       responsavel: "Capa Cinemática Prompt",
-      montar: () => montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }),
+      tipoReferenciaVisual: "cinematica",
+      montar: ({ referenciaVisual }) => montarPromptCapaCinematica({
+        contexto,
+        beuAtual,
+        narrativaCinematica,
+        referenciaVisual,
+      }),
     },
   };
 
@@ -1454,12 +1510,16 @@ export async function montarPromptAgente({
     responsavel: config.responsavel,
   });
   const modulos = [...agruparPorModulo(campos).keys()];
-  const promptMontado = config.montar({ campos });
+  const referenciaVisual = config.tipoReferenciaVisual
+    ? await buscarReferenciaVisualAtiva(config.tipoReferenciaVisual)
+    : null;
+  const promptMontado = config.montar({ campos, referenciaVisual });
 
   engineStep("PromptBuilder", "✓", {
     tipoEtapa,
     campos_carregados: campos.length,
     modulos,
+    referencia_visual: referenciaVisual?.public_url || referenciaVisual?.storage_path || null,
     tamanho_aproximado: promptMontado.length,
   });
 
