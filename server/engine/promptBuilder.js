@@ -593,6 +593,32 @@ function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
 IMAGE PROMPT UPGRADE - HERITAGE COLLECTION
 Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
 
+Exhibition brief first:
+- Antes de escrever o prompt visual, levante um briefing curatorial no estilo de exposicao.
+- O prompt final deve comecar com o bloco "EXHIBITION BRIEF" preenchido, usando dados da BEU e conhecimento consolidado da obra sem inventar fatos incertos.
+- Campos obrigatorios:
+  Work:
+  Original Title:
+  Creator / Studio / Author:
+  Year:
+  Legacy Title:
+  Legacy:
+  Hero Artifact:
+  Supporting Artifacts:
+  Archival Details:
+  Museum Identification Plaque:
+  Archive Division:
+  Emotional Tone:
+  Color Palette:
+  Museum Editorial Aesthetic:
+- Legacy Title deve ser uma frase forte, curta e editorial, como "A HISTORIA MAIS DEVASTADORA JA CONTADA EM GAMES", sem virar citacao falsa.
+- Hero Artifact deve ser um objeto concreto e especifico da obra, nao um simbolo abstrato.
+- Supporting Artifacts deve listar 4 a 7 objetos fisicos sustentados pela obra.
+- Archival Details deve transformar informacoes da obra em detalhes de arquivo: paginas anotadas, mapas, selos, carimbos, fragmentos, notas de producao, margem editorial, sem fingir documento historico real quando nao houver base.
+- Museum Identification Plaque deve ser curta e plausivel, com marca ESSENCIA HERITAGE COLLECTION, titulo, tipo de arquivo e codigo editorial.
+- Archive Division deve mudar conforme tipo_obra: Interactive Media Heritage Archive, Literary Heritage Archive, Cinematic Heritage Archive, Historical Memory Archive ou equivalente.
+- Emotional Tone e Color Palette devem orientar toda a imagem.
+
 Resultado esperado:
 - Gere um prompt final para imagem vertical de catalogo museologico, nao um poster dramatico.
 - A imagem deve parecer uma fotografia premium de uma vitrine editorial fisica: um artefato principal real, documentos de apoio, etiquetas curatoriais, placa inferior e acabamento de colecao.
@@ -702,6 +728,27 @@ Curadoria visual obrigatoria:
 - defina um "gancho de audio": por que esta imagem convida a ouvir a narracao;
 - defina paleta emocional, distancia de camera e area segura para UI externa de player.
 
+Scene impact mining:
+- Antes de escolher a cena final, levante de 4 a 8 cenas candidatas a partir de narrativa.momentos_essenciais, personagens, antagonistas, chefes, mortes, revelacoes, perdas, sacrificios, confrontos finais e simbolos recorrentes da BEU.
+- Para cada candidata, avalie internamente: impacto visual, violencia simbolica, reconhecimento por fas, misterio para novos usuarios, emocao dominante, especificidade da franquia, clareza do objeto heroico e risco de virar cena generica.
+- Escolha a cena com maior soma de impacto visual + violencia simbolica + especificidade da franquia, nao a cena mais panoramica ou "bonita".
+- Quando houver confrontos contra personagens iconicos, deuses, monstros, viloes, titaes, chefes ou entidades, prefira o instante fisico de maior consequencia: queda, derrota, captura, cabeca erguida, arma atravessando, corpo colapsando, objeto destruido, sacrificio ou revelacao.
+- Cenas como "personagem no alto de uma montanha olhando o horizonte" so podem vencer se forem explicitamente o momento mais devastador da obra. Caso contrario, trate como bela demais e pouco especifica.
+- Nao combine tres cenas em montagem. Se houver multiplos confrontos fortes, escolha um unico instante-simbolo e use os demais apenas como evidencias pequenas nos paineis editoriais.
+- O prompt final deve incluir o bloco "SCENE CANDIDATE RANKING" com 4 a 8 candidatas, nota de impacto 0-100 e motivo curto. A imagem final deve usar a candidata de maior impacto, salvo se ela violar fatos da BEU.
+
+Franchise lock:
+- Personagens, armas, criaturas, deuses, lugares e objetos devem ser descritos como aparecem especificamente nesta obra/franquia, nunca como versoes mitologicas genericas.
+- Se a obra for God of War, Zeus, Poseidon, Hades, Helios, Kratos, Olympus, Blades of Chaos e qualquer deus devem seguir a linguagem visual brutal, marcada, hiperfisica e sombria da franquia God of War, nao pintura classica generica, fantasia medieval ou mitologia academica.
+- Se a obra for The Last of Us, objetos e personagens devem seguir a linguagem de sobrevivencia pos-pandemica, material gasto, ferrugem, tecido, madeira, sangue seco, mapas e memoria humana da franquia, nao zumbis genericos.
+- Para qualquer obra conhecida, declare no prompt final: "faithful to the visual identity, material language, costume logic, creature design and emotional tone of [obra/franquia], without copying official artwork".
+- Nao use rosto de ator real, capa oficial, key art oficial ou logo protegido, mas preserve silhueta, materiais, objetos e atmosfera reconheciveis da franquia.
+
+Impact scene examples:
+- God of War III: Kratos segurando a cabeca de Helios, Poseidon sendo destruido no caos marinho, Hades sendo vencido no submundo, Zeus no confronto final. Esses exemplos mostram que a cena deve ser consequencia fisica brutal, nao apenas Kratos posando com uma arma.
+- The Last of Us: Joel carregando Ellie, uma fita cassete e pingente Firefly como memoria, uma cidade tomada pela natureza com intimidade humana. O impacto vem de amor, perda e decisao moral, nao de explosao generica.
+- Use estes exemplos apenas como calibragem de selecao, nunca como conteudo fixo para outras obras.
+
 Composicao obrigatoria:
 - vertical aspect ratio 4:5 or 2:3, safe for mobile cover and audio presentation screen;
 - preserve uma area segura nas bordas inferiores, sem elemento essencial, para controles externos de audio;
@@ -731,6 +778,7 @@ Antes de escrever qualquer direção artística ou regra de layout, realize uma 
 
 Preencha integralmente este briefing interno:
 {
+  "cenas_candidatas_avaliadas": [],
   "cena_principal": "",
   "motivo_da_escolha": "",
   "emocao_principal": "",
