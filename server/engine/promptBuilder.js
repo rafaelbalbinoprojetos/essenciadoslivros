@@ -642,81 +642,183 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   return `
 TEMPLATE HERITAGE - ESSENCIA DOS LIVROS
-Use a imagem de referencia anexada na etapa de geracao de imagem da Engine.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTRUÇÃO FIXA — USO DA IMAGEM DE REFERÊNCIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-A imagem de referencia deve funcionar como a BIBLIA VISUAL da colecao "Essencia dos Livros - Heritage Collection".
+Uma imagem de referência visual foi anexada a esta requisição.
 
-Ela define exclusivamente:
-- linguagem editorial;
-- composicao museologica;
-- atmosfera de acervo fisico;
-- densidade documental;
-- envelhecimento dos materiais;
-- iluminacao;
-- texturas;
-- hierarquia visual;
-- sensacao de objeto preservado em arquivo historico.
+Essa imagem anexada é a BÍBLIA VISUAL da coleção “Essência dos Livros”.
 
-NAO copie literalmente os objetos da imagem de referencia.
-NAO copie a obra retratada na referencia.
-NAO repita exatamente a mesma disposicao dos elementos.
-NAO transforme todas as capas em variacoes identicas.
+Ela NÃO é a imagem final.
+Ela NÃO deve ser editada literalmente.
+Ela NÃO deve ter seus objetos copiados.
+Ela NÃO deve ter seu texto, título, obra ou layout reproduzidos exatamente.
 
-A imagem de referencia deve ensinar o COMO:
-como a capa deve parecer, respirar, envelhecer, iluminar e organizar seus artefatos.
+A imagem anexada define o COMO.
+O prompt da obra define o O QUÊ.
 
-As informacoes carregadas pela API definem o O QUE:
-obra, titulo, autor/estudio, ano, legado, objeto central, artefatos secundarios, tom emocional, paleta e placa museologica.
+Antes de gerar a nova capa, estude visualmente a imagem anexada e extraia dela:
 
-A nova capa deve parecer pertencente a mesma colecao visual da imagem de referencia, mas curada individualmente para a obra atual.
+• linguagem editorial da coleção;
+• densidade documental;
+• aparência de acervo físico real;
+• composição vertical premium;
+• hierarquia entre título, objeto central, documentos e placa;
+• iluminação quente, suave e museológica;
+• texturas de papel envelhecido, couro, madeira, metal gasto e poeira;
+• sombras reais entre objetos sobrepostos;
+• documentos com dobras, manchas, fitas, grampos, carimbos e anotações;
+• sensação de arquivo histórico preservado;
+• equilíbrio entre riqueza visual e áreas de respiro;
+• integração tipográfica elegante e legível;
+• placa museológica inferior como elemento de identificação da coleção.
 
-Priorize sempre:
-- objeto central fisico, realista e com marcas de uso;
-- documentos envelhecidos com dobras, manchas, fitas, carimbos e anotacoes;
-- composicao vertical premium;
-- aparencia de mesa de curadoria ou arquivo historico real;
-- materiais tateis: papel antigo, couro, metal gasto, madeira, tecido, poeira, marcas de manuseio;
-- iluminacao natural de museu, quente, suave e direcional;
-- sombras reais e sobreposicao sutil entre objetos;
-- tipografia editorial serifada, elegante e legivel;
-- placa inferior museologica consistente com a colecao.
+A nova imagem deve parecer pertencente à mesma coleção visual da referência, mas deve ser totalmente dedicada à obra atual descrita no prompt.
 
-O resultado deve parecer uma fotografia editorial premium de um acervo fisico real, nao uma ilustracao digital, nao um poster promocional e nao uma colagem generica.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HIERARQUIA DE PRIORIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Regra principal:
-A imagem deve transmitir a sensacao de que os artefatos da obra foram encontrados, preservados, catalogados e fotografados por um museu internacional dedicado a memoria cultural. A capa deve ser imediatamente reconhecivel como parte da "Essencia dos Livros - Heritage Collection", mesmo sem ler o logotipo, mas nunca deve parecer uma simples copia da imagem de referencia.
+1. A imagem anexada define a identidade visual da coleção.
+2. Este bloco fixo define as regras permanentes da engine.
+3. O prompt da obra define os dados específicos da nova capa.
 
-TAREFA
-Crie um unico prompt textual completo, pronto para ser enviado a uma IA de geracao de imagens. Nao gere a imagem. Nao explique decisoes. Nao apresente alternativas.
+Se houver conflito entre estilo visual descrito no prompt da obra e a imagem anexada, priorize a imagem anexada.
 
-REGRAS DE USO DA REFERENCIA
-- O prompt final deve orientar a IA a usar a imagem de referencia anexada como referencia visual de estilo, sem citar caminho, URL ou arquivo.
-- Use a referencia apenas para linguagem visual, composicao museologica, atmosfera, envelhecimento, luz, textura, hierarquia e sensacao de acervo.
-- Os objetos, titulos, personagens, simbolos e documentos da nova capa devem vir exclusivamente da obra atual.
+Se houver conflito entre o objeto central da referência e o objeto central da obra atual, use o objeto central da obra atual.
 
-REGRAS DE CURADORIA DA OBRA
-- Identifique a obra atual a partir do contexto e da BEU.
-- Escolha um unico objeto central fisico, concreto e emocionalmente especifico da obra.
-- Escolha artefatos secundarios fisicos e reconheciveis que reforcem memoria, conflito, personagens, lugares, simbolos ou legado.
-- Defina legado, tom emocional, paleta e placa museologica usando os dados disponiveis.
-- Nao invente fatos, datas, estudios, documentos oficiais, falas ou nomes incertos.
-- Quando faltar dado factual, simplifique ou omita visualmente.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGRAS DE TRANSFORMAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-FORMATO DA RESPOSTA
-Retorne somente o prompt final de imagem, em texto corrido detalhado e preferencialmente em ingles tecnico de direcao de arte. Inclua composicao, materiais, iluminacao, lente/enquadramento, paleta, elementos, tipografia editorial, placa museologica e restricoes negativas.
+Crie uma nova capa original, não uma variação literal da referência.
 
-O prompt final deve incluir:
-- work/title;
-- creator/studio/author;
-- year when available;
-- legacy;
-- central hero artifact;
-- supporting artifacts;
-- archival documents/details;
-- emotional tone;
-- color palette;
-- museum identification plaque;
-- negative prompt.
+Substitua completamente:
+• obra;
+• título;
+• autor, estúdio ou criador;
+• ano;
+• objeto central;
+• artefatos secundários;
+• documentos;
+• anotações;
+• símbolos;
+• placa de identificação;
+• tom emocional;
+• paleta;
+• contexto narrativo.
+
+Preserve da referência:
+• atmosfera editorial;
+• sensação museológica;
+• envelhecimento físico;
+• realismo dos materiais;
+• densidade documental;
+• iluminação;
+• ritmo visual;
+• profundidade por sobreposição;
+• aparência de fotografia de arquivo.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPOSIÇÃO OBRIGATÓRIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A capa deve ser vertical, premium, editorial e fotográfica.
+
+O artefato principal da obra deve ocupar o centro emocional da composição, mas não deve parecer isolado.
+
+Ao redor dele, inclua entre 8 e 12 elementos curatoriais relacionados à obra, como:
+
+• documentos de produção;
+• mapas;
+• cartas;
+• páginas manuscritas;
+• fotografias ou estudos conceituais;
+• pequenos objetos simbólicos;
+• fragmentos físicos;
+• selos;
+• carimbos;
+• notas de arquivo;
+• rascunhos;
+• etiquetas catalográficas.
+
+Esses elementos devem parecer colocados fisicamente sobre uma mesa de arquivo, com pequenas sobreposições naturais, sombras reais e imperfeições.
+
+Nada deve parecer flutuante, artificial, digital ou colado sem peso físico.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MATERIAIS E REALISMO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Todos os objetos devem parecer reais, táteis e preservados por décadas.
+
+Aplicar:
+• desgaste natural;
+• manchas discretas;
+• cantos amassados;
+• papel amarelado;
+• metal oxidado;
+• couro gasto;
+• madeira escurecida;
+• poeira fina;
+• marcas de manuseio;
+• pequenas imperfeições;
+• textura irregular.
+
+Nenhum objeto deve parecer recém-fabricado, limpo demais, plástico, renderizado ou artificial.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TIPOGRAFIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Usar tipografia editorial serifada, elegante e legível.
+
+O título da obra deve ter hierarquia clara, mas integrado naturalmente ao design.
+
+A placa inferior deve conter os dados curatoriais da obra atual, seguindo a linguagem museológica da referência.
+
+Evitar textos longos demais em áreas pequenas.
+
+Textos menores podem parecer manuscritos, carimbados ou anotados, desde que visualmente coerentes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEGATIVO ABSOLUTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Não criar capa minimalista.
+Não criar pôster promocional.
+Não criar wallpaper.
+Não criar arte digital genérica.
+Não criar render 3D limpo.
+Não criar composição com poucos objetos.
+Não copiar literalmente a referência.
+Não manter objetos da obra de referência.
+Não usar layout vazio.
+Não usar brilho artificial.
+Não usar neon.
+Não usar UI moderna.
+Não usar elementos sem relação narrativa.
+Não usar objetos genéricos.
+Não deixar o artefato principal sozinho.
+Não gerar aparência de mockup barato.
+Não gerar imagem plana sem sombras físicas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OBJETIVO FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A imagem final deve parecer uma fotografia editorial premium de um acervo físico real, pertencente à “Essência dos Livros – Heritage Collection”.
+
+O visitante deve sentir que os artefatos daquela obra foram encontrados, preservados, catalogados e fotografados por um museu internacional dedicado à memória cultural.
+
+A capa deve ser reconhecível como parte da mesma coleção da imagem de referência, mesmo sendo uma criação completamente nova para a obra atual.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DADOS DA OBRA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[INSERIR AQUI O PROMPT GERADO PELA SUA ENGINE]
 
 CONTEXTO DA OBRA
 ${JSON.stringify(contexto, null, 2)}
