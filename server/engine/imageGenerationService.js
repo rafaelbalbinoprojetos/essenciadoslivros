@@ -10,6 +10,7 @@ import { supabaseAdmin } from "./supabaseAdmin.js";
 const CAPAS_BUCKET = "capas";
 const ENGINE_REFERENCIAS_BUCKET = "engine-referencias";
 const HERITAGE_REFERENCE_PATH = path.join(process.cwd(), "src", "image", "CAPA_REFERENCIA_HERITAGE.png");
+const SUPPORTED_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 let openaiClient = null;
 
@@ -48,6 +49,16 @@ function limitarPromptImagem(prompt) {
 Preserve all previous Heritage Collection instructions. Prioritize the visual reference image, physical museum archive realism, premium vertical composition, tactile materials, legible editorial typography and the current work data.`;
 }
 
+function detectarMimeImagem(fileName = "", reportedType = "") {
+  if (SUPPORTED_IMAGE_MIME_TYPES.has(reportedType)) return reportedType;
+
+  const ext = path.extname(fileName).toLowerCase();
+
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
+  return "image/png";
+}
+
 async function buscarReferenciaHeritageAtiva() {
   const { data, error } = await supabaseAdmin
     .from("engine_referencias_imagem")
@@ -78,11 +89,14 @@ async function carregarReferenciaComoUploadable() {
       throw new Error(`Erro ao baixar referencia Heritage do Storage: ${error.message}`);
     }
 
+    const fileName = referencia.nome || path.basename(referencia.storage_path) || "heritage-reference.png";
+    const mimeType = detectarMimeImagem(fileName, data.type);
+
     return {
       referencia,
       source: referencia.public_url || referencia.storage_path,
-      file: await toFile(data, referencia.nome || "heritage-reference.png", {
-        type: data.type || "image/png",
+      file: await toFile(data, fileName, {
+        type: mimeType,
       }),
     };
   }
@@ -96,11 +110,14 @@ async function carregarReferenciaComoUploadable() {
 
     const blob = await response.blob();
 
+    const fileName = referencia.nome || "heritage-reference.png";
+    const mimeType = detectarMimeImagem(fileName, blob.type);
+
     return {
       referencia,
       source: referencia.public_url,
-      file: await toFile(blob, referencia.nome || "heritage-reference.png", {
-        type: blob.type || "image/png",
+      file: await toFile(blob, fileName, {
+        type: mimeType,
       }),
     };
   }
@@ -112,7 +129,9 @@ async function carregarReferenciaComoUploadable() {
   return {
     referencia: null,
     source: HERITAGE_REFERENCE_PATH,
-    file: fs.createReadStream(HERITAGE_REFERENCE_PATH),
+    file: await toFile(await fs.promises.readFile(HERITAGE_REFERENCE_PATH), "CAPA_REFERENCIA_HERITAGE.png", {
+      type: "image/png",
+    }),
   };
 }
 
