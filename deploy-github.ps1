@@ -80,7 +80,7 @@ Write-Host "Branch: $branch"
 # --- Trava de seguranca: nunca commitar arquivos .env reais ---
 # Modelos como .env.example, .env.sample e .env.template podem ser versionados.
 $trackedEnv = git ls-files | Where-Object {
-  $fileName = [System.IO.Path]::GetFileName($_)
+  $fileName = ($_ -split '[\\/]')[-1]
   $isEnvironmentFile = $fileName -eq ".env" -or $fileName.StartsWith(".env.")
   $isSafeTemplate = $fileName -match '\.(example|sample|template)$'
   $isEnvironmentFile -and -not $isSafeTemplate

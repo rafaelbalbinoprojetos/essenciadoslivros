@@ -51,6 +51,24 @@ const NAV_ITEMS = NAV_LINKS.map((link) => ({
 
 const NAV_ITEMS_BY_PATH = new Map(NAV_ITEMS.map((item) => [item.to, item]));
 
+function formatTrialCountdown(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "breve";
+  }
+
+  const diffMs = date.getTime() - Date.now();
+  if (diffMs <= 0) {
+    return "hoje";
+  }
+
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (days === 1) {
+    return "1 dia";
+  }
+
+  return `${days} dias`;
+}
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,7 +111,7 @@ export default function Layout() {
   const trialExpired = Boolean(trialEndsAt) && trialEndsAt.getTime() <= Date.now();
   const trialActive = trialStatus === "active" && Boolean(trialEndsAt) && !trialExpired;
   const onboardingComplete =
-    userMetadata.completed_reading_onboarding ?? userMetadata.has_seen_welcome === true ?? false;
+    userMetadata.completed_reading_onboarding ?? (userMetadata.has_seen_welcome === true);
   const mobileNavPreference = userMetadata.mobile_nav_paths;
 
   const mobileNavItems = useMemo(() => {

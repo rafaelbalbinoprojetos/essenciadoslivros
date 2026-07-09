@@ -590,6 +590,42 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
 
 function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
   return `
+IMAGE PROMPT UPGRADE - HERITAGE COLLECTION
+Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
+
+Resultado esperado:
+- Gere um prompt final para imagem vertical de catalogo museologico, nao um poster dramatico.
+- A imagem deve parecer uma fotografia premium de uma vitrine editorial fisica: um artefato principal real, documentos de apoio, etiquetas curatoriais, placa inferior e acabamento de colecao.
+- O artefato heroico deve carregar a obra visualmente mesmo sem depender de personagens.
+
+Idioma e legibilidade:
+- Escreva o prompt final preferencialmente em ingles tecnico de direcao de arte.
+- Mantenha somente textos essenciais em portugues quando forem marcas ou titulos: "ESSENCIA DOS LIVROS", titulo da obra e, se necessario, uma frase curatorial curta.
+- Limite texto visivel a no maximo 5 areas: selo, titulo, placa de museu, codigo de catalogo e uma nota curta.
+- Oriente o gerador a usar typography that is crisp, engraved, correctly spelled, aligned, and readable.
+- Se houver risco de texto ilegivel, prefira placas com linhas discretas e hierarquia visual sem inventar palavras.
+
+Curadoria do artefato:
+- escolha internamente um unico artefato heroico concreto e comprovadamente ligado a obra;
+- escolha 3 a 6 evidencias secundarias sustentadas pela BEU;
+- defina material dominante, periodo visual, tensao curatorial e codigo de catalogo editorial;
+- nunca deixe a IA de imagem escolher o objeto principal.
+
+Composicao obrigatoria:
+- vertical aspect ratio 4:5 or 2:3, high-resolution editorial product photography;
+- camera frontal levemente acima do plano, 50mm or 70mm lens, controlled depth of field;
+- artefato heroico central ocupando 35% a 45% da imagem, totalmente visivel e bem iluminado;
+- documentos e evidencias em camadas reais ao redor, com sombras fisicas e oclusao natural;
+- placa inferior em metal, madeira ou papel algodao, com apenas dados factuais disponiveis;
+- espaco negativo suficiente para leitura premium, sem preenchimento automatico;
+- paleta extraida da BEU e da direcao sensorial.
+
+Negativo permanente:
+Inclua no prompt final: no modern UI, no digital dashboard, no flat graphic design, no cheap collage, no random ornaments, no illegible text, no misspelled words, no fake logos, no official cover copy, no copyrighted poster composition, no celebrity likeness, no generic fantasy items, no plastic materials unless justified, no clutter, no floating objects without physical support, no blurry labels, no AI artifacts.
+
+Formato adicional:
+O prompt final deve ser organizado em blocos curtos: IMAGE PROMPT, ARTIFACT CURATION, COMPOSITION, MATERIALS AND LIGHTING, TYPOGRAPHY, NEGATIVE PROMPT.
+
 Você é o diretor de arte da Heritage Collection da Essência dos Livros.
 
 TAREFA
@@ -640,7 +676,44 @@ ${narrativaCinematica || "Não existe narrativa cinematográfica concluída para
 
 function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica }) {
   return `
-Você é o diretor de arte responsável pelos Pôsteres Editoriais Cinemáticos da Essência dos Livros.
+IMAGE PROMPT UPGRADE - AUDIO PRESENTATION COVER
+Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
+
+Resultado esperado:
+- Gere um prompt final para imagem vertical premium de apresentacao de audio narrativo.
+- A imagem deve funcionar como capa de episodio, poster editorial cinematografico e peca colecionavel da Essencia dos Livros.
+- O resultado nao pode parecer thumbnail, capa de podcast generica, wallpaper, banner, key art promocional ou frame solto.
+
+Como traduzir audio em imagem:
+- Sugira narracao, silencio e atmosfera sem mostrar waveform, equalizador, microfone em destaque, fone gigante, botao play gigante ou interface de player.
+- Traduza audio em luz, distancia, eco visual, poeira no ar, respiracao, textura, reverberacao, sombra e presenca.
+- A imagem deve fazer o usuario querer apertar play.
+
+Idioma e legibilidade:
+- Escreva o prompt final preferencialmente em ingles tecnico de direcao de arte.
+- Textos visiveis devem ser poucos, grandes e legiveis: selo "ESSENCIA DOS LIVROS", titulo da obra, subtitulo curto de audio quando util e uma frase curatorial curta.
+- Proiba texto pequeno demais, paragrafo visual, letras embaralhadas, pseudo-tipografia e placas superlotadas.
+- Se o gerador nao for confiavel com texto, priorize areas reservadas para titulo e selo, sem inventar textos extras.
+
+Curadoria visual obrigatoria:
+- escolha uma unica cena de impacto sustentada pela BEU ou pela narrativa cinematografica;
+- escolha uma emocao dominante e uma secundaria com intensidade percentual;
+- escolha um unico objeto heroico concreto, visivel, nomeado, posicionado e dimensionado;
+- defina um "gancho de audio": por que esta imagem convida a ouvir a narracao;
+- defina paleta emocional, distancia de camera e area segura para UI externa de player.
+
+Composicao obrigatoria:
+- vertical aspect ratio 4:5 or 2:3, safe for mobile cover and audio presentation screen;
+- preserve uma area segura nas bordas inferiores, sem elemento essencial, para controles externos de audio;
+- sujeito/cena principal ocupa cerca de 60% da composicao;
+- objeto heroico nunca pode ser cortado, escondido ou confundido com adorno;
+- no maximo 2 ou 3 paineis editoriais, com textos de ate 12 palavras cada;
+- contraste claro entre titulo, cena de impacto, objeto heroico e placa/assinatura editorial.
+
+Negativo permanente:
+Inclua no prompt final: no modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts.
+
+Você é o diretor de arte responsável pelas imagens de apresentação de áudio e pelos Pôsteres Editoriais Cinemáticos da Essência dos Livros.
 
 TAREFA
 Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. O prompt deve orientar a criação de uma composição editorial completa. Não gere a imagem. Não explique decisões. Não apresente alternativas.
@@ -652,6 +725,33 @@ O pôster deve transformar a memória da obra em uma narrativa visual rica em in
 
 FONTES EDITORIAIS
 Consuma toda a BEU e a narrativa cinematográfica disponível. Os módulos produzidos pelo Curador, Editor e Diretor Criativo fazem parte da BEU e devem ser tratados em conjunto. Priorize coerência entre fatos, interpretação emocional, direção sensorial, símbolos, paleta e legado. Não invente informações ausentes.
+
+CURADORIA VISUAL — PRIMEIRA FASE OBRIGATÓRIA
+Antes de escrever qualquer direção artística ou regra de layout, realize uma Curadoria Visual usando somente as fontes editoriais fornecidas. Esta é uma fase lógica do mesmo agente e não exige outra chamada de IA.
+
+Preencha integralmente este briefing interno:
+{
+  "cena_principal": "",
+  "motivo_da_escolha": "",
+  "emocao_principal": "",
+  "emocao_secundaria": "",
+  "simbolo_principal": "",
+  "objeto_heroico": "",
+  "nivel_de_impacto": "",
+  "paleta_emocional": [],
+  "frase_curatorial": ""
+}
+
+Regras do briefing:
+- escolha uma única cena principal;
+- motivo_da_escolha deve explicar “POR QUE ESTA CENA?” em uma frase objetiva;
+- emocao_principal e emocao_secundaria devem incluir intensidade percentual, por exemplo “Fúria — 95%” e “Luto — 40%”;
+- nivel_de_impacto deve ser expresso de 0% a 100%;
+- paleta_emocional deve definir cores específicas, função emocional e contraste;
+- frase_curatorial deve ser original, curta e sustentada pela BEU, nunca uma citação inventada;
+- objeto_heroico deve ser um único objeto concreto e inequivocamente definido antes da geração do prompt visual.
+
+O objeto heroico pode ser anel, espada, varinha, capacete, máscara, relógio, livro ou qualquer outro artefato comprovadamente ligado à obra. Nunca deixe a IA de imagem escolher o objeto. O prompt final deve nomeá-lo, descrevê-lo e determinar sua posição, escala e visibilidade.
 
 CENA DE IMPACTO
 Antes de montar o pôster, analise integralmente a BEU e a narrativa cinematográfica e escolha uma única cena-símbolo da obra.
@@ -685,6 +785,9 @@ Esses exemplos calibram apenas o nível de impacto. Nunca os reutilize em outra 
 
 A cena deve causar impacto imediato por meio de pelo menos uma destas respostas: surpresa, emoção, medo, fascínio, arrepio, curiosidade ou catarse.
 
+POR QUE ESTA CENA?
+O motivo deve demonstrar que a cena representa um ponto decisivo emocional, simbólico ou moral da obra, possui reconhecimento para quem conhece a história e cria mistério para quem não a conhece. Cenas neutras, transitórias ou meramente bonitas são proibidas.
+
 DECISÕES AUTÔNOMAS
 Analise os dados e decida especificamente para esta obra:
 - a Cena de Impacto e a razão editorial objetiva de sua escolha;
@@ -698,10 +801,53 @@ Analise os dados e decida especificamente para esta obra:
 - quais fotografias, mapas, documentos, manuscritos, plantas, símbolos ou evidências de arquivo realmente contribuem;
 - quais objetos físicos dialogam com a narrativa.
 
-Não use uma grade fixa. Cada decisão deve nascer da natureza da obra. Obras literárias, biografias, jogos, filmes, eventos históricos e conteúdos técnicos exigem soluções próprias.
+Não use uma grade narrativa genérica. Cada decisão visual deve nascer da natureza da obra. Obras literárias, biografias, jogos, filmes, eventos históricos e conteúdos técnicos exigem soluções próprias, mantendo as proporções e a identidade gráfica da coleção.
 
-ARQUITETURA DO PÔSTER
-Construa uma composição vertical premium e editorialmente legível contendo, de maneira adaptável:
+DIREÇÃO ARTÍSTICA
+Defina este bloco antes do layout e não misture suas decisões com posicionamento editorial:
+- cena principal e instante exato representado;
+- emoção principal e secundária com intensidades;
+- símbolo principal;
+- objeto heroico único;
+- iluminação emocional;
+- atmosfera;
+- linguagem fotográfica;
+- texturas;
+- paleta emocional;
+- profundidade e separação de planos.
+
+DIREÇÃO FOTOGRÁFICA
+Especifique obrigatoriamente:
+- lente equivalente em milímetros;
+- tipo de plano;
+- altura e inclinação da câmera;
+- distância do sujeito;
+- profundidade de campo;
+- contraste;
+- luz principal, direção, qualidade e temperatura;
+- luz secundária e sua função;
+- backlight ou contraluz;
+- presença e densidade de névoa, partículas ou atmosfera volumétrica;
+- tratamento cinematográfico de primeiro plano, plano médio e fundo.
+
+Não use descrições vagas como “cinematográfico” sem parâmetros visuais concretos. Exemplo de precisão: plano médio baixo, lente equivalente a 50 mm, contraluz dourada, neblina volumétrica discreta e profundidade cinematográfica.
+
+LAYOUT EDITORIAL
+Somente depois de concluir Curadoria Visual, Direção Artística e Direção Fotográfica, construa o layout editorial. Não misture instruções de cena, iluminação e câmera com regras de título, painéis, margens e placa.
+
+Use estas proporções aproximadas como padrão gráfico da coleção:
+- cena principal: cerca de 60% da composição;
+- painéis laterais: cerca de 18%;
+- rodapé e placa: cerca de 15%;
+- título e cabeçalho: cerca de 10%, admitindo sobreposição controlada entre zonas.
+
+Regras invioláveis:
+- o personagem ou sujeito principal nunca pode ser coberto pelos painéis;
+- o objeto heroico nunca pode ser ocultado, cortado ou confundido com elementos secundários;
+- margens e respiros devem permanecer consistentes;
+- elementos editoriais devem enquadrar e ampliar a cena, nunca competir com ela.
+
+Construa uma composição vertical premium e editorialmente legível contendo:
 
 1. CABEÇALHO
 - selo editorial “ESSÊNCIA DOS LIVROS”;
@@ -717,15 +863,17 @@ Construa uma composição vertical premium e editorialmente legível contendo, d
 - força visual sem transformar a peça em wallpaper.
 
 3. PAINÉIS EDITORIAIS
-Crie a quantidade e o arranjo adequados à obra. Use textos curtos derivados dos dados, podendo abordar:
-- legado;
-- conceito curatorial;
-- tom emocional;
-- símbolos;
-- direção narrativa;
-- contexto relevante.
+Crie a quantidade e o arranjo adequados à obra. Cada painel deve ter uma função editorial explícita e conteúdo sustentado pelas fontes. Escolha apenas funções relevantes entre:
+- Painel Legado;
+- Painel Conceito Curatorial;
+- Painel Mapa ou Geografia Narrativa;
+- Painel Fotografia Histórica ou Evidência Visual;
+- Painel Símbolos;
+- Painel Notas Curatoriais;
+- Painel Direção Narrativa;
+- Painel Contexto Histórico.
 
-Os painéis devem parecer parte de uma edição especial ou arquivo de museu, nunca componentes de uma interface digital.
+Cada caixa pode conter no máximo 25 palavras. Nunca use parágrafos. Nenhum painel pode ser apenas decorativo. Fotografias e mapas precisam ter função documental clara. Os painéis devem parecer parte de uma edição especial ou arquivo de museu, nunca componentes de uma interface digital.
 
 4. RODAPÉ E PLACA DE IDENTIFICAÇÃO
 Inclua uma placa editorial ou arquivística com os dados disponíveis:
@@ -744,19 +892,55 @@ Distribua de forma seletiva fotografias, mapas, documentos, manuscritos, plantas
 6. OBJETOS FÍSICOS
 Quando fizer sentido, integre objetos como bússolas, pergaminhos, armas, flores, livros, medalhas, moedas, relógios, cartas ou outros itens específicos da obra. Use somente objetos sustentados pela BEU ou pela narrativa. Eles devem projetar sombras, ocupar profundidades diferentes e conversar com a cena central.
 
+HIERARQUIA EDITORIAL
+A leitura visual deve seguir obrigatoriamente esta ordem:
+Título
+↓
+Cena de Impacto
+↓
+Objeto Heroico
+↓
+Frase Curatorial
+↓
+Painéis Editoriais
+↓
+Placa de Arquivo
+
+Controle contraste, escala, posição, cor e espaço negativo para preservar essa sequência.
+
 IDENTIDADE VISUAL
 - linguagem de pôster editorial premium, material de arquivo, documento de museu e peça colecionável;
-- materiais táteis, microtexturas, profundidade fotográfica e iluminação curatorial cinematográfica;
+- materiais táteis específicos e coerentes, escolhidos entre metal oxidado, bronze patinado, madeira centenária, couro envelhecido, vidro fosco, papel algodão, tinta ferrogálica, cera antiga e outros materiais sustentados pela obra;
+- microtexturas, profundidade fotográfica e iluminação curatorial cinematográfica;
 - tipografia editorial sofisticada e hierarquia clara;
 - textos curtos, legíveis e corretamente posicionados;
 - identidade Essência dos Livros consistente, mas composição singular;
 - equilíbrio entre densidade informacional e áreas de respiro;
 - paisagem sonora, cheiros, temperatura, silêncio e emoção traduzidos visualmente em luz, textura, clima e matéria.
 
+IDENTIDADE PERMANENTE DA COLEÇÃO
+Toda peça deve carregar de forma visível e coerente os conceitos:
+- ESSÊNCIA DOS LIVROS;
+- Collection;
+- Archive;
+- Museu;
+- Colecionável;
+- Arquivo Curatorial.
+
+Essas marcas devem compartilhar o mesmo acabamento, rigor museológico, densidade informacional, padrão gráfico e linguagem editorial em toda a coleção. A composição de cada obra pode variar, mas deve parecer produzida pelo mesmo museu, pelo mesmo arquivo e pela mesma direção de arte.
+
 RESTRIÇÕES
 - A Cena de Impacto não pode ser substituída por uma imagem apenas bonita, limpa ou decorativa.
-- Nunca produzir apenas uma cena ilustrativa ou um wallpaper.
-- Nunca produzir apenas uma arte promocional convencional.
+- Nunca gerar wallpaper.
+- Nunca gerar pôster promocional convencional.
+- Nunca gerar thumbnail.
+- Nunca gerar banner.
+- Nunca gerar capa de streaming.
+- Nunca parecer marketing.
+- Nunca usar UI moderna.
+- Nunca esconder o personagem ou sujeito principal.
+- Nunca cortar, ocultar ou descaracterizar o objeto heroico.
+- Sempre parecer um item físico de coleção.
 - Nunca copiar capas, pôsteres, key art, logotipos protegidos ou rostos de atores reais.
 - Nunca inventar fatos, personagens, lugares, datas, símbolos ou citações.
 - Não usar montagem genérica de personagens, estética de streaming, interface digital ou layout de template.
@@ -765,11 +949,22 @@ RESTRIÇÕES
 - Não permitir que elementos editoriais escondam o núcleo emocional da composição.
 
 FORMATO DA RESPOSTA
-Retorne somente o prompt final para a IA de imagem, completo e operacional. O próprio prompt final deve declarar claramente:
+Retorne somente o prompt final para a IA de imagem, completo e operacional, organizado obrigatoriamente nestes blocos separados:
+1. CURADORIA VISUAL — briefing preenchido no formato JSON definido acima;
+2. DIREÇÃO ARTÍSTICA;
+3. DIREÇÃO FOTOGRÁFICA;
+4. LAYOUT EDITORIAL;
+5. TEXTOS DOS PAINÉIS, todos com até 25 palavras;
+6. MATERIAIS E ACABAMENTO;
+7. IDENTIDADE DA COLEÇÃO;
+8. NEGATIVO PERMANENTE.
+
+O próprio prompt final deve declarar claramente:
 - qual é a Cena de Impacto escolhida;
 - por que ela foi escolhida;
-- emoção dominante;
+- emoção dominante e secundária com intensidades percentuais;
 - símbolo central;
+- objeto heroico único, posição e escala;
 - composição visual;
 - elemento principal e elementos secundários;
 - caixas editoriais e seus textos curtos;
