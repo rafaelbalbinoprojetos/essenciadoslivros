@@ -42,6 +42,19 @@ const STATUS_CONFIG = {
   },
 };
 
+const EXPECTED_STEP_DURATIONS_SECONDS = {
+  criar_obra: 15,
+  curador_beu: 15,
+  editor_beu: 15,
+  diretor_criativo: 20,
+  narrativa_cinematica: 420,
+  heritage_prompt: 15,
+  heritage_image: 180,
+  capa_cinematica_prompt: 15,
+  capa_cinematica_image: 180,
+  atualizar_dados: 15,
+};
+
 function getStepStatus({ active, result, manualWhenIdle = false }) {
   if (active) return "loading";
   if (result?.ok === false) return "error";
@@ -50,12 +63,17 @@ function getStepStatus({ active, result, manualWhenIdle = false }) {
   return "waiting";
 }
 
-function getElapsedSeconds(startedAt, now) {
+function getStepProgressPercent(startedAt, now, expectedSeconds) {
   if (!startedAt) return 0;
-  return Math.max(0, Math.floor((now - startedAt) / 1000));
+  if (!expectedSeconds || expectedSeconds <= 0) return 0;
+
+  const elapsedSeconds = Math.max(0, (now - startedAt) / 1000);
+  const rawPercent = Math.floor((elapsedSeconds / expectedSeconds) * 100);
+
+  return Math.min(99, Math.max(1, rawPercent));
 }
 
-function EngineProcessStep({ label, status, elapsedSeconds = 0 }) {
+function EngineProcessStep({ label, status, progressPercent = 0 }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.waiting;
 
   return (
@@ -70,7 +88,7 @@ function EngineProcessStep({ label, status, elapsedSeconds = 0 }) {
         <span className="truncate font-medium text-zinc-200">{label}</span>
       </div>
       <span className={`shrink-0 text-xs font-semibold uppercase tracking-[0.18em] ${config.textClass}`}>
-        {status === "loading" ? `${config.label} - ${elapsedSeconds}s` : config.label}
+        {status === "loading" ? `${config.label} - ${progressPercent}%` : config.label}
       </span>
     </div>
   );
@@ -734,7 +752,11 @@ export default function EngineSolicitarObra() {
                   key={step.key}
                   label={step.label}
                   status={step.status}
-                  elapsedSeconds={getElapsedSeconds(stepStartedAt[step.key], timerNow)}
+                  progressPercent={getStepProgressPercent(
+                    stepStartedAt[step.key],
+                    timerNow,
+                    EXPECTED_STEP_DURATIONS_SECONDS[step.key],
+                  )}
                 />
               ))}
             </div>
