@@ -15,6 +15,7 @@ import {
   Route as RouteIcon,
   LayoutGrid,
   Dices,
+  Cpu,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu.jsx";
 import ThemeMenu from "../components/ThemeMenu.jsx";
@@ -40,6 +41,7 @@ const ICON_MAP = {
   mural: LayoutGrid,
   "unexpected-encounter": Dices,
   catalog: BookOpen,
+  engine: Cpu,
   assistant: Sparkles,
   settings: SettingsIcon,
 };

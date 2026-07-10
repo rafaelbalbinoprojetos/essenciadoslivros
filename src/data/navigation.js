@@ -49,6 +49,13 @@ export const NAV_LINKS = [
     description: "Inclua rapidamente novos livros, autores e coleções",
   },
   {
+    id: "engine",
+    to: "/engine",
+    label: "Solicitar obra",
+    shortLabel: "Solicitar",
+    description: "Crie obras com a Essência Engine",
+  },
+  {
     id: "assistant",
     to: "/assistente",
     label: "Assistente IA",
@@ -71,6 +78,7 @@ export const MOBILE_NAV_ALLOWED_PATHS = [
   "/memorias-cinematicas",
   "/encontro-inesperado",
   "/biblioteca/novo",
+  "/engine",
   "/assistente",
 ];
 
