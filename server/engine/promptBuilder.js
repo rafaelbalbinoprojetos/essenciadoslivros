@@ -946,75 +946,32 @@ Only after identifying this definitive cultural memory should the engine evaluat
 
 The selected scene must represent the emotional legacy of the work, not merely a famous promotional image or action sequence.
 
-Priority 1 — Irreplaceable Emotional Bond (Highest Priority)
+Before evaluating any object, artifact, place or symbol,
+determine whether the emotional identity of the work is built around another living being.
 
-Choose this category whenever the emotional identity of the work is defined by the relationship between the protagonist and another living being.
+Living beings include:
 
-This priority overrides every other category unless another scene has become unquestionably more iconic in popular culture.
+- child
+- baby
+- animal
+- horse
+- companion
+- sibling
+- parent
+- lover
+- mentor
+- friend
+- creature
+- AI with emotional consciousness
+- any character capable of reciprocal emotional connection.
 
-The bond may involve:
+If such relationship exists,
 
-child or baby
-animal or mount
-companion creature
-pet
-partner
-sibling
-parent
-mentor
-disciple
-close friend
-lover
-any living being whose presence fundamentally changes the protagonist.
+THIS PRIORITY IS MANDATORY.
 
-Give maximum priority to relationships involving protection, dependence, innocence, farewell or sacrifice.
+No artifact may replace this relationship.
 
-Examples of strongest emotional calibration:
-
-• Wander and Agro
-
-• Sam Porter Bridges and BB
-
-• Joel and Ellie
-
-• Arthur Morgan and his horse
-
-• Kratos and Atreus
-
-• Geralt and Ciri
-
-• Ico and Yorda
-
-• Link and Midna
-
-• Harry and Hedwig
-
-These are not mandatory scenes.
-They only define the emotional calibration.
-
-Prefer scenes where the emotional connection is physically visible:
-
-foreheads touching
-embrace
-carrying someone
-protecting
-holding after battle
-comforting
-silent eye contact
-hand on face
-hand on shoulder
-final goodbye
-final ride
-shared silence
-resting together before danger
-
-The relationship itself must occupy the foreground.
-
-The world, enemy, monster or final threat should remain behind them as narrative context.
-
-The viewer must immediately understand:
-
-"This relationship is what this story is truly about."
+Objects become secondary visual support only.
 
 Priority 2 — Cultural Icon (Antagonist, Rival or Legendary Figure)
 
