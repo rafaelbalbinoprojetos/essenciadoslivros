@@ -45,15 +45,24 @@ Ensure-Command git
 if (-not $SkipBuild) { Ensure-Command npm }
 
 # --- Garante que estamos num repositorio Git (inicializa se preciso) ---
-$repoRoot = git rev-parse --show-toplevel 2>$null
-if (-not $repoRoot) {
+$repoRoot = (Get-Location).Path
+$gitRoot = git rev-parse --show-toplevel 2>$null
+$isGitRepo = $LASTEXITCODE -eq 0 -and $gitRoot
+
+if (-not $isGitRepo) {
   Write-Step "Inicializando repositorio Git"
   git init
   Assert-NativeSuccess "Inicializacao do repositorio Git"
-  $repoRoot = git rev-parse --show-toplevel
-  Assert-NativeSuccess "Identificacao da raiz do repositorio"
+  $repoRoot = (Get-Location).Path
+} else {
+  try {
+    $repoRoot = (Resolve-Path -LiteralPath $gitRoot -ErrorAction Stop).Path
+    Set-Location -LiteralPath $repoRoot
+  } catch {
+    $repoRoot = (Get-Location).Path
+    Write-Host "Aviso: Git retornou uma raiz com caminho invalido para este terminal. Usando a pasta atual: $repoRoot" -ForegroundColor Yellow
+  }
 }
-Set-Location $repoRoot
 
 Write-Step "Repositorio"
 Write-Host "Pasta: $repoRoot"
