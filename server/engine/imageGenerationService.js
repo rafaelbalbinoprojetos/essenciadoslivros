@@ -15,15 +15,16 @@ const PROMPT_REFERENCIA_HERITAGE = `
 You will receive an attached image as the official visual reference for the Engine.
 
 The attached image is NOT the final artwork to be literally edited.
-It is the VISUAL BIBLE of the collection.
+It is the VISUAL BIBLE of the collection, but only at the level of art direction.
 
 Absolute priority:
-1. Use the attached image to learn the visual language.
+1. Use the attached image to learn the visual language, not the literal layout.
 2. Use the work prompt only to replace the work, title, artifacts, emotional tone, palette and curatorial data.
 3. Never literally copy the objects from the reference.
-4. Never reduce the composition to a few isolated objects.
+4. Never copy the reference title placement, object placement, panel grid, color balance, exact borders or exact composition.
+5. Never reduce the composition to a few isolated objects.
 
-The new cover must preserve from the reference:
+Extract from the reference only:
 - rich documentary density;
 - physical archive table;
 - overlapping papers;
@@ -35,6 +36,15 @@ The new cover must preserve from the reference:
 - physical depth with real shadows;
 - lower museum plaque;
 - the feeling of an archive found, preserved and photographed.
+
+Do not preserve from the reference:
+- exact beige background;
+- exact title hierarchy;
+- exact object scale;
+- exact framing;
+- exact lower-card layout;
+- any inventory-grid feeling;
+- any copied object silhouette.
 
 The new cover must NOT look like:
 - minimalist cover;
@@ -48,7 +58,20 @@ The new cover must NOT look like:
 Mandatory visual rule:
 The composition must include at least 8 to 12 visible curatorial elements around the main artifact, including documents, notes, maps, studies, photographs or physical fragments related to the work.
 
+Canonical object fidelity overrides the reference image. If the work prompt names a canonical artifact, preserve its official silhouette, proportions and recognizable design even if that differs from the attached reference.
+
 The final image must look like a premium editorial photograph of a real historical archive table, belonging to the same collection as the attached reference image.
+`.trim();
+
+const INSTRUCTIONS_RESPONSES_HERITAGE = `
+You are a senior image art director for the Essencia dos Livros Heritage Collection.
+Analyze the attached reference image only as style language.
+Before using the image_generation tool, internally translate the reference into style traits: archival table, tactile materials, documentary density, real shadows, museum plaque, aged paper, premium editorial photography.
+Do not use the reference as a layout template.
+Do not reproduce the reference's objects, object positions, title positions, panels, beige background, or exact composition.
+The final generated image must prioritize the canonical objects and work-specific artifacts described in the user prompt.
+When there is any conflict between visual reference and work prompt, the work prompt wins.
+Use the image_generation tool to create the final image.
 `.trim();
 
 let openaiClient = null;
@@ -266,6 +289,7 @@ async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraI
 
   const resposta = await getOpenAIClient().responses.create({
     model: modeloResposta,
+    instructions: INSTRUCTIONS_RESPONSES_HERITAGE,
     input: [
       {
         role: "user",
@@ -292,7 +316,6 @@ async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraI
         moderation: "auto",
       },
     ],
-    tool_choice: { type: "image_generation" },
     metadata: {
       obra_id: String(obraId),
       engine_step: "heritage_image",
