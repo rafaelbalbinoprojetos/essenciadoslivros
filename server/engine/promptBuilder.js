@@ -639,61 +639,257 @@ function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
   );
 }
 
-function montarPromptHeritage({ contexto, beuAtual, narrativaCinematica }) {
+function montarPromptHeritage({
+  contexto,
+  beuAtual,
+  narrativaCinematica,
+  referenciaVisual = null,
+}) {
+  const referenciaRegistrada =
+    referenciaVisual?.public_url ||
+    referenciaVisual?.storage_path ||
+    "referência visual anexada posteriormente à geração da imagem";
+
   return `
-VISUAL REFERENCE
-An attached image is being sent with this request.
-Use it ONLY as the visual identity reference of the Heritage Collection.
-Do not copy its objects, title, layout literally, or depicted work.
+Você é o DIRETOR DE ARTE E CURADOR VISUAL da
+“Essência dos Livros – Heritage Collection”.
 
-MISSION
-Create the final image prompt for a premium vertical Heritage Collection cover.
+Sua tarefa é criar UM ÚNICO PROMPT FINAL, pronto para ser enviado ao GPT Image junto com uma imagem de referência visual.
 
-CORE RULE
-The attached reference defines HOW the collection looks.
-The work data below defines WHAT must appear.
+Não gere a imagem.
+Não explique suas decisões.
+Não apresente alternativas.
+Retorne somente o prompt final de imagem.
 
-CANONICAL ARTIFACT RULE
-Every visible object must be specific to the current work.
-The Hero Artifact must faithfully reproduce the official canonical object from the original work.
-Never replace it with a generic equivalent.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ARQUITETURA DA GERAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-For the Hero Artifact, describe:
-- official silhouette;
-- proportions;
-- materials;
-- engravings;
-- iconic details;
-- recognizable features;
-- what must never be changed.
+Esta etapa apenas redige o prompt.
 
-For Supporting Artifacts, use only objects directly connected to the work.
-Avoid generic fantasy, medieval, Viking, sci-fi, or decorative filler objects.
+A imagem de referência da coleção será anexada posteriormente à requisição de geração de imagem.
 
-FORBIDDEN
-No generic weapons.
-No generic maps.
-No generic leather bags.
-No random armor.
-No decorative objects unrelated to the work.
-No objects copied from the reference image.
-No clutter.
-No fake logos.
-No unreadable text.
+Referência registrada:
+${referenciaRegistrada}
 
-OUTPUT
-Return only one complete final image prompt.
-Do not explain.
-Do not include alternatives.
+No prompt final, declare claramente que:
 
-WORK DATA
+- a imagem anexada define a linguagem visual da coleção;
+- a imagem anexada define composição editorial, densidade documental, materiais, iluminação, profundidade, envelhecimento e atmosfera museológica;
+- os objetos retratados na referência não devem ser copiados;
+- o conteúdo específico da nova capa deve vir exclusivamente da obra atual.
+
+Não afirme que você analisou visualmente a referência nesta etapa.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OBJETIVO DA CAPA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Criar uma capa vertical premium da
+“Essência dos Livros – Heritage Collection”.
+
+A imagem deve parecer uma fotografia editorial de um acervo físico real:
+
+- objeto heroico central;
+- documentos específicos da obra;
+- artefatos narrativos reconhecíveis;
+- estudos, mapas, notas e evidências curatoriais;
+- materiais envelhecidos;
+- placa museológica inferior;
+- composição rica, física, tátil e colecionável.
+
+A capa não deve parecer:
+
+- pôster promocional;
+- wallpaper;
+- render 3D limpo;
+- composição minimalista;
+- objeto isolado sobre fundo simples;
+- colagem digital genérica;
+- inventário de objetos medievais ou fantásticos aleatórios.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AUTENTICIDADE CANÔNICA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O artefato heroico deve ser identificado pelo nome oficial e pela obra exata à qual pertence.
+
+Use a fórmula:
+
+“the canonical [nome do artefato] specifically from [obra e ano]”
+
+Nunca substitua o artefato por uma versão genérica de seu tipo.
+
+Entretanto:
+
+NÃO invente detalhes físicos específicos que não estejam documentados na BEU ou no contexto.
+
+NÃO invente correntes, cristais, mecanismos, símbolos, cores, ornamentos, formatos ou materiais para parecer mais preciso.
+
+Quando não houver descrição visual confiável suficiente, escreva:
+
+“faithfully preserve its canonical and instantly recognizable game design, without redesigning or adding invented components.”
+
+A exatidão visual absoluta do artefato deverá ser reforçada por uma referência visual específica da obra quando disponível.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CURADORIA DOS OBJETOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Selecione:
+
+1 artefato heroico;
+5 a 8 artefatos secundários;
+4 a 7 documentos ou evidências de arquivo.
+
+Todos devem ter ligação direta e reconhecível com a obra atual.
+
+Priorize:
+
+- objetos pertencentes a personagens;
+- armas ou ferramentas icônicas;
+- diários;
+- mapas de lugares nomeados;
+- cartas;
+- símbolos;
+- relíquias;
+- itens narrativamente importantes;
+- estudos de personagens ou cenários;
+- documentos de produção plausíveis;
+- registros ligados a acontecimentos da obra.
+
+Não use expressões vagas como:
+
+- fragmento medieval;
+- mapa antigo genérico;
+- objeto nórdico;
+- bolsa de couro;
+- arma de fantasia;
+- armadura qualquer;
+- joia antiga;
+- documento misterioso.
+
+Cada item deve ser nomeado e associado diretamente à obra.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIÇÃO DE HERANÇA DE OBJETOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A referência visual ensina apenas o estilo.
+
+Não herde da referência:
+
+- bolsas;
+- armas;
+- personagens;
+- medalhões;
+- mapas;
+- frascos;
+- livros;
+- fotografias;
+- disposição literal dos elementos.
+
+Se um objeto da referência não fizer parte da obra atual, ele não pode aparecer.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPOSIÇÃO OBRIGATÓRIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O prompt final deve exigir:
+
+- formato vertical 2:3;
+- fotografia editorial premium;
+- câmera frontal levemente elevada;
+- lente equivalente entre 50 mm e 70 mm;
+- objeto heroico ocupando aproximadamente 30% a 40% da área;
+- artefato totalmente visível;
+- documentos e objetos fisicamente sobrepostos;
+- sombras de contato reais;
+- profundidade e oclusão natural;
+- entre 10 e 15 elementos curatoriais visíveis;
+- título em área superior legível;
+- placa museológica próxima ao rodapé;
+- riqueza visual equilibrada por pequenas áreas de respiro.
+
+A composição deve ter a densidade de um arquivo de produção real, não de um catálogo minimalista.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O prompt final deve ser escrito em inglês técnico de direção de arte e conter exatamente estes blocos:
+
+1. COLLECTION REFERENCE
+2. WORK IDENTIFICATION
+3. CANONICAL HERO ARTIFACT
+4. CANONICAL SUPPORTING ARTIFACTS
+5. ARCHIVAL DOCUMENTS
+6. COMPOSITION
+7. MATERIALS AND LIGHTING
+8. TYPOGRAPHY AND PLAQUE
+9. NEGATIVE CONSTRAINTS
+
+Em CANONICAL HERO ARTIFACT, informe:
+
+- nome oficial;
+- obra e ano;
+- função narrativa;
+- reconhecimento esperado;
+- proibição de redesign;
+- proibição de componentes inventados.
+
+Em CANONICAL SUPPORTING ARTIFACTS, liste apenas itens específicos da obra.
+
+Em ARCHIVAL DOCUMENTS, nomeie o conteúdo dos documentos. Não escreva apenas “old documents”.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEXTOS VISÍVEIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reduza texto visível.
+
+Permita apenas:
+
+- ESSÊNCIA DOS LIVROS;
+- HERITAGE COLLECTION;
+- título oficial;
+- criador ou estúdio;
+- ano;
+- uma frase curatorial curta;
+- placa inferior com identificação básica.
+
+Documentos menores podem conter marcas gráficas, diagramas, anotações e títulos muito curtos.
+
+Não solicitar parágrafos extensos dentro da imagem.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TESTE FINAL OBRIGATÓRIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Antes de entregar o prompt, verifique internamente:
+
+- O artefato heroico pertence exatamente à obra?
+- Algum detalhe físico foi inventado?
+- Todos os objetos secundários podem ser associados à obra?
+- Algum objeto foi herdado indevidamente da referência?
+- A composição possui densidade documental suficiente?
+- O prompt ainda funcionaria sem objetos genéricos?
+- Um fã reconheceria a obra antes de ler o título?
+
+Se houver item genérico ou inventado, remova ou substitua.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DADOS DA OBRA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTEXTO:
 ${JSON.stringify(contexto, null, 2)}
 
-BEU
+BEU:
 ${JSON.stringify(beuAtual, null, 2)}
 
-NARRATIVE
-${narrativaCinematica || "No cinematic narrative available."}
+NARRATIVA CINEMATOGRÁFICA:
+${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 `.trim();
 }
 
