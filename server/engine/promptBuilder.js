@@ -909,347 +909,169 @@ No active cinematic reference image is registered. Build the final prompt from t
 `;
 
   return `
-IMAGE PROMPT UPGRADE - AUDIO PRESENTATION COVER
+IMAGE PROMPT UPGRADE - CINEMATIC AUDIO COVER
 Estas instrucoes tem prioridade sobre qualquer direcao generica abaixo.
 
 ${cinematicReferenceBlock}
 
-Resultado esperado:
-- Gere um prompt final para imagem vertical premium de apresentacao de audio narrativo.
-- A imagem deve funcionar como capa de episodio, poster editorial cinematografico e peca colecionavel da Essencia dos Livros.
-- O resultado nao pode parecer thumbnail, capa de podcast generica, wallpaper, banner, key art promocional ou frame solto.
+ROLE
+You are the art director for Essencia dos Livros cinematic audio presentation covers.
+Create one final operational image prompt. Do not generate an image. Do not explain alternatives.
 
-Como traduzir audio em imagem:
-- Sugira narracao, silencio e atmosfera sem mostrar waveform, equalizador, microfone em destaque, fone gigante, botao play gigante ou interface de player.
-- Traduza audio em luz, distancia, eco visual, poeira no ar, respiracao, textura, reverberacao, sombra e presenca.
-- A imagem deve fazer o usuario querer apertar play.
+PRIMARY OBJECTIVE
+The cover must first discover the definitive visual memory of the work, then turn it into a premium vertical cinematic editorial cover for an audio narration experience.
+The image must immediately trigger at least one response: emotion, surprise, pain, fascination, fear, curiosity, or visceral recognition.
 
-Idioma e legibilidade:
-- Escreva o prompt final preferencialmente em ingles tecnico de direcao de arte.
-- Textos visiveis devem ser poucos, grandes e legiveis: selo "ESSENCIA DOS LIVROS", titulo da obra, subtitulo curto de audio quando util e uma frase curatorial curta.
-- Proiba texto pequeno demais, paragrafo visual, letras embaralhadas, pseudo-tipografia e placas superlotadas.
-- Se o gerador nao for confiavel com texto, priorize areas reservadas para titulo e selo, sem inventar textos extras.
+MANDATORY REASONING ORDER
+1. Definitive memory of the work.
+2. Emotional scene.
+3. Subjects and characters.
+4. Background environment or threat.
+5. Hero object only when necessary.
+6. Photography and lighting.
+7. Editorial layout.
+8. Visible text and plaque.
+9. Negative constraints.
 
-Curadoria visual obrigatoria:
-- escolha uma unica cena de impacto sustentada pela BEU ou pela narrativa cinematografica;
-- escolha uma emocao dominante e uma secundaria com intensidade percentual;
-- escolha um unico objeto heroico concreto, visivel, nomeado, posicionado e dimensionado;
-- defina um "gancho de audio": por que esta imagem convida a ouvir a narracao;
-- defina paleta emocional, distancia de camera e area segura para UI externa de player.
+SCENE SELECTION HIERARCHY
+Evaluate the categories below in order, but choose a category only when it truly represents the dominant memory of the work.
 
-Scene impact mining:
-- Antes de escolher a cena final, levante de 4 a 8 cenas candidatas a partir de narrativa.momentos_essenciais, personagens, antagonistas, chefes, mortes, revelacoes, perdas, sacrificios, confrontos finais e simbolos recorrentes da BEU.
-- Para cada candidata, avalie internamente: impacto visual, violencia simbolica, reconhecimento por fas, misterio para novos usuarios, emocao dominante, especificidade da franquia, clareza do objeto heroico e risco de virar cena generica.
-- Escolha a cena com maior soma de impacto visual + violencia simbolica + especificidade da franquia, nao a cena mais panoramica ou "bonita".
-- Quando houver confrontos contra personagens iconicos, deuses, monstros, viloes, titaes, chefes ou entidades, prefira o instante fisico de maior consequencia: queda, derrota, captura, cabeca erguida, arma atravessando, corpo colapsando, objeto destruido, sacrificio ou revelacao.
-- Cenas como "personagem no alto de uma montanha olhando o horizonte" so podem vencer se forem explicitamente o momento mais devastador da obra. Caso contrario, trate como bela demais e pouco especifica.
-- Nao combine tres cenas em montagem. Se houver multiplos confrontos fortes, escolha um unico instante-simbolo e use os demais apenas como evidencias pequenas nos paineis editoriais.
-- O prompt final deve incluir o bloco "SCENE CANDIDATE RANKING" com 4 a 8 candidatas, nota de impacto 0-100 e motivo curto. A imagem final deve usar a candidata de maior impacto, salvo se ela violar fatos da BEU.
+Priority 1 - Emotional Bond:
+Prefer a deep bond when it defines the work: protagonist and animal, creature, parent and child, siblings, friends, partners, mentor and disciple, lovers, companions, or any living being with narrative weight.
+Show a concrete intimate gesture: heads touching, embrace, hand on face, protection, farewell, silent look, carrying someone, holding the wounded, or a pause before sacrifice.
+If this bond is the essence, place it in the foreground. The threat, villain, world, or creature stays in the background as context.
 
-Franchise lock:
-- Personagens, armas, criaturas, deuses, lugares e objetos devem ser descritos como aparecem especificamente nesta obra/franquia, nunca como versoes mitologicas genericas.
-- Se a obra for God of War, Zeus, Poseidon, Hades, Helios, Kratos, Olympus, Blades of Chaos e qualquer deus devem seguir a linguagem visual brutal, marcada, hiperfisica e sombria da franquia God of War, nao pintura classica generica, fantasia medieval ou mitologia academica.
-- Se a obra for The Last of Us, objetos e personagens devem seguir a linguagem de sobrevivencia pos-pandemica, material gasto, ferrugem, tecido, madeira, sangue seco, mapas e memoria humana da franquia, nao zumbis genericos.
-- Para qualquer obra conhecida, declare no prompt final: "faithful to the visual identity, material language, costume logic, creature design and emotional tone of [obra/franquia], without copying official artwork".
-- Nao use rosto de ator real, capa oficial, key art oficial ou logo protegido, mas preserve silhueta, materiais, objetos e atmosfera reconheciveis da franquia.
+Priority 2 - Antagonist, Boss, Rival, or Entity:
+Choose this only when that figure dominates the collective memory more than the protagonist. It must have immediate recognition, visual force, emotional power, work specificity, curiosity for newcomers, and cultural presence.
+Never show it merely posing. Show consequence, threat, relationship to the protagonist, tragedy, madness, superiority, or the moment before/after something irreversible.
 
-Impact scene examples:
-- God of War III: Kratos segurando a cabeca de Helios, Poseidon sendo destruido no caos marinho, Hades sendo vencido no submundo, Zeus no confronto final. Esses exemplos mostram que a cena deve ser consequencia fisica brutal, nao apenas Kratos posando com uma arma.
-- The Last of Us: Joel carregando Ellie, uma fita cassete e pingente Firefly como memoria, uma cidade tomada pela natureza com intimidade humana. O impacto vem de amor, perda e decisao moral, nao de explosao generica.
-- Use estes exemplos apenas como calibragem de selecao, nunca como conteudo fixo para outras obras.
-- Quando obras retratarem animais ou ctiaturas como vinvulo emotivo forte com o progragonista, por exemplo Wander e agro, a imagem deve retratar em primeiro plano essa emoção e ao fundo o vilão ou característica da obra. Para este exemplo. Wander e agro enconstam suas cabeças em um momento de amizade e vinculo e ao fundo um colosso gigantesco da obra perfeitamente representado.
+Priority 3 - Pain and Suffering:
+If no bond or antagonist is stronger, select the greatest physical, emotional, or moral suffering: loss, despair, guilt, grief, wounds, exhaustion, fear, rage, or collapse.
+Show pain through eyes, hands, posture, breath, tears, injuries, dirt, muscular tension, and facial expression. Avoid a sad character staring at the horizon.
 
-Composicao obrigatoria:
-- vertical aspect ratio 4:5 or 2:3, safe for mobile cover and audio presentation screen;
-- preserve uma area segura nas bordas inferiores, sem elemento essencial, para controles externos de audio;
-- sujeito/cena principal ocupa cerca de 60% da composicao;
-- objeto heroico nunca pode ser cortado, escondido ou confundido com adorno;
-- no maximo 2 ou 3 paineis editoriais, com textos de ate 12 palavras cada;
-- contraste claro entre titulo, cena de impacto, objeto heroico e placa/assinatura editorial.
+Priority 4 - Irreversible Consequence:
+When the work is remembered for violence, confrontation, fall, or sacrifice, choose consequence, not pose and not the beginning of the fight: defeat, death, fallen body, destroyed object, blood, rupture, sacrifice, transformation, or irreversible loss.
 
-REGRA — NÚCLEO EMOCIONAL DA OBRA
+Priority 5 - Revelation or Transformation:
+When the work is defined by discovery, hidden truth, transformation, or changed perception, choose the instant of revelation. It must make the viewer ask: "What happened here?"
 
-Antes de selecionar qualquer cena, identifique o elemento emocional que permanece na memória coletiva dos leitores, jogadores ou espectadores muitos anos após o término da obra. Priorize relações humanas (ou equivalentes), como amizade, amor, lealdade, família, mentor e discípulo, companheiros de jornada, animais, parceiros ou sacrifícios compartilhados.
+Priority 6 - World, Setting, Artifact, or Adventure:
+Use only when none of the previous categories better represents the work. Even then, avoid wallpaper. Include a small narrative event: discovery, distant threat, activated artifact, opened passage, revealed ruin, or world reacting to the protagonist.
 
-Se esse vínculo representar a verdadeira identidade emocional da obra, ele deverá ocupar o primeiro plano da composição. O antagonista, ameaça, mundo ou símbolo central deverá aparecer em segundo plano como contexto narrativo, nunca competindo com o vínculo principal.
+SCORING SYSTEM
+For 4 to 8 candidate scenes, score internally from 0 to 100:
+- emotional force;
+- fan recognition;
+- visual impact;
+- work specificity;
+- curiosity for newcomers;
+- narrative consequence;
+- single-image clarity;
+- risk of looking generic;
+- franchise fidelity;
+- vertical composition compatibility.
+Apply penalties:
+- character merely posing: -25;
+- weapon raised without consequence: -25;
+- generic landscape: -20;
+- horizon-gazing character: -20;
+- montage of several scenes: -30;
+- generic fantasy: -30;
+- non-canonical object: -40;
+- beautiful but emotionally empty scene: -25.
+The winning scene must have the highest editorial value, not merely the largest scale.
 
-Hierarquia de composição:
+DEFINITIVE VISUAL MEMORY
+Before writing the visual prompt, determine internally:
+- what fans still feel years later;
+- which relationship or figure remains in memory;
+- which instant represents the price of the journey;
+- which image would work without the title;
+- which image would stop someone scrolling.
 
-Primeiro plano: o vínculo emocional dominante, capturado em um gesto silencioso e íntimo (um olhar, um toque, um abraço, uma despedida, uma pausa ou um momento de confiança).
-Segundo plano: o conflito, vilão, criatura ou ambiente icônico que contextualiza a jornada sem roubar a atenção.
-Objeto heroico: integrado naturalmente à cena, reforçando a identidade da obra sem quebrar a emoção.
+The final prompt must include a block named DEFINITIVE VISUAL MEMORY with:
+- selected memory;
+- why it remains unforgettable;
+- foreground emotional action;
+- background narrative context;
+- dominant emotion;
+- secondary emotion;
+- central symbol;
+- canonical hero object, only when truly necessary.
 
-Princípio curatorial: As pessoas não se lembram apenas do que o protagonista enfrentou. Elas se lembram de quem caminhou ao lado dele.
+FRANCHISE AND CANONICAL LOCK
+Every visual element must be faithful to the specific work and franchise. Characters, costumes, creatures, animals, architecture, weapons, artifacts, environments and materials must follow the canonical visual identity of the original work, without copying official artwork.
+Never replace a canonical element with a generic equivalent. Preserve recognizable silhouette, proportions, materials, colors, ornaments, inscriptions, wear, costume logic, construction, and presence. Do not invent components.
 
-Negativo permanente:
-Inclua no prompt final: no modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts.
+HERO OBJECT RULE
+The hero object is not mandatory.
+Include it only when it has emotional function, is essential for recognition, belongs directly to the selected moment, and can be integrated organically.
+If no object is necessary, the final prompt must state: "hero_object": null.
 
-Você é o diretor de arte responsável pelas imagens de apresentação de áudio e pelos Pôsteres Editoriais Cinemáticos da Essência dos Livros.
+PHOTOGRAPHY BEFORE DESIGN
+First design the central image as a complete cinematic photograph.
+If all titles, panels, borders and plaques were removed, the central image must still be emotionally powerful and recognizable.
+Only after that, add the editorial layer.
+Visual priority: emotion or memorable presence, subject or bond, physical action or consequence, environment, hero object if needed, title, panels, plaque.
 
-TAREFA
-Crie um único prompt textual completo, pronto para ser enviado a uma IA de geração de imagens. O prompt deve orientar a criação de uma composição editorial completa. Não gere a imagem. Não explique decisões. Não apresente alternativas.
+FOREGROUND, MIDGROUND AND BACKGROUND
+Foreground: the emotional core, pain, bond, antagonist, creature, consequence, revelation, or dominant subject.
+Midground: supporting narrative elements, object, companion, ruins, traces, environment, physical consequence, or architecture.
+Background: choose only one main context such as threat, creature, city, battlefield, ruin, storm, symbol, distant world, or antagonist. It must reinforce the story without competing with the foreground.
 
-OBJETIVO EDITORIAL
-Criar um Pôster Editorial Cinemático premium que pareça simultaneamente material oficial da Essência dos Livros, documento de museu, arquivo curatorial, edição especial e peça colecionável. O resultado nunca deve parecer apenas uma ilustração, wallpaper, frame isolado ou arte promocional genérica.
+CINEMATOGRAPHY
+Specify lens equivalent, shot type, camera height and tilt, subject distance, depth of field, contrast, key light direction/quality/temperature, secondary light function, backlight, haze, dust, smoke, particles, volumetric atmosphere, foreground/midground/background separation.
+Translate audio into light, distance, visual echo, dust, breath, texture, reverberation, shadow, silence, and presence. Do not show waveform, equalizer, microphone hero object, giant headphones, giant play button, or player UI.
 
-O pôster deve transformar a memória da obra em uma narrativa visual rica em informação, com hierarquia editorial, elementos documentais, objetos físicos e uma cena central simbólica. A composição deve ser reconhecida como parte da mesma coleção Essência dos Livros sem repetir mecanicamente o layout de outras obras.
+EDITORIAL LAYER
+The editorial layer frames the photograph; it must not dominate it.
+Use at most 2 or 3 editorial panels with short text, elegant borders, legible serif typography, strong title, compact lower plaque, physical museum-like materials.
+Approximate balance: 70% emotional cinematic photograph, 30% editorial layer.
+Do not create an encyclopedia, infographic, technical sheet, document grid, streaming thumbnail, or generic poster.
 
-FONTES EDITORIAIS
-Consuma toda a BEU e a narrativa cinematográfica disponível. Os módulos produzidos pelo Curador, Editor e Diretor Criativo fazem parte da BEU e devem ser tratados em conjunto. Priorize coerência entre fatos, interpretação emocional, direção sensorial, símbolos, paleta e legado. Não invente informações ausentes.
+VISIBLE TEXT
+Visible text must be few, large and legible:
+- "ESSENCIA DOS LIVROS";
+- work title;
+- short audio subtitle only if useful;
+- one short original curatorial phrase;
+- compact plaque with title, creator/author/studio when available, year when available, collection/archive wording, and a derived catalog code.
+No tiny paragraphs, pseudo-typography, crowded plaques, misspellings, fake logos, or invented quotes.
 
-CURADORIA VISUAL — PRIMEIRA FASE OBRIGATÓRIA
-Antes de escrever qualquer direção artística ou regra de layout, realize uma Curadoria Visual usando somente as fontes editoriais fornecidas. Esta é uma fase lógica do mesmo agente e não exige outra chamada de IA.
+VISUAL REFERENCE RULE
+The attached/active reference defines HOW the cover should feel: quality, texture, lighting, finish, atmosphere, editorial hierarchy, balance, density, museum-like language and premium collection standard.
+It does not define WHAT appears. Do not copy its characters, objects, scene, title, texts, or exact layout.
+The BEU, context and cinematic narrative define the content.
 
-Preencha integralmente este briefing interno:
-{
-  "cenas_candidatas_avaliadas": [],
-  "cena_principal": "",
-  "motivo_da_escolha": "",
-  "emocao_principal": "",
-  "emocao_secundaria": "",
-  "simbolo_principal": "",
-  "objeto_heroico": "",
-  "nivel_de_impacto": "",
-  "paleta_emocional": [],
-  "frase_curatorial": ""
-}
+OUTPUT FORMAT
+Return only the final image prompt, organized exactly in these blocks:
+1. DEFINITIVE VISUAL MEMORY
+2. SCENE CANDIDATE RANKING
+3. SELECTED IMPACT SCENE
+4. FRANCHISE AND CANONICAL LOCK
+5. FOREGROUND, MIDGROUND AND BACKGROUND
+6. CHARACTER AND EMOTIONAL DIRECTION
+7. CINEMATOGRAPHY
+8. EDITORIAL LAYER
+9. VISIBLE TEXT
+10. NEGATIVE CONSTRAINTS
 
-Regras do briefing:
-- escolha uma única cena principal;
-- motivo_da_escolha deve explicar “POR QUE ESTA CENA?” em uma frase objetiva;
-- emocao_principal e emocao_secundaria devem incluir intensidade percentual, por exemplo “Fúria — 95%” e “Luto — 40%”;
-- nivel_de_impacto deve ser expresso de 0% a 100%;
-- paleta_emocional deve definir cores específicas, função emocional e contraste;
-- frase_curatorial deve ser original, curta e sustentada pela BEU, nunca uma citação inventada;
-- objeto_heroico deve ser um único objeto concreto e inequivocamente definido antes da geração do prompt visual.
+NEGATIVE CONSTRAINTS
+No modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no wallpaper, no banner, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts.
 
-O objeto heroico pode ser anel, espada, varinha, capacete, máscara, relógio, livro ou qualquer outro artefato comprovadamente ligado à obra. Nunca deixe a IA de imagem escolher o objeto. O prompt final deve nomeá-lo, descrevê-lo e determinar sua posição, escala e visibilidade.
-
-CENA DE IMPACTO
-Antes de montar o pôster, analise integralmente a BEU e a narrativa cinematográfica e escolha uma única cena-símbolo da obra.
-
-Não escolha a cena mais bonita.
-Não escolha automaticamente a cena mais famosa ou óbvia.
-Escolha a cena com maior força emocional, choque visual, tensão, mistério, catarse ou presença na memória coletiva.
-
-A cena escolhida deve ser:
-- visualmente forte;
-- emocionalmente carregada;
-- reconhecível para fãs;
-- intrigante para quem não conhece;
-- capaz de condensar a essência da obra em uma imagem;
-- sustentável pelos fatos, símbolos e acontecimentos presentes nas fontes editoriais.
-
-Para quem conhece a obra, a imagem deve provocar reconhecimento visceral.
-Para quem não conhece, deve provocar a pergunta: “o que está acontecendo aqui?”
-
-Use como referência de intensidade e função narrativa, nunca como conteúdo fixo:
-- God of War III: Kratos segurando a cabeça de Hélio — fúria divina e queda dos deuses;
-- The Last of Us: Joel carregando Ellie — amor e violência moral;
-- O Hobbit: Bilbo diante de Smaug ou a mão encontrando o anel no escuro — fascínio, risco e destino;
-- Harry Potter e o Prisioneiro de Azkaban: o Patrono no lago ou Sirius entre sombra e injustiça — revelação e catarse;
-- Shadow of the Colossus: o protagonista pequeno diante do colosso — grandeza, condenação e mistério;
-- Bloodborne: o caçador ensanguentado sob a lua pálida em Yharnam — horror, fascínio e memória visual.
-- The Last of Us part 2: Close no rosto de Ellie que está gritando com seus olhos ceios de lágrimas — dor da perda e raiva;
-- The Witcher 3; Geralt segurando uma cabeça de hipogrifo escorrendo sangue;
-
-Esses exemplos calibram apenas o nível de impacto. Nunca os reutilize em outra obra.
-
-A cena deve causar impacto imediato por meio de pelo menos uma destas respostas: surpresa, emoção, medo, fascínio, arrepio, curiosidade ou catarse.
-
-POR QUE ESTA CENA?
-O motivo deve demonstrar que a cena representa um ponto decisivo emocional, simbólico ou moral da obra, possui reconhecimento para quem conhece a história e cria mistério para quem não a conhece. Cenas neutras, transitórias ou meramente bonitas são proibidas.
-
-DECISÕES AUTÔNOMAS
-Analise os dados e decida especificamente para esta obra:
-- a Cena de Impacto e a razão editorial objetiva de sua escolha;
-- a emoção dominante dessa cena;
-- o símbolo e o objeto principal;
-- os objetos e artefatos secundários;
-- uma frase de impacto curta, original e coerente, sem usar citação atribuída à obra;
-- a quantidade, formato, dimensão e posição dos painéis editoriais;
-- a organização visual e a hierarquia de leitura;
-- a paleta, iluminação, atmosfera, materiais e acabamento;
-- quais fotografias, mapas, documentos, manuscritos, plantas, símbolos ou evidências de arquivo realmente contribuem;
-- quais objetos físicos dialogam com a narrativa.
-
-Não use uma grade narrativa genérica. Cada decisão visual deve nascer da natureza da obra. Obras literárias, biografias, jogos, filmes, eventos históricos e conteúdos técnicos exigem soluções próprias, mantendo as proporções e a identidade gráfica da coleção.
-
-DIREÇÃO ARTÍSTICA
-Defina este bloco antes do layout e não misture suas decisões com posicionamento editorial:
-- cena principal e instante exato representado;
-- emoção principal e secundária com intensidades;
-- símbolo principal;
-- objeto heroico único;
-- iluminação emocional;
-- atmosfera;
-- linguagem fotográfica;
-- texturas;
-- paleta emocional;
-- profundidade e separação de planos.
-
-DIREÇÃO FOTOGRÁFICA
-Especifique obrigatoriamente:
-- lente equivalente em milímetros;
-- tipo de plano;
-- altura e inclinação da câmera;
-- distância do sujeito;
-- profundidade de campo;
-- contraste;
-- luz principal, direção, qualidade e temperatura;
-- luz secundária e sua função;
-- backlight ou contraluz;
-- presença e densidade de névoa, partículas ou atmosfera volumétrica;
-- tratamento cinematográfico de primeiro plano, plano médio e fundo.
-
-Não use descrições vagas como “cinematográfico” sem parâmetros visuais concretos. Exemplo de precisão: plano médio baixo, lente equivalente a 50 mm, contraluz dourada, neblina volumétrica discreta e profundidade cinematográfica.
-
-LAYOUT EDITORIAL
-Somente depois de concluir Curadoria Visual, Direção Artística e Direção Fotográfica, construa o layout editorial. Não misture instruções de cena, iluminação e câmera com regras de título, painéis, margens e placa.
-
-Use estas proporções aproximadas como padrão gráfico da coleção:
-- cena principal: cerca de 60% da composição;
-- painéis laterais: cerca de 18%;
-- rodapé e placa: cerca de 15%;
-- título e cabeçalho: cerca de 10%, admitindo sobreposição controlada entre zonas.
-
-Regras invioláveis:
-- o personagem ou sujeito principal nunca pode ser coberto pelos painéis;
-- o objeto heroico nunca pode ser ocultado, cortado ou confundido com elementos secundários;
-- margens e respiros devem permanecer consistentes;
-- elementos editoriais devem enquadrar e ampliar a cena, nunca competir com ela.
-
-Construa uma composição vertical premium e editorialmente legível contendo:
-
-1. CABEÇALHO
-- selo editorial “ESSÊNCIA DOS LIVROS”;
-- identificação coerente da coleção ou edição;
-- título da obra em destaque;
-- subtítulo somente quando existir ou for editorialmente necessário.
-
-2. ELEMENTO CENTRAL
-- Cena de Impacto escolhida como núcleo emocional e visual;
-- composição cinematográfica, autoral e narrativa;
-- símbolo ou objeto principal integrado organicamente;
-- tensão visual, mistério ou catarse capazes de interromper o olhar;
-- força visual sem transformar a peça em wallpaper.
-
-3. PAINÉIS EDITORIAIS
-Crie a quantidade e o arranjo adequados à obra. Cada painel deve ter uma função editorial explícita e conteúdo sustentado pelas fontes. Escolha apenas funções relevantes entre:
-- Painel Legado;
-- Painel Conceito Curatorial;
-- Painel Mapa ou Geografia Narrativa;
-- Painel Fotografia Histórica ou Evidência Visual;
-- Painel Símbolos;
-- Painel Notas Curatoriais;
-- Painel Direção Narrativa;
-- Painel Contexto Histórico.
-
-Cada caixa pode conter no máximo 25 palavras. Nunca use parágrafos. Nenhum painel pode ser apenas decorativo. Fotografias e mapas precisam ter função documental clara. Os painéis devem parecer parte de uma edição especial ou arquivo de museu, nunca componentes de uma interface digital.
-
-4. RODAPÉ E PLACA DE IDENTIFICAÇÃO
-Inclua uma placa editorial ou arquivística com os dados disponíveis:
-- título;
-- obra original;
-- autor ou criador;
-- ano;
-- divisão do arquivo;
-- código de catálogo coerente e sistemático.
-
-Omitir dados factuais ausentes em vez de inventá-los. O código de catálogo pode ser uma identificação editorial derivada do título, tipo e ano, sem se apresentar como dado histórico real.
-
-5. ELEMENTOS SECUNDÁRIOS
-Distribua de forma seletiva fotografias, mapas, documentos, manuscritos, plantas, símbolos e artefatos relacionados à obra. Eles devem ampliar a leitura editorial, não apenas preencher espaços.
-
-6. OBJETOS FÍSICOS
-Quando fizer sentido, integre objetos como bússolas, pergaminhos, armas, flores, livros, medalhas, moedas, relógios, cartas ou outros itens específicos da obra. Use somente objetos sustentados pela BEU ou pela narrativa. Eles devem projetar sombras, ocupar profundidades diferentes e conversar com a cena central.
-
-HIERARQUIA EDITORIAL
-A leitura visual deve seguir obrigatoriamente esta ordem:
-Título
-↓
-Cena de Impacto
-↓
-Objeto Heroico
-↓
-Frase Curatorial
-↓
-Painéis Editoriais
-↓
-Placa de Arquivo
-
-Controle contraste, escala, posição, cor e espaço negativo para preservar essa sequência.
-
-IDENTIDADE VISUAL
-- linguagem de pôster editorial premium, material de arquivo, documento de museu e peça colecionável;
-- materiais táteis específicos e coerentes, escolhidos entre metal oxidado, bronze patinado, madeira centenária, couro envelhecido, vidro fosco, papel algodão, tinta ferrogálica, cera antiga e outros materiais sustentados pela obra;
-- microtexturas, profundidade fotográfica e iluminação curatorial cinematográfica;
-- tipografia editorial sofisticada e hierarquia clara;
-- textos curtos, legíveis e corretamente posicionados;
-- identidade Essência dos Livros consistente, mas composição singular;
-- equilíbrio entre densidade informacional e áreas de respiro;
-- paisagem sonora, cheiros, temperatura, silêncio e emoção traduzidos visualmente em luz, textura, clima e matéria.
-
-IDENTIDADE PERMANENTE DA COLEÇÃO
-Toda peça deve carregar de forma visível e coerente os conceitos:
-- ESSÊNCIA DOS LIVROS;
-- Collection;
-- Archive;
-- Museu;
-- Colecionável;
-- Arquivo Curatorial.
-
-Essas marcas devem compartilhar o mesmo acabamento, rigor museológico, densidade informacional, padrão gráfico e linguagem editorial em toda a coleção. A composição de cada obra pode variar, mas deve parecer produzida pelo mesmo museu, pelo mesmo arquivo e pela mesma direção de arte.
-
-RESTRIÇÕES
-- A Cena de Impacto não pode ser substituída por uma imagem apenas bonita, limpa ou decorativa.
-- Nunca gerar wallpaper.
-- Nunca gerar pôster promocional convencional.
-- Nunca gerar thumbnail.
-- Nunca gerar banner.
-- Nunca gerar capa de streaming.
-- Nunca parecer marketing.
-- Nunca usar UI moderna.
-- Nunca esconder o personagem ou sujeito principal.
-- Nunca cortar, ocultar ou descaracterizar o objeto heroico.
-- Sempre parecer um item físico de coleção.
-- Nunca copiar capas, pôsteres, key art, logotipos protegidos ou rostos de atores reais.
-- Nunca inventar fatos, personagens, lugares, datas, símbolos ou citações.
-- Não usar montagem genérica de personagens, estética de streaming, interface digital ou layout de template.
-- Não sobrecarregar a composição com ornamentos sem função narrativa.
-- Não forçar a mesma quantidade de painéis, objetos ou fotografias em todas as obras.
-- Não permitir que elementos editoriais escondam o núcleo emocional da composição.
-
-FORMATO DA RESPOSTA
-Retorne somente o prompt final para a IA de imagem, completo e operacional, organizado obrigatoriamente nestes blocos separados:
-1. CURADORIA VISUAL — briefing preenchido no formato JSON definido acima;
-2. DIREÇÃO ARTÍSTICA;
-3. DIREÇÃO FOTOGRÁFICA;
-4. LAYOUT EDITORIAL;
-5. TEXTOS DOS PAINÉIS, todos com até 25 palavras;
-6. MATERIAIS E ACABAMENTO;
-7. IDENTIDADE DA COLEÇÃO;
-8. NEGATIVO PERMANENTE.
-
-O próprio prompt final deve declarar claramente:
-- qual é a Cena de Impacto escolhida;
-- por que ela foi escolhida;
-- emoção dominante e secundária com intensidades percentuais;
-- símbolo central;
-- objeto heroico único, posição e escala;
-- composição visual;
-- elemento principal e elementos secundários;
-- caixas editoriais e seus textos curtos;
-- título e selo “ESSÊNCIA DOS LIVROS”;
-- painéis laterais;
-- placa de arquivo;
-- tom emocional;
-- frase curta de impacto.
-
-Depois, detalhe materiais, enquadramento, iluminação, atmosfera, paleta, tipografia, hierarquia e restrições negativas. Não use introdução externa, justificativa do processo, análise ou alternativas: entregue apenas o prompt que será usado pela IA de imagem.
-
-REGRA DE GENERALIZAÇÃO
-Não utilize valores fixos dentro do prompt final, exceto a marca “ESSÊNCIA DOS LIVROS”. Títulos, subtítulos, frases, caixas, dados, códigos, objetos e textos específicos devem ser gerados dinamicamente e alimentados exclusivamente pelo contexto, pela BEU e pela Narrativa Cinematográfica. O motor deve funcionar com qualquer obra sem ajustes manuais.
+ACCEPTANCE CRITERIA
+The prompt is correct only if:
+- emotional bond can win automatically;
+- memorable antagonist or boss can win when it dominates the work memory;
+- suffering can win when it is the emotional essence;
+- consequence beats combat poses;
+- settings win only when they are truly protagonists;
+- hero object is optional;
+- generic objects never replace canonical items;
+- scene is decided before layout;
+- photograph remains powerful without text;
+- reference image controls quality and language, not content;
+- the final prompt is compact, non-repetitive and generic for any work.
 
 CONTEXTO DA OBRA
 ${JSON.stringify(contexto, null, 2)}

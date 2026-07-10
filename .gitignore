@@ -27,7 +27,7 @@ dist-ssr
 .vercel
 
 # Backups locais
-/server/engine/promptBuilder copy.js
+/server/engine/promptBuilder copy*.js
 /src/prompts
 # variáveis de ambiente
 .env
