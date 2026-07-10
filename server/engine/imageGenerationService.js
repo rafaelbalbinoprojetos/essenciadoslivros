@@ -342,7 +342,7 @@ async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraI
 }
 
 async function gerarComImagesEdit({ promptFinal, referencia }) {
-  const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+  const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
 
   const resposta = await getOpenAIClient().images.edit({
     model: modelo,
