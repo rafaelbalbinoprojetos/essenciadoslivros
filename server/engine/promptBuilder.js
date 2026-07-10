@@ -936,27 +936,205 @@ MANDATORY REASONING ORDER
 SCENE SELECTION HIERARCHY
 Evaluate the categories below in order, but choose a category only when it truly represents the dominant memory of the work.
 
-Priority 1 - Emotional Bond:
-Prefer a deep bond when it defines the work: protagonist and animal, creature, parent and child, siblings, friends, partners, mentor and disciple, lovers, companions, or any living being with narrative weight.
-Show a concrete intimate gesture: heads touching, embrace, hand on face, protection, farewell, silent look, carrying someone, holding the wounded, or a pause before sacrifice.
-If this bond is the essence, place it in the foreground. The threat, villain, world, or creature stays in the background as context.
+PRE-SELECTION — Cultural Memory Test
 
-Priority 2 - Antagonist, Boss, Rival, or Entity:
-Choose this only when that figure dominates the collective memory more than the protagonist. It must have immediate recognition, visual force, emotional power, work specificity, curiosity for newcomers, and cultural presence.
-Never show it merely posing. Show consequence, threat, relationship to the protagonist, tragedy, madness, superiority, or the moment before/after something irreversible.
+Before evaluating any priority, answer this question:
 
-Priority 3 - Pain and Suffering:
-If no bond or antagonist is stronger, select the greatest physical, emotional, or moral suffering: loss, despair, guilt, grief, wounds, exhaustion, fear, rage, or collapse.
-Show pain through eyes, hands, posture, breath, tears, injuries, dirt, muscular tension, and facial expression. Avoid a sad character staring at the horizon.
+"If the title of the work were removed, which single image would make most fans instantly recognize it?"
 
-Priority 4 - Irreversible Consequence:
-When the work is remembered for violence, confrontation, fall, or sacrifice, choose consequence, not pose and not the beginning of the fight: defeat, death, fallen body, destroyed object, blood, rupture, sacrifice, transformation, or irreversible loss.
+Only after identifying this definitive cultural memory should the engine evaluate the priorities above.
 
-Priority 5 - Revelation or Transformation:
-When the work is defined by discovery, hidden truth, transformation, or changed perception, choose the instant of revelation. It must make the viewer ask: "What happened here?"
+The selected scene must represent the emotional legacy of the work, not merely a famous promotional image or action sequence.
 
-Priority 6 - World, Setting, Artifact, or Adventure:
-Use only when none of the previous categories better represents the work. Even then, avoid wallpaper. Include a small narrative event: discovery, distant threat, activated artifact, opened passage, revealed ruin, or world reacting to the protagonist.
+Priority 1 — Irreplaceable Emotional Bond (Highest Priority)
+
+Choose this category whenever the emotional identity of the work is defined by the relationship between the protagonist and another living being.
+
+This priority overrides every other category unless another scene has become unquestionably more iconic in popular culture.
+
+The bond may involve:
+
+child or baby
+animal or mount
+companion creature
+pet
+partner
+sibling
+parent
+mentor
+disciple
+close friend
+lover
+any living being whose presence fundamentally changes the protagonist.
+
+Give maximum priority to relationships involving protection, dependence, innocence, farewell or sacrifice.
+
+Examples of strongest emotional calibration:
+
+• Wander and Agro
+
+• Sam Porter Bridges and BB
+
+• Joel and Ellie
+
+• Arthur Morgan and his horse
+
+• Kratos and Atreus
+
+• Geralt and Ciri
+
+• Ico and Yorda
+
+• Link and Midna
+
+• Harry and Hedwig
+
+These are not mandatory scenes.
+They only define the emotional calibration.
+
+Prefer scenes where the emotional connection is physically visible:
+
+foreheads touching
+embrace
+carrying someone
+protecting
+holding after battle
+comforting
+silent eye contact
+hand on face
+hand on shoulder
+final goodbye
+final ride
+shared silence
+resting together before danger
+
+The relationship itself must occupy the foreground.
+
+The world, enemy, monster or final threat should remain behind them as narrative context.
+
+The viewer must immediately understand:
+
+"This relationship is what this story is truly about."
+
+Priority 2 — Cultural Icon (Antagonist, Rival or Legendary Figure)
+
+Choose this only if another character has become more culturally recognizable than the protagonist itself.
+
+The decision must be based on collective memory rather than gameplay importance.
+
+Examples:
+
+• Malenia (Elden Ring)
+
+• Pyramid Head (Silent Hill)
+
+• Darth Vader
+
+• The Joker
+
+• Sephiroth
+
+• Bowser
+
+• GLaDOS
+
+• Nemesis
+
+The antagonist must never simply pose.
+
+Show:
+
+consequence
+tragedy
+superiority
+confrontation
+domination
+sacrifice
+irreversible victory
+psychological tension
+
+The viewer should immediately think:
+
+"This is THAT character."
+
+Priority 3 — Human Pain
+
+If no emotional relationship or iconic antagonist better represents the work, choose the greatest emotional or physical suffering.
+
+Focus on:
+
+grief
+guilt
+despair
+exhaustion
+rage
+fear
+sacrifice
+mourning
+loneliness
+redemption
+
+Pain must be communicated through:
+
+eyes
+breathing
+trembling hands
+tears
+posture
+tension
+injuries
+dirt
+silence
+
+Never use a generic "character looking at the horizon."
+
+Priority 4 — Irreversible Consequence
+
+If the work is remembered for a decisive event, depict the consequence rather than the action itself.
+
+Examples:
+
+defeated villain
+destroyed kingdom
+sacrifice completed
+body on the ground
+transformation completed
+broken artifact
+final farewell
+irreversible loss
+
+Avoid the beginning of combat.
+
+Show what remains after everything changed.
+
+Priority 5 — Revelation or Transformation
+
+When the emotional legacy comes from discovering a hidden truth or witnessing a transformation, depict the exact instant where perception changes forever.
+
+The image should naturally make viewers wonder:
+
+"What just happened?"
+
+Priority 6 — World, Journey, Artifact or Adventure
+
+Only use this category if none of the previous priorities define the work.
+
+The environment must still tell a story.
+
+Avoid wallpaper compositions.
+
+Always include a narrative event such as:
+
+discovered ruin
+activated relic
+approaching danger
+distant silhouette
+opened gate
+changing weather
+collapsing world
+mysterious light
+
+The world must feel alive rather than decorative.
 
 SCORING SYSTEM
 For 4 to 8 candidate scenes, score internally from 0 to 100:
