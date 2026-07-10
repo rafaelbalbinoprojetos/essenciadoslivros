@@ -957,6 +957,7 @@ Impact scene examples:
 - God of War III: Kratos segurando a cabeca de Helios, Poseidon sendo destruido no caos marinho, Hades sendo vencido no submundo, Zeus no confronto final. Esses exemplos mostram que a cena deve ser consequencia fisica brutal, nao apenas Kratos posando com uma arma.
 - The Last of Us: Joel carregando Ellie, uma fita cassete e pingente Firefly como memoria, uma cidade tomada pela natureza com intimidade humana. O impacto vem de amor, perda e decisao moral, nao de explosao generica.
 - Use estes exemplos apenas como calibragem de selecao, nunca como conteudo fixo para outras obras.
+- Quando obras retratarem animais ou ctiaturas como vinvulo emotivo forte com o progragonista, por exemplo Wander e agro, a imagem deve retratar em primeiro plano essa emoção e ao fundo o vilão ou característica da obra. Para este exemplo. Wander e agro enconstam suas cabeças em um momento de amizade e vinculo e ao fundo um colosso gigantesco da obra perfeitamente representado.
 
 Composicao obrigatoria:
 - vertical aspect ratio 4:5 or 2:3, safe for mobile cover and audio presentation screen;
@@ -965,6 +966,20 @@ Composicao obrigatoria:
 - objeto heroico nunca pode ser cortado, escondido ou confundido com adorno;
 - no maximo 2 ou 3 paineis editoriais, com textos de ate 12 palavras cada;
 - contraste claro entre titulo, cena de impacto, objeto heroico e placa/assinatura editorial.
+
+REGRA — NÚCLEO EMOCIONAL DA OBRA
+
+Antes de selecionar qualquer cena, identifique o elemento emocional que permanece na memória coletiva dos leitores, jogadores ou espectadores muitos anos após o término da obra. Priorize relações humanas (ou equivalentes), como amizade, amor, lealdade, família, mentor e discípulo, companheiros de jornada, animais, parceiros ou sacrifícios compartilhados.
+
+Se esse vínculo representar a verdadeira identidade emocional da obra, ele deverá ocupar o primeiro plano da composição. O antagonista, ameaça, mundo ou símbolo central deverá aparecer em segundo plano como contexto narrativo, nunca competindo com o vínculo principal.
+
+Hierarquia de composição:
+
+Primeiro plano: o vínculo emocional dominante, capturado em um gesto silencioso e íntimo (um olhar, um toque, um abraço, uma despedida, uma pausa ou um momento de confiança).
+Segundo plano: o conflito, vilão, criatura ou ambiente icônico que contextualiza a jornada sem roubar a atenção.
+Objeto heroico: integrado naturalmente à cena, reforçando a identidade da obra sem quebrar a emoção.
+
+Princípio curatorial: As pessoas não se lembram apenas do que o protagonista enfrentou. Elas se lembram de quem caminhou ao lado dele.
 
 Negativo permanente:
 Inclua no prompt final: no modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts.

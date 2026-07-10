@@ -13,7 +13,10 @@ import {
   criarExecucaoAgente,
   falharExecucaoAgente,
 } from "./execucaoService.js";
-import { gerarImagemHeritageComReferencia } from "./imageGenerationService.js";
+import {
+  gerarImagemCinematicaComReferencia,
+  gerarImagemHeritageComReferencia,
+} from "./imageGenerationService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { montarPromptAgente } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
@@ -52,6 +55,10 @@ const DEFINICOES_ETAPAS = {
   heritage_image: {
     ordem: 7,
     executor: executarImagemHeritage,
+  },
+  capa_cinematica_image: {
+    ordem: 8,
+    executor: executarImagemCinematica,
   },
 };
 
@@ -957,6 +964,90 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
   } catch (error) {
     const erro = normalizarErro(error);
     engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarImagemCinematica({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "â†’", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    const promptCinematico = await buscarUltimaSaidaEtapa({
+      obraId,
+      tipoEtapa: "capa_cinematica_prompt",
+    });
+
+    if (typeof promptCinematico !== "string" || !promptCinematico.trim()) {
+      throw new Error("Nenhum prompt de capa cinematica concluido foi encontrado. Gere o prompt da capa cinematica antes da imagem.");
+    }
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      mock: ENGINE_CONFIG.mock,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      prompt_origem: "ai_pipeline_etapas.capa_cinematica_prompt.saida",
+      prompt_tamanho_aproximado: promptCinematico.length,
+      persistencia: "storage.capas + livros.capa_cinematica_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarImagemCinematicaComReferencia({
+      obraId,
+      titulo: contexto?.obra?.titulo || "obra",
+      prompt: promptCinematico,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "âœ“", {
+      obraId,
+      tipoEtapa,
+      imagem_url: resultado.imagem_url,
+    });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      imagemUrl: resultado.imagem_url,
+      storagePath: resultado.storage_path,
+      referenciaVisual: resultado.referencia_visual,
+      mock: resultado.mock,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "âœ•", { obraId, tipoEtapa, erro });
 
     if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
     throw error;

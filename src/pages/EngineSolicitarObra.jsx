@@ -50,7 +50,12 @@ function getStepStatus({ active, result, manualWhenIdle = false }) {
   return "waiting";
 }
 
-function EngineProcessStep({ label, status }) {
+function getElapsedSeconds(startedAt, now) {
+  if (!startedAt) return 0;
+  return Math.max(0, Math.floor((now - startedAt) / 1000));
+}
+
+function EngineProcessStep({ label, status, elapsedSeconds = 0 }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.waiting;
 
   return (
@@ -65,7 +70,7 @@ function EngineProcessStep({ label, status }) {
         <span className="truncate font-medium text-zinc-200">{label}</span>
       </div>
       <span className={`shrink-0 text-xs font-semibold uppercase tracking-[0.18em] ${config.textClass}`}>
-        {config.label}
+        {status === "loading" ? `${config.label} - ${elapsedSeconds}s` : config.label}
       </span>
     </div>
   );
@@ -87,6 +92,7 @@ export default function EngineSolicitarObra() {
   const [executandoHeritagePrompt, setExecutandoHeritagePrompt] = useState(false);
   const [executandoHeritageImage, setExecutandoHeritageImage] = useState(false);
   const [executandoCapaPrompt, setExecutandoCapaPrompt] = useState(false);
+  const [executandoCapaImage, setExecutandoCapaImage] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
@@ -96,7 +102,11 @@ export default function EngineSolicitarObra() {
   const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
   const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
+  const [resultadoCapaImage, setResultadoCapaImage] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
+  const [stepStartedAt, setStepStartedAt] = useState({});
+  const [timerNow, setTimerNow] = useState(() => Date.now());
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || atualizandoDados;
 
   const loadEngineReferences = useCallback(async () => {
     setReferencesLoading(true);
@@ -115,6 +125,62 @@ export default function EngineSolicitarObra() {
   useEffect(() => {
     loadEngineReferences();
   }, [loadEngineReferences]);
+
+  useEffect(() => {
+    const activeSteps = {
+      criar_obra: criandoObra,
+      curador_beu: executandoCurador,
+      editor_beu: executandoEditor,
+      diretor_criativo: executandoDiretor,
+      narrativa_cinematica: executandoNarrativa,
+      heritage_prompt: executandoHeritagePrompt,
+      heritage_image: executandoHeritageImage,
+      capa_cinematica_prompt: executandoCapaPrompt,
+      capa_cinematica_image: executandoCapaImage,
+      atualizar_dados: atualizandoDados,
+    };
+
+    setStepStartedAt((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      Object.entries(activeSteps).forEach(([key, active]) => {
+        if (active && !next[key]) {
+          next[key] = Date.now();
+          changed = true;
+        }
+
+        if (!active && next[key]) {
+          delete next[key];
+          changed = true;
+        }
+      });
+
+      return changed ? next : current;
+    });
+  }, [
+    criandoObra,
+    executandoCurador,
+    executandoEditor,
+    executandoDiretor,
+    executandoNarrativa,
+    executandoHeritagePrompt,
+    executandoHeritageImage,
+    executandoCapaPrompt,
+    executandoCapaImage,
+    atualizandoDados,
+  ]);
+
+  useEffect(() => {
+    if (!loading) return undefined;
+
+    setTimerNow(Date.now());
+    const intervalId = window.setInterval(() => {
+      setTimerNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [loading]);
 
   async function handleReferenceUpload(tipo, event) {
     const file = event.target.files?.[0];
@@ -178,6 +244,7 @@ export default function EngineSolicitarObra() {
     const isHeritagePrompt = tipoEtapa === "heritage_prompt";
     const isHeritageImage = tipoEtapa === "heritage_image";
     const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
+    const isCapaImage = tipoEtapa === "capa_cinematica_image";
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
@@ -186,6 +253,7 @@ export default function EngineSolicitarObra() {
     if (isHeritagePrompt) setExecutandoHeritagePrompt(true);
     if (isHeritageImage) setExecutandoHeritageImage(true);
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
+    if (isCapaImage) setExecutandoCapaImage(true);
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -211,6 +279,7 @@ export default function EngineSolicitarObra() {
       if (isHeritagePrompt) setResultadoHeritagePrompt(data);
       if (isHeritageImage) setResultadoHeritageImage(data);
       if (isCapaPrompt) setResultadoCapaPrompt(data);
+      if (isCapaImage) setResultadoCapaImage(data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -235,6 +304,7 @@ export default function EngineSolicitarObra() {
       if (isHeritagePrompt) setResultadoHeritagePrompt((atual) => atual || fallback);
       if (isHeritageImage) setResultadoHeritageImage((atual) => atual || fallback);
       if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
+      if (isCapaImage) setResultadoCapaImage((atual) => atual || fallback);
 
       return null;
     } finally {
@@ -245,6 +315,7 @@ export default function EngineSolicitarObra() {
       if (isHeritagePrompt) setExecutandoHeritagePrompt(false);
       if (isHeritageImage) setExecutandoHeritageImage(false);
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
+      if (isCapaImage) setExecutandoCapaImage(false);
     }
   }
 
@@ -303,6 +374,7 @@ export default function EngineSolicitarObra() {
     setExecutandoHeritagePrompt(false);
     setExecutandoHeritageImage(false);
     setExecutandoCapaPrompt(false);
+    setExecutandoCapaImage(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
@@ -312,6 +384,7 @@ export default function EngineSolicitarObra() {
     setResultadoHeritagePrompt(null);
     setResultadoHeritageImage(null);
     setResultadoCapaPrompt(null);
+    setResultadoCapaImage(null);
     setResultadoAtualizacao(null);
 
     try {
@@ -371,11 +444,11 @@ export default function EngineSolicitarObra() {
       setExecutandoHeritagePrompt(false);
       setExecutandoHeritageImage(false);
       setExecutandoCapaPrompt(false);
+      setExecutandoCapaImage(false);
       setAtualizandoDados(false);
     }
   }
 
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || atualizandoDados;
   const hasRequestedWork = Boolean(
     resultadoCriacao
     || resultadoCurador
@@ -385,28 +458,34 @@ export default function EngineSolicitarObra() {
     || resultadoHeritagePrompt
     || resultadoHeritageImage
     || resultadoCapaPrompt
+    || resultadoCapaImage
     || resultadoAtualizacao
     || loading,
   );
   const optionalStepsEnabled = Boolean(resultadoCriacao?.livro?.id);
   const engineProgressSteps = [
     {
+      key: "criar_obra",
       label: "Criando obra",
       status: getStepStatus({ active: criandoObra, result: resultadoCriacao }),
     },
     {
+      key: "curador_beu",
       label: "Executando curador",
       status: getStepStatus({ active: executandoCurador, result: resultadoCurador }),
     },
     {
+      key: "editor_beu",
       label: "Executando editor",
       status: getStepStatus({ active: executandoEditor, result: resultadoEditor }),
     },
     {
+      key: "diretor_criativo",
       label: "Executando diretor criativo",
       status: getStepStatus({ active: executandoDiretor, result: resultadoDiretor }),
     },
     {
+      key: "narrativa_cinematica",
       label: "Gerando narrativa cinematográfica",
       status: getStepStatus({
         active: executandoNarrativa,
@@ -415,6 +494,7 @@ export default function EngineSolicitarObra() {
       }),
     },
     {
+      key: "heritage_prompt",
       label: "Gerando prompt Heritage",
       status: getStepStatus({
         active: executandoHeritagePrompt,
@@ -423,6 +503,7 @@ export default function EngineSolicitarObra() {
       }),
     },
     {
+      key: "heritage_image",
       label: "Gerando imagem Heritage",
       status: getStepStatus({
         active: executandoHeritageImage,
@@ -431,6 +512,7 @@ export default function EngineSolicitarObra() {
       }),
     },
     {
+      key: "capa_cinematica_prompt",
       label: "Gerando prompt da capa cinematográfica",
       status: getStepStatus({
         active: executandoCapaPrompt,
@@ -439,6 +521,16 @@ export default function EngineSolicitarObra() {
       }),
     },
     {
+      key: "capa_cinematica_image",
+      label: "Gerando imagem cinematográfica",
+      status: getStepStatus({
+        active: executandoCapaImage,
+        result: resultadoCapaImage,
+        manualWhenIdle: Boolean(resultadoCapaPrompt?.ok),
+      }),
+    },
+    {
+      key: "atualizar_dados",
       label: "Atualizando dados ausentes",
       status: getStepStatus({ active: atualizandoDados, result: resultadoAtualizacao }),
     },
@@ -524,10 +616,12 @@ export default function EngineSolicitarObra() {
                         : executandoHeritageImage
                           ? "Gerando imagem Heritage..."
                           : executandoCapaPrompt
-                          ? "Gerando prompt da capa cinematográfica..."
-                      : atualizandoDados
-                        ? "Atualizando dados..."
-                        : "Solicitar obra"}
+                            ? "Gerando prompt da capa cinematográfica..."
+                            : executandoCapaImage
+                              ? "Gerando imagem cinematográfica..."
+                              : atualizandoDados
+                                ? "Atualizando dados..."
+                                : "Solicitar obra"}
           </button>
         </form>
 
@@ -636,7 +730,12 @@ export default function EngineSolicitarObra() {
 
             <div className="grid gap-3">
               {engineProgressSteps.map((step) => (
-                <EngineProcessStep key={step.label} label={step.label} status={step.status} />
+                <EngineProcessStep
+                  key={step.key}
+                  label={step.label}
+                  status={step.status}
+                  elapsedSeconds={getElapsedSeconds(stepStartedAt[step.key], timerNow)}
+                />
               ))}
             </div>
 
@@ -769,6 +868,14 @@ export default function EngineSolicitarObra() {
                   >
                     Gerar Prompt Capa Cinemática
                   </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("capa_cinematica_image")}
+                    className="rounded-xl border border-rose-500/60 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/10 disabled:opacity-60"
+                  >
+                    Gerar Imagem Cinemática
+                  </button>
                 </div>
               </div>
             )}
@@ -813,6 +920,14 @@ export default function EngineSolicitarObra() {
                     className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
                   >
                     Gerar Prompt Capa Cinemática
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("capa_cinematica_image")}
+                    className="rounded-xl border border-rose-500/60 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/10 disabled:opacity-60"
+                  >
+                    Gerar Imagem Cinemática
                   </button>
                 </div>
               </div>
@@ -948,6 +1063,38 @@ export default function EngineSolicitarObra() {
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
                 {JSON.stringify(resultadoCapaPrompt, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoCapaImage && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do capa_cinematica_image
+            </h2>
+            {resultadoCapaImage.ok && resultadoCapaImage.imagemUrl ? (
+              <div className="rounded-2xl border border-rose-900 bg-black p-5">
+                <img
+                  src={resultadoCapaImage.imagemUrl}
+                  alt="Capa cinematica gerada"
+                  className="mx-auto max-h-[720px] rounded-xl border border-zinc-800 object-contain"
+                />
+                <a
+                  href={resultadoCapaImage.imagemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block truncate text-sm font-semibold text-rose-200 hover:text-rose-100"
+                >
+                  {resultadoCapaImage.imagemUrl}
+                </a>
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-rose-100">
+                  {JSON.stringify(resultadoCapaImage, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoCapaImage, null, 2)}
               </pre>
             )}
           </section>

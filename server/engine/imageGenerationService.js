@@ -63,6 +63,26 @@ Canonical object fidelity overrides the reference image. If the work prompt name
 The final image must look like a premium editorial photograph of a real historical archive table, belonging to the same collection as the attached reference image.
 `.trim();
 
+const PROMPT_REFERENCIA_CINEMATICA = `
+You will receive an attached image as the official visual reference for the cinematic audio cover.
+
+The attached image is NOT the final artwork to be literally edited.
+It is the visual direction reference for cinematic presentation covers.
+
+Absolute priority:
+1. Use the attached image to learn visual language, impact, mood, hierarchy, lighting, texture, and editorial finish.
+2. Use the work prompt to define the current work, scene, characters, artifacts, emotion, palette, title and curatorial audio details.
+3. Never copy the exact depicted work, objects, character pose, title placement, or layout from the reference.
+4. Do not create a Heritage museum archive table unless the prompt explicitly asks for one.
+
+The final cover must feel premium, cinematic, emotional and designed for an audio presentation experience.
+It should make the viewer want to press play.
+
+Preserve from the reference only the cinematic quality bar: dramatic visual impact, strong composition, atmospheric lighting, depth, texture, readable title hierarchy, and collectible editorial finish.
+
+The work prompt overrides the reference image whenever there is a conflict.
+`.trim();
+
 const INSTRUCTIONS_RESPONSES_HERITAGE = `
 You are a senior image art director for the Essencia dos Livros Heritage Collection.
 Analyze the attached reference image only as style language.
@@ -143,25 +163,29 @@ function detectarMimeImagem(fileName = "", reportedType = "") {
   return "image/png";
 }
 
-async function buscarReferenciaHeritageAtiva() {
+async function buscarReferenciaAtiva(tipo = "heritage") {
   const { data, error } = await supabaseAdmin
     .from("engine_referencias_imagem")
     .select("tipo,nome,bucket,storage_path,public_url,usar_como_referencia,ativo")
-    .eq("tipo", "heritage")
+    .eq("tipo", tipo)
     .eq("ativo", true)
     .eq("usar_como_referencia", true)
     .maybeSingle();
 
   if (error) {
-    console.warn("[ImageGeneration] referencia heritage ativa indisponivel:", error.message);
+    console.warn(`[ImageGeneration] referencia ${tipo} ativa indisponivel:`, error.message);
     return null;
   }
 
   return data || null;
 }
 
-async function carregarReferenciaComoUploadable() {
-  const referencia = await buscarReferenciaHeritageAtiva();
+async function carregarReferenciaComoUploadable({
+  tipo = "heritage",
+  fallbackPath = HERITAGE_REFERENCE_PATH,
+  fallbackName = "CAPA_REFERENCIA_HERITAGE.png",
+} = {}) {
+  const referencia = await buscarReferenciaAtiva(tipo);
 
   if (referencia?.storage_path) {
     const bucket = referencia.bucket || ENGINE_REFERENCIAS_BUCKET;
@@ -173,7 +197,7 @@ async function carregarReferenciaComoUploadable() {
       throw new Error(`Erro ao baixar referencia Heritage do Storage: ${error.message}`);
     }
 
-    const fileName = referencia.nome || path.basename(referencia.storage_path) || "heritage-reference.png";
+    const fileName = referencia.nome || path.basename(referencia.storage_path) || `${tipo}-reference.png`;
     const mimeType = detectarMimeImagem(fileName, data.type);
     const buffer = Buffer.from(await data.arrayBuffer());
 
@@ -198,7 +222,7 @@ async function carregarReferenciaComoUploadable() {
 
     const blob = await response.blob();
 
-    const fileName = referencia.nome || "heritage-reference.png";
+    const fileName = referencia.nome || `${tipo}-reference.png`;
     const mimeType = detectarMimeImagem(fileName, blob.type);
     const buffer = Buffer.from(await blob.arrayBuffer());
 
@@ -214,27 +238,34 @@ async function carregarReferenciaComoUploadable() {
     };
   }
 
-  if (!fs.existsSync(HERITAGE_REFERENCE_PATH)) {
-    throw new Error(`Referencia Heritage local nao encontrada: ${HERITAGE_REFERENCE_PATH}`);
+  if (!fallbackPath || !fs.existsSync(fallbackPath)) {
+    throw new Error(`Referencia ${tipo} nao encontrada. Cadastre uma imagem de referencia ativa na pagina Engine.`);
   }
 
-  const buffer = await fs.promises.readFile(HERITAGE_REFERENCE_PATH);
+  const buffer = await fs.promises.readFile(fallbackPath);
 
   return {
     referencia: null,
-    source: HERITAGE_REFERENCE_PATH,
+    source: fallbackPath,
     mimeType: "image/png",
     buffer,
     dataUrl: `data:image/png;base64,${buffer.toString("base64")}`,
-    file: await toFile(buffer, "CAPA_REFERENCIA_HERITAGE.png", {
+    file: await toFile(buffer, fallbackName, {
       type: "image/png",
     }),
   };
 }
 
-async function salvarImagemNoStorage({ obraId, titulo, imageBuffer }) {
-  const fileName = `${Date.now()}-${slugify(titulo)}-heritage.png`;
-  const storagePath = `engine/heritage/${obraId}/${fileName}`;
+async function salvarImagemNoStorage({
+  obraId,
+  titulo,
+  imageBuffer,
+  tipoImagem = "heritage",
+  colunaCapa = "capa_url",
+  label = "Heritage",
+}) {
+  const fileName = `${Date.now()}-${slugify(titulo)}-${tipoImagem}.png`;
+  const storagePath = `engine/${tipoImagem}/${obraId}/${fileName}`;
 
   const { error: uploadError } = await supabaseAdmin.storage
     .from(CAPAS_BUCKET)
@@ -245,7 +276,7 @@ async function salvarImagemNoStorage({ obraId, titulo, imageBuffer }) {
     });
 
   if (uploadError) {
-    throw new Error(`Erro ao salvar imagem Heritage no Storage: ${uploadError.message}`);
+    throw new Error(`Erro ao salvar imagem ${label} no Storage: ${uploadError.message}`);
   }
 
   const { data } = supabaseAdmin.storage
@@ -255,13 +286,13 @@ async function salvarImagemNoStorage({ obraId, titulo, imageBuffer }) {
   const publicUrl = data?.publicUrl;
 
   if (!publicUrl) {
-    throw new Error("Storage nao retornou URL publica da imagem Heritage.");
+    throw new Error(`Storage nao retornou URL publica da imagem ${label}.`);
   }
 
   const { error: updateError } = await supabaseAdmin
     .from("livros")
     .update({
-      capa_url: publicUrl,
+      [colunaCapa]: publicUrl,
       atualizado_em: new Date().toISOString(),
     })
     .eq("id", obraId);
@@ -283,7 +314,7 @@ function extrairImagemBase64DaResponses(resposta) {
   return imageCall?.result || null;
 }
 
-async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraId }) {
+async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraId, tipoEtapa = "heritage_image" }) {
   const modeloResposta = process.env.OPENAI_RESPONSES_MODEL || "gpt-4.1";
   const modeloImagem = process.env.OPENAI_IMAGE_TOOL_MODEL || "gpt-image-1";
 
@@ -318,7 +349,7 @@ async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraI
     ],
     metadata: {
       obra_id: String(obraId),
-      engine_step: "heritage_image",
+      engine_step: tipoEtapa,
     },
   });
 
@@ -370,16 +401,24 @@ async function gerarComImagesEdit({ promptFinal, referencia }) {
   };
 }
 
-export async function gerarImagemHeritageComReferencia({
+async function gerarImagemComReferencia({
   obraId,
   titulo,
   prompt,
+  tipoReferencia = "heritage",
+  tipoImagem = "heritage",
+  tipoEtapa = "heritage_image",
+  promptReferencia = PROMPT_REFERENCIA_HERITAGE,
+  colunaCapa = "capa_url",
+  label = "Heritage",
+  fallbackPath = HERITAGE_REFERENCE_PATH,
+  fallbackName = "CAPA_REFERENCIA_HERITAGE.png",
 }) {
-  if (!obraId) throw new Error("obraId e obrigatorio para gerar imagem Heritage.");
-  if (!prompt) throw new Error("Prompt Heritage nao encontrado para gerar imagem.");
+  if (!obraId) throw new Error(`obraId e obrigatorio para gerar imagem ${label}.`);
+  if (!prompt) throw new Error(`Prompt ${label} nao encontrado para gerar imagem.`);
 
   if (isEngineMockEnabled()) {
-    engineStep("Imagem Heritage", "->", { modo: "mock", modelo: "mock-engine" });
+    engineStep(`Imagem ${label}`, "->", { modo: "mock", modelo: "mock-engine" });
 
     return {
       ok: true,
@@ -395,14 +434,18 @@ export async function gerarImagemHeritageComReferencia({
   }
 
   const promptDaObra = limparPromptHeritageParaImagem(prompt);
-  const promptFinal = limitarPromptImagem(`${PROMPT_REFERENCIA_HERITAGE}
+  const promptFinal = limitarPromptImagem(`${promptReferencia}
 
 DADOS DA OBRA:
 ${promptDaObra}`);
-  const referencia = await carregarReferenciaComoUploadable();
+  const referencia = await carregarReferenciaComoUploadable({
+    tipo: tipoReferencia,
+    fallbackPath,
+    fallbackName,
+  });
   const inicio = Date.now();
 
-  engineStep("Imagem Heritage", "->", {
+  engineStep(`Imagem ${label}`, "->", {
     modo_preferencial: "responses.image_generation",
     referencia_visual: referencia.source,
     prompt_tamanho: promptFinal.length,
@@ -415,6 +458,7 @@ ${promptDaObra}`);
       promptFinal,
       referencia,
       obraId,
+      tipoEtapa,
     });
   } catch (error) {
     console.warn("[ImageGeneration] Responses API falhou, tentando images.edit:", error.message);
@@ -433,11 +477,14 @@ ${promptDaObra}`);
     obraId,
     titulo,
     imageBuffer,
+    tipoImagem,
+    colunaCapa,
+    label,
   });
 
   const fim = Date.now();
 
-  engineStep("Imagem Heritage", "ok", {
+  engineStep(`Imagem ${label}`, "ok", {
     imagem_url: storage.publicUrl,
     storage_path: storage.storagePath,
     tempo_ms: fim - inicio,
@@ -458,4 +505,36 @@ ${promptDaObra}`);
     fallback_reason: geracao.fallback_reason || null,
     resposta_bruta: geracao.respostaBruta,
   };
+}
+
+export async function gerarImagemHeritageComReferencia({ obraId, titulo, prompt }) {
+  return gerarImagemComReferencia({
+    obraId,
+    titulo,
+    prompt,
+    tipoReferencia: "heritage",
+    tipoImagem: "heritage",
+    tipoEtapa: "heritage_image",
+    promptReferencia: PROMPT_REFERENCIA_HERITAGE,
+    colunaCapa: "capa_url",
+    label: "Heritage",
+    fallbackPath: HERITAGE_REFERENCE_PATH,
+    fallbackName: "CAPA_REFERENCIA_HERITAGE.png",
+  });
+}
+
+export async function gerarImagemCinematicaComReferencia({ obraId, titulo, prompt }) {
+  return gerarImagemComReferencia({
+    obraId,
+    titulo,
+    prompt,
+    tipoReferencia: "cinematica",
+    tipoImagem: "cinematica",
+    tipoEtapa: "capa_cinematica_image",
+    promptReferencia: PROMPT_REFERENCIA_CINEMATICA,
+    colunaCapa: "capa_cinematica_url",
+    label: "Cinematica",
+    fallbackPath: null,
+    fallbackName: "CAPA_REFERENCIA_CINEMATICA.png",
+  });
 }

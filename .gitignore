@@ -28,6 +28,7 @@ dist-ssr
 
 # Backups locais
 /server/engine/promptBuilder copy.js
+/src/prompts
 # variáveis de ambiente
 .env
 .env.local
