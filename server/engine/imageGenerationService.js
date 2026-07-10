@@ -152,10 +152,14 @@ async function carregarReferenciaComoUploadable() {
 
     const fileName = referencia.nome || path.basename(referencia.storage_path) || "heritage-reference.png";
     const mimeType = detectarMimeImagem(fileName, data.type);
+    const buffer = Buffer.from(await data.arrayBuffer());
 
     return {
       referencia,
       source: referencia.public_url || referencia.storage_path,
+      mimeType,
+      buffer,
+      dataUrl: `data:${mimeType};base64,${buffer.toString("base64")}`,
       file: await toFile(data, fileName, {
         type: mimeType,
       }),
@@ -173,10 +177,14 @@ async function carregarReferenciaComoUploadable() {
 
     const fileName = referencia.nome || "heritage-reference.png";
     const mimeType = detectarMimeImagem(fileName, blob.type);
+    const buffer = Buffer.from(await blob.arrayBuffer());
 
     return {
       referencia,
       source: referencia.public_url,
+      mimeType,
+      buffer,
+      dataUrl: `data:${mimeType};base64,${buffer.toString("base64")}`,
       file: await toFile(blob, fileName, {
         type: mimeType,
       }),
@@ -187,10 +195,15 @@ async function carregarReferenciaComoUploadable() {
     throw new Error(`Referencia Heritage local nao encontrada: ${HERITAGE_REFERENCE_PATH}`);
   }
 
+  const buffer = await fs.promises.readFile(HERITAGE_REFERENCE_PATH);
+
   return {
     referencia: null,
     source: HERITAGE_REFERENCE_PATH,
-    file: await toFile(await fs.promises.readFile(HERITAGE_REFERENCE_PATH), "CAPA_REFERENCIA_HERITAGE.png", {
+    mimeType: "image/png",
+    buffer,
+    dataUrl: `data:image/png;base64,${buffer.toString("base64")}`,
+    file: await toFile(buffer, "CAPA_REFERENCIA_HERITAGE.png", {
       type: "image/png",
     }),
   };
@@ -240,6 +253,95 @@ async function salvarImagemNoStorage({ obraId, titulo, imageBuffer }) {
   };
 }
 
+function extrairImagemBase64DaResponses(resposta) {
+  const output = Array.isArray(resposta?.output) ? resposta.output : [];
+  const imageCall = output.find((item) => item?.type === "image_generation_call" && item?.result);
+
+  return imageCall?.result || null;
+}
+
+async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraId }) {
+  const modeloResposta = process.env.OPENAI_RESPONSES_MODEL || "gpt-4.1";
+  const modeloImagem = process.env.OPENAI_IMAGE_TOOL_MODEL || "gpt-image-1";
+
+  const resposta = await getOpenAIClient().responses.create({
+    model: modeloResposta,
+    input: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: promptFinal,
+          },
+          {
+            type: "input_image",
+            image_url: referencia.dataUrl,
+            detail: "high",
+          },
+        ],
+      },
+    ],
+    tools: [
+      {
+        type: "image_generation",
+        model: modeloImagem,
+        size: "1024x1536",
+        quality: "high",
+        output_format: "png",
+        moderation: "auto",
+      },
+    ],
+    tool_choice: { type: "image_generation" },
+    metadata: {
+      obra_id: String(obraId),
+      engine_step: "heritage_image",
+    },
+  });
+
+  return {
+    b64: extrairImagemBase64DaResponses(resposta),
+    modelo: `${modeloResposta} + ${modeloImagem}`,
+    modo: "responses.image_generation",
+    respostaBruta: {
+      id: resposta.id ?? null,
+      status: resposta.status ?? null,
+      usage: resposta.usage ?? null,
+      output: Array.isArray(resposta.output)
+        ? resposta.output.map((item) => ({
+          type: item?.type,
+          status: item?.status ?? null,
+          has_result: Boolean(item?.result),
+        }))
+        : null,
+    },
+  };
+}
+
+async function gerarComImagesEdit({ promptFinal, referencia }) {
+  const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+
+  const resposta = await getOpenAIClient().images.edit({
+    model: modelo,
+    image: referencia.file,
+    prompt: promptFinal,
+    size: "1024x1536",
+    quality: "high",
+    input_fidelity: "high",
+    n: 1,
+  });
+
+  return {
+    b64: resposta.data?.[0]?.b64_json || null,
+    modelo,
+    modo: "images.edit",
+    respostaBruta: {
+      created: resposta.created ?? null,
+      usage: resposta.usage ?? null,
+    },
+  };
+}
+
 export async function gerarImagemHeritageComReferencia({
   obraId,
   titulo,
@@ -249,7 +351,7 @@ export async function gerarImagemHeritageComReferencia({
   if (!prompt) throw new Error("Prompt Heritage nao encontrado para gerar imagem.");
 
   if (isEngineMockEnabled()) {
-    engineStep("Imagem Heritage", "→", { modo: "mock", modelo: "mock-engine" });
+    engineStep("Imagem Heritage", "->", { modo: "mock", modelo: "mock-engine" });
 
     return {
       ok: true,
@@ -270,26 +372,29 @@ export async function gerarImagemHeritageComReferencia({
 DADOS DA OBRA:
 ${promptDaObra}`);
   const referencia = await carregarReferenciaComoUploadable();
-  const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
   const inicio = Date.now();
 
-  engineStep("Imagem Heritage", "→", {
-    modelo,
+  engineStep("Imagem Heritage", "->", {
+    modo_preferencial: "responses.image_generation",
     referencia_visual: referencia.source,
     prompt_tamanho: promptFinal.length,
   });
 
-  const resposta = await getOpenAIClient().images.edit({
-    model: modelo,
-    image: referencia.file,
-    prompt: promptFinal,
-    size: "1024x1536",
-    quality: "high",
-    input_fidelity: "high",
-    n: 1,
-  });
+  let geracao;
 
-  const b64 = resposta.data?.[0]?.b64_json;
+  try {
+    geracao = await gerarComResponsesImageGeneration({
+      promptFinal,
+      referencia,
+      obraId,
+    });
+  } catch (error) {
+    console.warn("[ImageGeneration] Responses API falhou, tentando images.edit:", error.message);
+    geracao = await gerarComImagesEdit({ promptFinal, referencia });
+    geracao.fallback_reason = error.message;
+  }
+
+  const b64 = geracao.b64;
 
   if (!b64) {
     throw new Error("A OpenAI nao retornou imagem em base64.");
@@ -304,26 +409,25 @@ ${promptDaObra}`);
 
   const fim = Date.now();
 
-  engineStep("Imagem Heritage", "✓", {
+  engineStep("Imagem Heritage", "ok", {
     imagem_url: storage.publicUrl,
     storage_path: storage.storagePath,
     tempo_ms: fim - inicio,
+    modo: geracao.modo,
   });
 
   return {
     ok: true,
     mock: false,
-    modelo,
+    modelo: geracao.modelo,
     provider: "openai",
-    modo: "images.edit",
+    modo: geracao.modo,
     tempo_ms: fim - inicio,
     imagem_url: storage.publicUrl,
     storage_path: storage.storagePath,
     referencia_visual: referencia.source,
     prompt_tamanho: promptFinal.length,
-    resposta_bruta: {
-      created: resposta.created ?? null,
-      usage: resposta.usage ?? null,
-    },
+    fallback_reason: geracao.fallback_reason || null,
+    resposta_bruta: geracao.respostaBruta,
   };
 }
