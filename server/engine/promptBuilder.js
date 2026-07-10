@@ -946,32 +946,129 @@ Only after identifying this definitive cultural memory should the engine evaluat
 
 The selected scene must represent the emotional legacy of the work, not merely a famous promotional image or action sequence.
 
-Before evaluating any object, artifact, place or symbol,
-determine whether the emotional identity of the work is built around another living being.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIVING RELATIONSHIP VALIDATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before evaluating any priority category, determine whether the emotional identity of the work is fundamentally defined by the relationship between the protagonist and another living being.
 
 Living beings include:
 
-- child
-- baby
-- animal
-- horse
-- companion
-- sibling
-- parent
-- lover
-- mentor
-- friend
-- creature
-- AI with emotional consciousness
-- any character capable of reciprocal emotional connection.
+• child
+• baby
+• parent
+• sibling
+• lover
+• partner
+• close friend
+• mentor
+• disciple
+• animal
+• horse
+• pet
+• companion creature
+• sentient artificial life
+• any character capable of reciprocal emotional connection.
 
-If such relationship exists,
+If such relationship exists, evaluate whether fans remember this relationship more strongly than any weapon, artifact, location, battle, villain or visual spectacle.
 
-THIS PRIORITY IS MANDATORY.
+If the answer is YES:
 
-No artifact may replace this relationship.
+THIS RELATIONSHIP BECOMES MANDATORY.
 
-Objects become secondary visual support only.
+The emotional relationship automatically overrides every object, artifact, weapon, location or symbolic element.
+
+Objects become supporting elements only.
+
+The image must communicate the relationship first.
+
+Only after defining the relationship may the engine decide:
+
+• physical gesture
+• emotional expression
+• supporting artifact
+• environment
+• antagonist placement
+• lighting
+• composition
+
+Never replace a living emotional relationship with a symbolic object.
+
+Incorrect examples:
+
+❌ Sam + backpack
+❌ Arthur + rifle
+❌ Joel + watch
+❌ Wander + sword
+
+Correct examples:
+
+✔ Sam + BB
+✔ Arthur + horse
+✔ Joel + Ellie
+✔ Wander + Agro
+✔ Kratos + Atreus
+✔ Geralt + Ciri
+✔ Harry + Hedwig
+✔ Ico + Yorda
+
+The viewer should immediately understand:
+
+"This relationship is what this story is truly about."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRIORITY 1 — IRREPLACEABLE EMOTIONAL BOND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If Living Relationship Validation selected a relationship, this priority becomes mandatory.
+
+Choose the single emotional memory that best represents the relationship.
+
+The composition must be built around a visible emotional gesture rather than dialogue or exposition.
+
+Prefer moments such as:
+
+• forehead touching
+• embrace
+• carrying someone
+• protecting
+• comforting
+• final goodbye
+• resting together
+• holding the wounded
+• silent eye contact
+• hand on face
+• hand on shoulder
+• waiting together
+• walking together before danger
+• mourning together
+• sharing silence
+
+The emotional gesture must occupy the foreground.
+
+The second living being must never appear as a decorative element.
+
+Both participants must actively contribute to the emotional narrative.
+
+The world, villain, creature, environment or battlefield should remain behind them as narrative context only.
+
+Supporting objects may appear naturally but must never compete with the emotional relationship.
+
+The final image must communicate:
+
+love,
+trust,
+companionship,
+protection,
+loss,
+farewell,
+hope,
+redemption,
+or sacrifice,
+
+before communicating action.
+
+The viewer should immediately recognize that the emotional connection is the true subject of the image.
 
 Priority 2 — Cultural Icon (Antagonist, Rival or Legendary Figure)
 
