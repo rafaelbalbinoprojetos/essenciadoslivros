@@ -144,7 +144,9 @@ OBRIGATÓRIO: "Intenção dramática" e "Símbolo central" nunca podem ser um co
 
 [narrativa da cena — texto simples apenas. NUNCA imagem, infográfico, tabela ou gráfico]
 
-━━━ CENA 01 — O CONVITE ━━━
+━━━ O CONVITE — ANTES DAS CENAS ━━━
+
+O Convite é conteúdo à parte, escrito antes de qualquer cena numerada. Ele nunca é a Cena 01 e nunca leva o cabeçalho [CENA XX — EMOÇÃO: ...].
 
 Estrutura obrigatória:
 1. Narração seca (2–3 linhas, sem música)
@@ -220,9 +222,9 @@ A emoção conduz a memória. A memória conduz a interpretação. A cronologia 
 
 Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma?
 
-Global: ✓ 12–14 cenas? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ Cena 01 é o Convite? ✓ última cena retorna ao primeiro símbolo? ✓ a narrativa desperta vontade de revisitar a obra?
+Global: ✓ 12–14 cenas? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ o Convite aparece integralmente antes da Cena 01 e não entra na contagem de cenas? ✓ última cena retorna ao primeiro símbolo? ✓ a narrativa desperta vontade de revisitar a obra?
 
-A primeira linha da saída é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada antes. Nada depois da última cena.
+A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação "ESSÊNCIA DOS LIVROS APRESENTA..."). Depois do Convite, a primeira cena é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada depois da última cena.
 
 ━━━ OBRA ━━━
 [PAYLOAD DA OBRA]`;
@@ -669,14 +671,9 @@ async function aplicarModoTesteNarrativa(motor) {
       "12 a 14 cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.",
       "MODO DE TESTE: gere exatamente 2 cenas, além do Convite. O Convite vem antes da Cena 01 e não entra na contagem. Cada cena mantém UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01] e [CENA 02]. Não mencione o modo de teste na saída.",
     )
-    .replace("━━━ CENA 01 — O CONVITE ━━━", "━━━ O CONVITE — ANTES DAS CENAS ━━━")
     .replace(
-      "✓ Cena 01 é o Convite?",
-      "✓ o Convite aparece integralmente antes da Cena 01 e não entra na contagem?",
-    )
-    .replace(
-      "A primeira linha da saída é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada antes. Nada depois da última cena.",
-      "A primeira linha da saída é obrigatoriamente O CONVITE. Depois do Convite, gere exatamente [CENA 01 — EMOÇÃO: ...] e [CENA 02 — EMOÇÃO: ...]. Nada depois da segunda cena.",
+      "A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação \"ESSÊNCIA DOS LIVROS APRESENTA...\"). Depois do Convite, a primeira cena é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada depois da última cena.",
+      "A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação \"ESSÊNCIA DOS LIVROS APRESENTA...\"). Depois do Convite, gere exatamente [CENA 01 — EMOÇÃO: ...] e [CENA 02 — EMOÇÃO: ...]. Nada depois da segunda cena.",
     );
 }
 
