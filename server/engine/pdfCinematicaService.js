@@ -483,7 +483,10 @@ export async function gerarPdfCinematico({ obraId, contexto, beuAtual }) {
   const capaUrl = contexto?.arquivos_existentes?.capa_cinematica_url || null;
 
   if (!capaUrl) {
-    throw new Error("Nenhuma capa cinemática encontrada para esta obra. Gere a capa cinemática antes do PDF.");
+    engineStep("PDF Cinemático", "!", {
+      obraId,
+      aviso: "Nenhuma capa cinemática encontrada para esta obra. Gerando PDF sem capa.",
+    });
   }
 
   const titulo = contexto?.obra?.titulo || beuAtual?.identificacao?.titulo || "Obra";

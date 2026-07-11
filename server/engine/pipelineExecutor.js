@@ -940,11 +940,19 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       custoEstimado: calcularCustoEstimado(),
     });
 
-    engineStep("Pipeline concluida", "✓", {
-      obraId,
-      tipoEtapa,
-      imagem_url: resultado.imagem_url,
-    });
+    if (resultado.bloqueado_por_moderacao) {
+      engineStep("Pipeline concluida sem imagem", "!", {
+        obraId,
+        tipoEtapa,
+        motivo: resultado.motivo,
+      });
+    } else {
+      engineStep("Pipeline concluida", "✓", {
+        obraId,
+        tipoEtapa,
+        imagem_url: resultado.imagem_url,
+      });
+    }
 
     return {
       ok: true,
@@ -955,6 +963,8 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       imagemUrl: resultado.imagem_url,
       storagePath: resultado.storage_path,
       referenciaVisual: resultado.referencia_visual,
+      bloqueadoPorModeracao: Boolean(resultado.bloqueado_por_moderacao),
+      motivoBloqueio: resultado.motivo || null,
     };
   } catch (error) {
     const erro = normalizarErro(error);
@@ -1022,11 +1032,19 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       custoEstimado: calcularCustoEstimado(),
     });
 
-    engineStep("Pipeline concluida", "✓", {
-      obraId,
-      tipoEtapa,
-      imagem_url: resultado.imagem_url,
-    });
+    if (resultado.bloqueado_por_moderacao) {
+      engineStep("Pipeline concluida sem imagem", "!", {
+        obraId,
+        tipoEtapa,
+        motivo: resultado.motivo,
+      });
+    } else {
+      engineStep("Pipeline concluida", "✓", {
+        obraId,
+        tipoEtapa,
+        imagem_url: resultado.imagem_url,
+      });
+    }
 
     return {
       ok: true,
@@ -1037,6 +1055,8 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       imagemUrl: resultado.imagem_url,
       storagePath: resultado.storage_path,
       referenciaVisual: resultado.referencia_visual,
+      bloqueadoPorModeracao: Boolean(resultado.bloqueado_por_moderacao),
+      motivoBloqueio: resultado.motivo || null,
     };
   } catch (error) {
     const erro = normalizarErro(error);

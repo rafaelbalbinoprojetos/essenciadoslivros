@@ -326,6 +326,61 @@ async function salvarImagemNoStorage({
   };
 }
 
+function ehRecusaPorModeracao(error) {
+  const codigo = String(error?.code || error?.error?.code || "").toLowerCase();
+  const tipo = String(error?.type || error?.error?.type || "").toLowerCase();
+  const mensagem = String(error?.message || "").toLowerCase();
+  const status = error?.status ?? error?.response?.status ?? null;
+
+  const marcadores = [
+    "content_policy_violation",
+    "moderation_blocked",
+    "content policy",
+    "safety system",
+    "our safety",
+    "content filter",
+    "moderation",
+    "rejected as a result of",
+    "not allowed to generate",
+    "cannot generate",
+    "unable to generate",
+  ];
+
+  const alvo = `${codigo} ${tipo} ${mensagem}`;
+
+  if (marcadores.some((marcador) => alvo.includes(marcador))) return true;
+  if (status === 400 && /polic|moderat|safety|violat/i.test(mensagem)) return true;
+
+  return false;
+}
+
+async function ajustarPromptAposRecusa({ promptOriginal, motivoRecusa }) {
+  const modelo = process.env.OPENAI_MODERACAO_AJUSTE_MODEL || "gpt-4.1-mini";
+
+  const resposta = await getOpenAIClient().chat.completions.create({
+    model: modelo,
+    temperature: 0.4,
+    messages: [
+      {
+        role: "system",
+        content: "Você é um editor de prompts de geração de imagem. Reescreva prompts recusados pelo sistema de moderação da OpenAI, removendo elementos que possam violar políticas de conteúdo (violência gráfica explícita, sangue, nudez, personagens reais/celebridades, ódio, autolesão, armas em detalhe realista excessivo, conteúdo perturbador), mas preservando ao máximo a composição, atmosfera, estilo cinematográfico, artefatos simbólicos e fidelidade emocional à obra original. Responda apenas com o prompt reescrito em inglês, sem explicações, sem aspas, sem markdown.",
+      },
+      {
+        role: "user",
+        content: `O prompt abaixo foi recusado pela moderação da OpenAI.\n\nMotivo reportado: ${motivoRecusa || "não especificado"}\n\nPrompt original:\n${promptOriginal}\n\nReescreva mantendo a essência, apenas suavizando o que for necessário para passar pela moderação.`,
+      },
+    ],
+  });
+
+  const textoAjustado = resposta.choices?.[0]?.message?.content?.trim();
+
+  if (!textoAjustado) {
+    throw new Error("Não foi possível ajustar o prompt após recusa de moderação.");
+  }
+
+  return textoAjustado;
+}
+
 function extrairImagemBase64DaResponses(resposta) {
   const output = Array.isArray(resposta?.output) ? resposta.output : [];
   const imageCall = output.find((item) => item?.type === "image_generation_call" && item?.result);
@@ -467,29 +522,79 @@ ${promptDaObra}`);
     prompt_tamanho: promptFinal.length,
   });
 
-  let geracao;
+  async function tentarGerarImagem(promptParaGerar) {
+    try {
+      return await gerarComResponsesImageGeneration({
+        promptFinal: promptParaGerar,
+        referencia,
+        obraId,
+        tipoEtapa,
+        instructions: instructionsResponses,
+      });
+    } catch (error) {
+      console.warn("[ImageGeneration] Responses API falhou, tentando images.edit:", error.message);
+      const geracaoFallback = await gerarComImagesEdit({ promptFinal: promptParaGerar, referencia });
+      geracaoFallback.fallback_reason = error.message;
+      return geracaoFallback;
+    }
+  }
 
-  try {
-    geracao = await gerarComResponsesImageGeneration({
-      promptFinal,
-      referencia,
-      obraId,
-      tipoEtapa,
-      instructions: instructionsResponses,
+  async function tentarGerarOuBloquear(promptParaGerar) {
+    try {
+      const geracao = await tentarGerarImagem(promptParaGerar);
+
+      if (!geracao.b64) {
+        return { bloqueado: true, motivo: "A OpenAI não retornou imagem em base64 (possível recusa silenciosa)." };
+      }
+
+      return { bloqueado: false, geracao };
+    } catch (error) {
+      if (!ehRecusaPorModeracao(error)) throw error;
+      return { bloqueado: true, motivo: error.message };
+    }
+  }
+
+  let promptUsado = promptFinal;
+  let tentativa = await tentarGerarOuBloquear(promptUsado);
+
+  if (tentativa.bloqueado) {
+    engineStep(`Imagem ${label}`, "!", {
+      aviso: "Prompt recusado pela moderação da OpenAI. Ajustando e tentando novamente.",
+      motivo: tentativa.motivo,
     });
-  } catch (error) {
-    console.warn("[ImageGeneration] Responses API falhou, tentando images.edit:", error.message);
-    geracao = await gerarComImagesEdit({ promptFinal, referencia });
-    geracao.fallback_reason = error.message;
+
+    try {
+      promptUsado = await ajustarPromptAposRecusa({ promptOriginal: promptFinal, motivoRecusa: tentativa.motivo });
+      tentativa = await tentarGerarOuBloquear(promptUsado);
+    } catch (erroAjuste) {
+      tentativa = { bloqueado: true, motivo: erroAjuste.message };
+    }
   }
 
-  const b64 = geracao.b64;
+  if (tentativa.bloqueado) {
+    engineStep(`Imagem ${label}`, "✕", {
+      aviso: "Geração bloqueada pela moderação da OpenAI mesmo após ajuste do prompt. Seguindo sem imagem.",
+      motivo: tentativa.motivo,
+    });
 
-  if (!b64) {
-    throw new Error("A OpenAI nao retornou imagem em base64.");
+    return {
+      ok: false,
+      mock: false,
+      bloqueado_por_moderacao: true,
+      modelo: null,
+      provider: "openai",
+      modo: null,
+      imagem_url: null,
+      storage_path: null,
+      referencia_visual: referencia.source,
+      prompt_tamanho: promptUsado.length,
+      motivo: tentativa.motivo,
+      resposta_bruta: null,
+    };
   }
 
-  const imageBuffer = Buffer.from(b64, "base64");
+  const { geracao } = tentativa;
+  const imageBuffer = Buffer.from(geracao.b64, "base64");
   const storage = await salvarImagemNoStorage({
     obraId,
     titulo,
@@ -511,6 +616,7 @@ ${promptDaObra}`);
   return {
     ok: true,
     mock: false,
+    bloqueado_por_moderacao: false,
     modelo: geracao.modelo,
     provider: "openai",
     modo: geracao.modo,
@@ -518,7 +624,7 @@ ${promptDaObra}`);
     imagem_url: storage.publicUrl,
     storage_path: storage.storagePath,
     referencia_visual: referencia.source,
-    prompt_tamanho: promptFinal.length,
+    prompt_tamanho: promptUsado.length,
     fallback_reason: geracao.fallback_reason || null,
     resposta_bruta: geracao.respostaBruta,
   };

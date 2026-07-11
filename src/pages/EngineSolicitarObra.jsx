@@ -435,7 +435,15 @@ export default function EngineSolicitarObra() {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
       }
 
-      toast.success(`${tipoEtapa} executado com sucesso!`);
+      if (data?.bloqueadoPorModeracao) {
+        toast.error(
+          `A OpenAI recusou gerar a imagem de "${tipoEtapa}" (moderação), mesmo após tentar ajustar o prompt. A etapa seguiu sem imagem — o PDF final será gerado sem essa capa.`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(`${tipoEtapa} executado com sucesso!`);
+      }
+
       return data;
     } catch (error) {
       console.error("[ENGINE] erro ao executar etapa", { tipoEtapa, error });
