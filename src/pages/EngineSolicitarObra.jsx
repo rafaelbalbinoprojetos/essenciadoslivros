@@ -195,6 +195,9 @@ export default function EngineSolicitarObra() {
   const [resultadoPdfCinematica, setResultadoPdfCinematica] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
   const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
+  const [testesAtivo, setTestesAtivo] = useState(false);
+  const [testesLoading, setTestesLoading] = useState(true);
+  const [testesSaving, setTestesSaving] = useState(false);
   const [decisaoObraExistente, setDecisaoObraExistente] = useState(null);
   const [executandoPipelineSelecionada, setExecutandoPipelineSelecionada] = useState(false);
   const [stepStartedAt, setStepStartedAt] = useState({});
@@ -218,6 +221,55 @@ export default function EngineSolicitarObra() {
   useEffect(() => {
     loadEngineReferences();
   }, [loadEngineReferences]);
+
+  useEffect(() => {
+    async function loadTestes() {
+      setTestesLoading(true);
+
+      try {
+        const response = await fetch("/api/engine/config");
+        const data = await response.json();
+
+        if (response.ok && data?.ok) {
+          setTestesAtivo(Boolean(data.testes));
+        }
+      } catch (error) {
+        console.error("[ENGINE] erro ao carregar modo de testes", error);
+      } finally {
+        setTestesLoading(false);
+      }
+    }
+
+    loadTestes();
+  }, []);
+
+  async function handleToggleTestes(checked) {
+    const anterior = testesAtivo;
+    setTestesAtivo(checked);
+    setTestesSaving(true);
+
+    try {
+      const response = await fetch("/api/engine/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testes: checked }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Erro ao atualizar modo de testes.");
+      }
+
+      toast.success(checked ? "Modo Testes ativado." : "Modo Testes desativado.");
+    } catch (error) {
+      console.error("[ENGINE] erro ao atualizar modo de testes", error);
+      toast.error(error.message);
+      setTestesAtivo(anterior);
+    } finally {
+      setTestesSaving(false);
+    }
+  }
 
   useEffect(() => {
     const activeSteps = {
@@ -708,6 +760,39 @@ export default function EngineSolicitarObra() {
         <p className="text-zinc-400 mb-8">
           Solicite uma nova obra para iniciar a criação da Base Editorial Universal.
         </p>
+
+        <section className="mb-6 rounded-2xl border border-purple-900/50 bg-purple-950/10 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-purple-300">
+                Modo Testes
+              </p>
+              <h2 className="mt-1 text-base font-semibold text-white">
+                Narrativa cinematográfica reduzida
+              </h2>
+              <p className="mt-1 text-sm text-zinc-400">
+                Ativado: a narrativa cinematográfica gera só 2 cenas + Convite (chamada real à OpenAI, mais barata).
+                Desativado: gera as 12-14 cenas completas. As demais etapas não são afetadas por este modo.
+              </p>
+              {!isAdmin && (
+                <p className="mt-2 text-xs text-zinc-500">
+                  Apenas administradores podem alternar este modo.
+                </p>
+              )}
+            </div>
+            <label className="relative inline-flex flex-none cursor-pointer items-center">
+              <input
+                type="checkbox"
+                checked={testesAtivo}
+                disabled={!isAdmin || testesLoading || testesSaving}
+                onChange={(event) => handleToggleTestes(event.target.checked)}
+                className="peer sr-only"
+              />
+              <div className="h-7 w-12 rounded-full bg-zinc-700 transition-colors peer-checked:bg-purple-500 peer-disabled:opacity-50" />
+              <div className="absolute left-1 h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
+            </label>
+          </div>
+        </section>
 
         <form
           onSubmit={solicitarObra}

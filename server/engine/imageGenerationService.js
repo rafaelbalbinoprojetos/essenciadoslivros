@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
-import { isEngineMockEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -442,22 +441,6 @@ async function gerarImagemComReferencia({
 }) {
   if (!obraId) throw new Error(`obraId e obrigatorio para gerar imagem ${label}.`);
   if (!prompt) throw new Error(`Prompt ${label} nao encontrado para gerar imagem.`);
-
-  if (await isEngineMockEnabled()) {
-    engineStep(`Imagem ${label}`, "->", { modo: "mock", modelo: "mock-engine" });
-
-    return {
-      ok: true,
-      mock: true,
-      modelo: "mock-engine",
-      provider: "mock",
-      modo: "mock",
-      imagem_url: null,
-      storage_path: null,
-      referencia_visual: null,
-      resposta_bruta: null,
-    };
-  }
 
   const limpador = tipoImagem === "cinematica"
     ? limparPromptCinematicaParaImagem

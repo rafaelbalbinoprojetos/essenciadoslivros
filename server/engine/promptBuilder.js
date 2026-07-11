@@ -1,5 +1,5 @@
 import { ENGINE_CONFIG } from "./engineConfig.js";
-import { isNarrativaTesteEnabled } from "./engineConfigService.js";
+import { isEngineTestesAtivo } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -662,7 +662,7 @@ Exemplo:
 }
 
 async function aplicarModoTesteNarrativa(motor) {
-  if (!(await isNarrativaTesteEnabled())) return motor;
+  if (!(await isEngineTestesAtivo())) return motor;
 
   return motor
     .replace(

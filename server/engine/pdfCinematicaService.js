@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { isEngineMockEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -473,20 +472,6 @@ async function salvarPdfNoStorage({ obraId, tituloArquivo, pdfBuffer }) {
 export async function gerarPdfCinematico({ obraId, contexto, beuAtual }) {
   if (!obraId) {
     throw new Error("obraId é obrigatório para gerar o PDF cinemático.");
-  }
-
-  if (await isEngineMockEnabled()) {
-    engineStep("PDF Cinemático", "->", { modo: "mock" });
-
-    return {
-      ok: true,
-      mock: true,
-      provider: "mock",
-      modo: "mock",
-      pdf_url: null,
-      storage_path: null,
-      paginas: null,
-    };
   }
 
   const narrativa = await buscarNarrativaCinematica(obraId);
