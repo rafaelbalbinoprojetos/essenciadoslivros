@@ -280,7 +280,7 @@ function renderizarCena(doc, cena) {
   if (cena.estiloSuno || cena.intencao || cena.simbolo) {
     doc.font("corpoItalico").fontSize(8.5).fillColor(COR_ACCENT);
     if (cena.estiloSuno) {
-      doc.text(`Estilo Suno: ${cena.estiloSuno}`);
+      doc.text(`Ambientação: ${cena.estiloSuno}`);
       doc.moveDown(0.25);
     }
     if (cena.intencao) {

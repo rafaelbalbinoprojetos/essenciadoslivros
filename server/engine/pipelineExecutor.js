@@ -274,6 +274,21 @@ async function executarCuradorBEU({ obraId }) {
     });
     engineStep("BEU salva", "✓", { payloadId: payload.id });
 
+    const tituloPesquisado = resultado.saida?.identificacao?.titulo;
+
+    if (typeof tituloPesquisado === "string" && tituloPesquisado.trim()) {
+      const { error: erroTitulo } = await supabaseAdmin
+        .from("livros")
+        .update({ titulo: tituloPesquisado.trim() })
+        .eq("id", obraId);
+
+      if (erroTitulo) {
+        console.error("Erro ao atualizar título da obra com a pesquisa do curador:", erroTitulo.message);
+      } else {
+        engineStep("Título da obra atualizado", "✓", { titulo: tituloPesquisado.trim() });
+      }
+    }
+
     await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
 
     await concluirExecucaoAgente({
