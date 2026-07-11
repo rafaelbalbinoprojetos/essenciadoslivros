@@ -56,6 +56,74 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   atualizar_dados: 15,
 };
 
+const PIPELINE_STEP_DEFS = [
+  { key: "curador_beu", label: "Curador (dados factuais)", colorClass: "text-amber-500 focus:ring-amber-500" },
+  { key: "editor_beu", label: "Editor (interpretação emocional)", colorClass: "text-amber-500 focus:ring-amber-500" },
+  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-sky-500 focus:ring-sky-500" },
+  { key: "narrativa_cinematica", label: "Narrativa Cinematográfica", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "heritage_prompt", label: "Prompt Heritage", colorClass: "text-orange-500 focus:ring-orange-500" },
+  { key: "heritage_image", label: "Imagem Heritage", colorClass: "text-yellow-500 focus:ring-yellow-500" },
+  { key: "capa_cinematica_prompt", label: "Prompt Capa Cinemática", colorClass: "text-fuchsia-500 focus:ring-fuchsia-500" },
+  { key: "capa_cinematica_image", label: "Imagem Cinemática", colorClass: "text-rose-500 focus:ring-rose-500" },
+  { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-cyan-500 focus:ring-cyan-500" },
+];
+
+function criarSelecaoDeEtapas(valor) {
+  return Object.fromEntries(PIPELINE_STEP_DEFS.map((etapa) => [etapa.key, valor]));
+}
+
+function PipelineStepSelector({ selectedSteps, onToggle, onSelectAll, onRun, running, disabled }) {
+  const quantidadeSelecionada = PIPELINE_STEP_DEFS.filter((etapa) => selectedSteps[etapa.key]).length;
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-black/30 p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-zinc-200">Selecione as etapas a buscar/gerar</p>
+        <div className="flex gap-3 text-xs">
+          <button type="button" onClick={() => onSelectAll(true)} className="font-semibold text-emerald-300 hover:underline">
+            Marcar todas
+          </button>
+          <button type="button" onClick={() => onSelectAll(false)} className="font-semibold text-zinc-400 hover:underline">
+            Desmarcar todas
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {PIPELINE_STEP_DEFS.map((etapa) => (
+          <label
+            key={etapa.key}
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-200"
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(selectedSteps[etapa.key])}
+              onChange={() => onToggle(etapa.key)}
+              disabled={disabled}
+              className={`h-4 w-4 rounded border-zinc-700 bg-black ${etapa.colorClass}`}
+            />
+            {etapa.label}
+          </label>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        disabled={disabled || quantidadeSelecionada === 0}
+        onClick={onRun}
+        className="mt-4 w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+      >
+        {running
+          ? "Executando pipeline selecionada..."
+          : `Executar ${quantidadeSelecionada} etapa${quantidadeSelecionada === 1 ? "" : "s"} selecionada${quantidadeSelecionada === 1 ? "" : "s"}`}
+      </button>
+      <p className="mt-2 text-xs text-zinc-500">
+        Ao terminar cada etapa selecionada, imagens e PDF já sobem automaticamente para o Storage e a obra é atualizada no catálogo.
+      </p>
+    </div>
+  );
+}
+
 function getStepStatus({ active, result, manualWhenIdle = false }) {
   if (active) return "loading";
   if (result?.ok === false) return "error";
@@ -125,9 +193,12 @@ export default function EngineSolicitarObra() {
   const [resultadoCapaImage, setResultadoCapaImage] = useState(null);
   const [resultadoPdfCinematica, setResultadoPdfCinematica] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
+  const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
+  const [decisaoObraExistente, setDecisaoObraExistente] = useState(null);
+  const [executandoPipelineSelecionada, setExecutandoPipelineSelecionada] = useState(false);
   const [stepStartedAt, setStepStartedAt] = useState({});
   const [timerNow, setTimerNow] = useState(() => Date.now());
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados;
 
   const loadEngineReferences = useCallback(async () => {
     setReferencesLoading(true);
@@ -347,6 +418,47 @@ export default function EngineSolicitarObra() {
     }
   }
 
+  function toggleStepSelecionado(key) {
+    setSelectedSteps((atual) => ({ ...atual, [key]: !atual[key] }));
+  }
+
+  function definirTodasEtapas(valor) {
+    setSelectedSteps(criarSelecaoDeEtapas(valor));
+  }
+
+  async function executarPipelineSelecionada(obraIdParam = null) {
+    const obraId = obraIdParam || resultadoCriacao?.livro?.id;
+
+    if (!obraId) {
+      toast.error("Nenhuma obra selecionada para executar a pipeline.");
+      return;
+    }
+
+    const etapasParaRodar = PIPELINE_STEP_DEFS.filter((etapa) => selectedSteps[etapa.key]);
+
+    if (etapasParaRodar.length === 0) {
+      toast.error("Selecione ao menos uma etapa para executar.");
+      return;
+    }
+
+    setExecutandoPipelineSelecionada(true);
+
+    try {
+      for (const etapa of etapasParaRodar) {
+        const resultado = await executarEtapaManual(etapa.key, obraId);
+
+        if (!resultado?.ok) {
+          toast.error(`Pipeline interrompida em "${etapa.label}". Corrija e rode as etapas restantes manualmente se quiser.`);
+          return;
+        }
+      }
+
+      toast.success("Pipeline concluída — imagens, PDF e dados já foram salvos na obra.");
+    } finally {
+      setExecutandoPipelineSelecionada(false);
+    }
+  }
+
   async function atualizarDadosAusentes(obraIdParam = null) {
     const obraId = obraIdParam || resultadoCriacao?.livro?.id;
 
@@ -416,6 +528,8 @@ export default function EngineSolicitarObra() {
     setResultadoCapaImage(null);
     setResultadoPdfCinematica(null);
     setResultadoAtualizacao(null);
+    setDecisaoObraExistente(null);
+    setSelectedSteps(criarSelecaoDeEtapas(true));
 
     try {
       console.log("[ENGINE] iniciando solicitar-obra");
@@ -449,19 +563,10 @@ export default function EngineSolicitarObra() {
       }
 
       if (data.existente === true) {
-        console.log("[ENGINE] obra existente, pipeline automática não será executada", obraId);
-        setCriandoObra(false);
-        return;
+        console.log("[ENGINE] obra existente, aguardando decisão do usuário", obraId);
       }
 
       setCriandoObra(false);
-      const curador = await executarEtapaManual("curador_beu", obraId);
-      if (curador?.ok) {
-        const editor = await executarEtapaManual("editor_beu", obraId);
-        if (editor?.ok) {
-          await executarEtapaManual("diretor_criativo", obraId);
-        }
-      }
     } catch (error) {
       console.error("[ENGINE] erro no fluxo", error);
       toast.error(error.message);
@@ -844,92 +949,32 @@ export default function EngineSolicitarObra() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
               Resultado da criação da obra
             </h2>
-            {resultadoCriacao.existente === true && (
+            {resultadoCriacao.existente === true && decisaoObraExistente === null && (
               <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
                 <p className="font-semibold">Obra já existe no catálogo.</p>
                 <p className="mt-1 text-amber-100/75">
-                  A pipeline automática não foi executada. Use os botões abaixo se quiser reprocessar manualmente.
+                  Deseja pesquisar todas as informações novamente e substituir os dados atuais, ou prefere escolher manualmente o que atualizar?
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("curador_beu")}
-                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60"
+                    onClick={() => {
+                      definirTodasEtapas(true);
+                      setDecisaoObraExistente("redo");
+                    }}
+                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400"
                   >
-                    Reprocessar Curador
+                    Sim, pesquisar tudo novamente e substituir
                   </button>
                   <button
                     type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("editor_beu")}
-                    className="rounded-xl border border-amber-500/60 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/10 disabled:opacity-60"
+                    onClick={() => {
+                      definirTodasEtapas(false);
+                      setDecisaoObraExistente("manual");
+                    }}
+                    className="rounded-xl border border-amber-500/60 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/10"
                   >
-                    Reprocessar Editor
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("diretor_criativo")}
-                    className="rounded-xl border border-sky-500/60 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/10 disabled:opacity-60"
-                  >
-                    Reprocessar Diretor Criativo
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => atualizarDadosAusentes()}
-                    className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
-                  >
-                    Atualizar dados ausentes
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("narrativa_cinematica")}
-                    className="rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10 disabled:opacity-60"
-                  >
-                    Gerar Narrativa Cinematográfica
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("heritage_prompt")}
-                    className="rounded-xl border border-orange-500/60 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-orange-500/10 disabled:opacity-60"
-                  >
-                    Gerar Prompt Heritage
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("heritage_image")}
-                    className="rounded-xl border border-yellow-500/60 px-4 py-2 text-sm font-semibold text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-60"
-                  >
-                    Gerar Imagem Heritage
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("capa_cinematica_prompt")}
-                    className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
-                  >
-                    Gerar Prompt Capa Cinemática
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("capa_cinematica_image")}
-                    className="rounded-xl border border-rose-500/60 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/10 disabled:opacity-60"
-                  >
-                    Gerar Imagem Cinemática
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("pdf_cinematica")}
-                    className="rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10 disabled:opacity-60"
-                  >
-                    Gerar PDF Cinemático
+                    Não, quero escolher manualmente
                   </button>
                 </div>
               </div>
@@ -937,62 +982,25 @@ export default function EngineSolicitarObra() {
             <pre className="bg-black border border-zinc-800 rounded-2xl p-5 overflow-auto text-sm text-emerald-300">
               {JSON.stringify(resultadoCriacao, null, 2)}
             </pre>
-            {resultadoCriacao?.livro?.id && resultadoCriacao.existente !== true && (
-              <div className="mt-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4 text-sm text-purple-100">
-                <p className="font-semibold">Narrativa Cinematográfica</p>
-                <p className="mt-1 text-purple-100/75">
-                  Esta etapa é manual e usa a BEU já enriquecida pelo Curador, Editor e Diretor Criativo.
-                </p>
+            {resultadoCriacao?.livro?.id
+              && (resultadoCriacao.existente !== true || decisaoObraExistente !== null) && (
+              <div className="mt-4 space-y-3">
+                <PipelineStepSelector
+                  selectedSteps={selectedSteps}
+                  onToggle={toggleStepSelecionado}
+                  onSelectAll={definirTodasEtapas}
+                  onRun={() => executarPipelineSelecionada()}
+                  running={executandoPipelineSelecionada}
+                  disabled={loading}
+                />
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={() => executarEtapaManual("narrativa_cinematica")}
-                  className="mt-4 rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10 disabled:opacity-60"
+                  onClick={() => atualizarDadosAusentes()}
+                  className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
                 >
-                  Gerar Narrativa Cinematográfica
+                  Atualizar dados ausentes
                 </button>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("heritage_prompt")}
-                    className="rounded-xl border border-orange-500/60 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-orange-500/10 disabled:opacity-60"
-                  >
-                    Gerar Prompt Heritage
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("heritage_image")}
-                    className="rounded-xl border border-yellow-500/60 px-4 py-2 text-sm font-semibold text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-60"
-                  >
-                    Gerar Imagem Heritage
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("capa_cinematica_prompt")}
-                    className="rounded-xl border border-fuchsia-500/60 px-4 py-2 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-500/10 disabled:opacity-60"
-                  >
-                    Gerar Prompt Capa Cinemática
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("capa_cinematica_image")}
-                    className="rounded-xl border border-rose-500/60 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/10 disabled:opacity-60"
-                  >
-                    Gerar Imagem Cinemática
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => executarEtapaManual("pdf_cinematica")}
-                    className="rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10 disabled:opacity-60"
-                  >
-                    Gerar PDF Cinemático
-                  </button>
-                </div>
               </div>
             )}
           </section>
