@@ -94,6 +94,16 @@ When there is any conflict between visual reference and work prompt, the work pr
 Use the image_generation tool to create the final image.
 `.trim();
 
+const INSTRUCTIONS_RESPONSES_CINEMATICA = `
+You are a senior image art director for the Essencia dos Livros cinematic audio cover collection.
+Analyze the attached reference image only as quality and style language: dramatic lighting, texture, depth, atmosphere, editorial hierarchy, premium cinematic finish.
+This is NOT a Heritage museum archive cover. Do not add archival tables, museum plaques, aged documents, inventories of artifacts, or documentary density unless the work prompt explicitly asks for them.
+The work prompt may start with a LOCKED SCENE describing the mandatory emotional subject of the image, including a living relationship between the protagonist and another living being (animal, child, companion, partner, sentient creature). When that living relationship is present, it MUST dominate the composition and be immediately recognizable. Objects, weapons, bags or artifacts may only appear as supporting elements in the background or midground and must never replace, upstage or compete with the living being.
+Never substitute a living emotional relationship with an object, symbol or artifact-centric composition.
+When there is any conflict between the visual reference and the work prompt, the work prompt wins.
+Use the image_generation tool to create the final image.
+`.trim();
+
 let openaiClient = null;
 
 function getOpenAIClient() {
@@ -324,13 +334,19 @@ function extrairImagemBase64DaResponses(resposta) {
   return imageCall?.result || null;
 }
 
-async function gerarComResponsesImageGeneration({ promptFinal, referencia, obraId, tipoEtapa = "heritage_image" }) {
+async function gerarComResponsesImageGeneration({
+  promptFinal,
+  referencia,
+  obraId,
+  tipoEtapa = "heritage_image",
+  instructions = INSTRUCTIONS_RESPONSES_HERITAGE,
+}) {
   const modeloResposta = process.env.OPENAI_RESPONSES_MODEL || "gpt-4.1";
   const modeloImagem = process.env.OPENAI_IMAGE_TOOL_MODEL || "gpt-image-1";
 
   const resposta = await getOpenAIClient().responses.create({
     model: modeloResposta,
-    instructions: INSTRUCTIONS_RESPONSES_HERITAGE,
+    instructions,
     input: [
       {
         role: "user",
@@ -446,6 +462,9 @@ async function gerarImagemComReferencia({
   const limpador = tipoImagem === "cinematica"
     ? limparPromptCinematicaParaImagem
     : limparPromptHeritageParaImagem;
+  const instructionsResponses = tipoImagem === "cinematica"
+    ? INSTRUCTIONS_RESPONSES_CINEMATICA
+    : INSTRUCTIONS_RESPONSES_HERITAGE;
 
   const promptDaObra = limpador(prompt);
   const promptFinal = limitarPromptImagem(`${promptReferencia}
@@ -473,6 +492,7 @@ ${promptDaObra}`);
       referencia,
       obraId,
       tipoEtapa,
+      instructions: instructionsResponses,
     });
   } catch (error) {
     console.warn("[ImageGeneration] Responses API falhou, tentando images.edit:", error.message);

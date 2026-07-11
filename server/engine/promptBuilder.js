@@ -962,7 +962,7 @@ ${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 //   Agora o GPT-4o faz o raciocínio e entrega apenas a cena já resolvida.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+function montarPromptCapaCinematica({ contexto, beuAtual, referenciaVisual = null }) {
   // ─────────────────────────────────────────────────────────────────────────
   // ARQUITETURA DE DOIS ESTÁGIOS — v5 (com anchor de relação viva)
   //
@@ -1103,12 +1103,6 @@ Creator: ${criador}${ano ? `\nYear: ${ano}` : ""}
 ${temaCentral ? `Central theme: ${temaCentral}` : ""}
 ${curvaEmocional ? `Emotional arc: ${curvaEmocional}` : ""}
 ${momentos.length > 0 ? `Essential moments:\n${momentos.map((m) => `- ${m}`).join("\n")}` : ""}
-
-FULL BEU:
-${JSON.stringify(beuAtual, null, 2)}
-
-CINEMATIC NARRATIVE:
-${narrativaCinematica || "Not available. Use BEU and context only."}
 `.trim();
 }
 
@@ -1588,7 +1582,6 @@ export async function montarPromptAgente({
       montar: ({ referenciaVisual }) => montarPromptCapaCinematica({
         contexto,
         beuAtual,
-        narrativaCinematica,
         referenciaVisual,
       }),
     },
