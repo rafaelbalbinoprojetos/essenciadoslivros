@@ -205,12 +205,9 @@ ${tituloApresentacao}
 
 
 [CENA 01 — EMOÇÃO: CONTEMPLAÇÃO / SAUDADE]
-
-ESTILO SUNO
-[Brazilian Portuguese, reflective cinematic narration, slow strings, distant piano, nostalgic ambience]
-
-[Intenção dramática: iniciar a experiência como uma lembrança que ainda não sabe se quer ser contada]
-[Símbolo central: a porta]
+ESTILO SUNO: Melancholic Warm Ambient Score, Nostalgic Soft Atmosphere, Aching Beauty, Slow Fading Warmth, No Ticking Rhythms, No Drums, No Constant Pulse
+Intenção dramática: iniciar a experiência como uma lembrança que ainda não sabe se quer ser contada
+Símbolo central: a porta
 
 Houve um tempo em que esta história ainda não tinha se tornado memória.
 
@@ -230,12 +227,9 @@ Com uma pequena abertura.
 
 
 [CENA 02 — EMOÇÃO: ESPERANÇA CAUTELOSA]
-
-ESTILO SUNO
-[Brazilian Portuguese, restrained hopeful narration, soft warm background enters, gentle piano, quiet strings, lower voice]
-
-[Intenção dramática: revelar que toda jornada começa antes da coragem parecer possível]
-[Símbolo central: o primeiro passo]
+ESTILO SUNO: Fragile Rising Warmth, Tentative Light Atmosphere, Small Brave Glow, Hope as Whisper Not Shout, No Ticking Rhythms, No Drums, No Constant Pulse
+Intenção dramática: revelar que toda jornada começa antes da coragem parecer possível
+Símbolo central: o primeiro passo
 
 Anos depois, o que permanece não é a sequência exata dos acontecimentos.
 

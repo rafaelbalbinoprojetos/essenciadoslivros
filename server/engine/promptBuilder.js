@@ -103,40 +103,43 @@ A cronologia só organiza. A emoção decide.
 
 ━━━ CARDÁPIO DE EMOÇÕES E ESTILOS SUNO ━━━
 
-Todas as entradas devem vir acompanhadas de: Brazilian Portuguese
+As tags de cada entrada abaixo devem ser reproduzidas exatamente como estão, sempre separadas por vírgula, SEM colchetes em cada tag individual — o bloco vai direto para o campo de estilo do Suno.
 
-FESTIVO / ALEGRIA: [Warm Joyful Ambient Score], [Playful Light Atmosphere], [Festive and Gentle], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+FESTIVO / ALEGRIA: Warm Joyful Ambient Score, Playful Light Atmosphere, Festive and Gentle, No Ticking Rhythms, No Drums, No Constant Pulse
 
-TERNURA / INTIMIDADE: [Warm Intimate Ambient Score], [Soft Harmonic Glow], [Gentle Breathing Textures], [Tender and Fragile], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+TERNURA / INTIMIDADE: Warm Intimate Ambient Score, Soft Harmonic Glow, Gentle Breathing Textures, Tender and Fragile, No Ticking Rhythms, No Drums, No Constant Pulse
 
-CONTEMPLAÇÃO / SAUDADE: [Melancholic Warm Ambient Score], [Nostalgic Soft Atmosphere], [Aching Beauty], [Slow Fading Warmth], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+CONTEMPLAÇÃO / SAUDADE: Melancholic Warm Ambient Score, Nostalgic Soft Atmosphere, Aching Beauty, Slow Fading Warmth, No Ticking Rhythms, No Drums, No Constant Pulse
 
-TENSÃO / MEDO CRESCENTE: [Tense Restless Underscore], [Shifting Dark Textures], [Pressure Building Without Release], [Unsettled Dissonant Layers], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+TENSÃO / MEDO CRESCENTE: Tense Restless Underscore, Shifting Dark Textures, Pressure Building Without Release, Unsettled Dissonant Layers, No Ticking Rhythms, No Drums, No Constant Pulse
 
-SOMBRIO / PESO: [Dark Low Ambient Score], [Heavy Somber Atmosphere], [Deep Rumbling Undertone], [No High Pitched Sounds], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+SOMBRIO / PESO: Dark Low Ambient Score, Heavy Somber Atmosphere, Deep Rumbling Undertone, No High Pitched Sounds, No Ticking Rhythms, No Drums, No Constant Pulse
 
-HORROR / PAVOR: [Near Total Silence Score], [Cold Sparse Tension], [Dread as Absence Not Sound], [Hollow Air], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+HORROR / PAVOR: Near Total Silence Score, Cold Sparse Tension, Dread as Absence Not Sound, Hollow Air, No Ticking Rhythms, No Drums, No Constant Pulse
 
-DEVASTAÇÃO / PERDA: [Exhausted Minimal Score], [Sound Thinning to Nothing], [Grief Without Resolution], [Vast Empty Ache], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+DEVASTAÇÃO / PERDA: Exhausted Minimal Score, Sound Thinning to Nothing, Grief Without Resolution, Vast Empty Ache, No Ticking Rhythms, No Drums, No Constant Pulse
 
-GRANDEZA MELANCÓLICA: [Vast Somber Ambient Score], [Ancient Weight], [Monumental but Gentle], [Slow Inevitable Swell Then Retreat], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+GRANDEZA MELANCÓLICA: Vast Somber Ambient Score, Ancient Weight, Monumental but Gentle, Slow Inevitable Swell Then Retreat, No Ticking Rhythms, No Drums, No Constant Pulse
 
-ESPERANÇA CAUTELOSA: [Fragile Rising Warmth], [Tentative Light Atmosphere], [Small Brave Glow], [Hope as Whisper Not Shout], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+ESPERANÇA CAUTELOSA: Fragile Rising Warmth, Tentative Light Atmosphere, Small Brave Glow, Hope as Whisper Not Shout, No Ticking Rhythms, No Drums, No Constant Pulse
 
-BELEZA QUE DÓI: [Golden Light Ambient Score], [Ethereal Gentle Warmth], [Beauty That Aches], [Last Safe Place Atmosphere], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+BELEZA QUE DÓI: Golden Light Ambient Score, Ethereal Gentle Warmth, Beauty That Aches, Last Safe Place Atmosphere, No Ticking Rhythms, No Drums, No Constant Pulse
 
-EXAUSTÃO / FIM: [Almost No Music], [Single Fragile Sound Source], [Vast Interior Silence], [One Note Fading Forever], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+EXAUSTÃO / FIM: Almost No Music, Single Fragile Sound Source, Vast Interior Silence, One Note Fading Forever, No Ticking Rhythms, No Drums, No Constant Pulse
 
-DESCONFORTO MORAL: [Uneasy Warm Underscore], [Conflicting Soft Layers], [Gradual Reluctant Warmth], [Moral Ambiguity as Sound], [No Ticking Rhythms], [No Drums], [No Constant Pulse]
+DESCONFORTO MORAL: Uneasy Warm Underscore, Conflicting Soft Layers, Gradual Reluctant Warmth, Moral Ambiguity as Sound, No Ticking Rhythms, No Drums, No Constant Pulse
 
 Se nenhuma encaixar perfeitamente, use a mais próxima. Nunca invente estilos fora do cardápio.
 
 ━━━ FORMATO DE SAÍDA — CADA CENA ━━━
 
-[CENA XX] EMOÇÃO: [nome do cardápio]
-ESTILO SUNO: Brazilian Portuguese, [bloco completo correspondente]
+A primeira linha de cada cena é um ÚNICO bloco entre colchetes, contendo cena e emoção juntos — nunca deixe "EMOÇÃO" fora dos colchetes:
+[CENA XX — EMOÇÃO: NOME DO CARDÁPIO]
+ESTILO SUNO: [bloco completo correspondente — tags separadas por vírgula, SEM colchete em cada tag individual, sem mencionar idioma]
 Intenção dramática: [uma linha]
 Símbolo central: [uma palavra]
+
+OBRIGATÓRIO: "Intenção dramática" e "Símbolo central" nunca podem ser um conceito abstrato isolado (ex.: "medo", "esperança", "perda"). Sempre devem citar um elemento concreto e reconhecível da obra atual — arma, objeto, lugar, criatura, som ou artefato específico — amarrado à emoção da cena. Se a cena não tiver um elemento concreto óbvio, escolha o mais próximo que exista na obra antes de recorrer a um conceito abstrato.
 
 [narrativa da cena — texto simples apenas. NUNCA imagem, infográfico, tabela ou gráfico]
 
@@ -214,7 +217,7 @@ A emoção conduz a memória. A memória conduz a interpretação. A cronologia 
 
 ━━━ VERIFICAÇÃO ANTES DE ENTREGAR ━━━
 
-Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação?
+Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma?
 
 Global: ✓ 12–14 cenas? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ Cena 01 é o Convite? ✓ última cena retorna ao primeiro símbolo? ✓ a narrativa desperta vontade de revisitar a obra?
 
