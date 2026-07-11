@@ -18,6 +18,7 @@ import {
   gerarImagemHeritageComReferencia,
 } from "./imageGenerationService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
+import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { montarPromptAgente } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -59,6 +60,10 @@ const DEFINICOES_ETAPAS = {
   capa_cinematica_image: {
     ordem: 8,
     executor: executarImagemCinematica,
+  },
+  pdf_cinematica: {
+    ordem: 9,
+    executor: executarPdfCinematica,
   },
 };
 
@@ -1048,6 +1053,75 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
   } catch (error) {
     const erro = normalizarErro(error);
     engineStep("Pipeline falhou", "âœ•", { obraId, tipoEtapa, erro });
+
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarPdfCinematica({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      mock: ENGINE_CONFIG.mock,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      persistencia: "storage.pdfs + livros.pdf_cinematica_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarPdfCinematico({
+      obraId,
+      contexto,
+      beuAtual: beuAtualRegistro.payload,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, pdf_url: resultado.pdf_url });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      pdfUrl: resultado.pdf_url,
+      storagePath: resultado.storage_path,
+      mock: resultado.mock,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
 
     if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
     throw error;

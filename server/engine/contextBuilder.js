@@ -17,6 +17,8 @@ export async function buildContext(obraId) {
       capa_url,
       capa_cinematica_url,
       tem_experiencia_cinematica,
+      titulo_cinematico,
+      descricao_cinematica,
       autores (
         id,
         nome
@@ -58,6 +60,8 @@ export async function buildContext(obraId) {
       tipo_obra: obra.tipo_obra,
       data_lancamento: obra.data_lancamento,
       tem_experiencia_cinematica: obra.tem_experiencia_cinematica,
+      titulo_cinematico: obra.titulo_cinematico,
+      descricao_cinematica: obra.descricao_cinematica,
     },
     autoria: {
       autor: obra.autores || null,
