@@ -153,6 +153,16 @@ function limparPromptHeritageParaImagem(prompt = "") {
   return linhas.join("\n").trim();
 }
 
+// Remove a linha de declaração "LOCKED SCENE: ..." gerada pelo agente diretor de arte.
+// Essa linha é útil para debug/log mas não deve ir para o modelo de imagem.
+function limparPromptCinematicaParaImagem(prompt = "") {
+  return String(prompt)
+    .split(/\r?\n/)
+    .filter((linha) => !linha.trim().toUpperCase().startsWith("LOCKED SCENE:"))
+    .join("\n")
+    .trim();
+}
+
 function detectarMimeImagem(fileName = "", reportedType = "") {
   if (SUPPORTED_IMAGE_MIME_TYPES.has(reportedType)) return reportedType;
 
@@ -433,7 +443,11 @@ async function gerarImagemComReferencia({
     };
   }
 
-  const promptDaObra = limparPromptHeritageParaImagem(prompt);
+  const limpador = tipoImagem === "cinematica"
+    ? limparPromptCinematicaParaImagem
+    : limparPromptHeritageParaImagem;
+
+  const promptDaObra = limpador(prompt);
   const promptFinal = limitarPromptImagem(`${promptReferencia}
 
 DADOS DA OBRA:

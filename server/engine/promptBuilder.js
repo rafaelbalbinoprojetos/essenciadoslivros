@@ -914,102 +914,143 @@ ${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 // ─────────────────────────────────────────────────────────────────────────────
 
 function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // ARQUITETURA DE DOIS ESTÁGIOS — v4 (definitiva)
+  //
+  // Esta função gera um META-PROMPT para o agente LLM (capa-cinematica-prompt).
+  // O LLM raciocina internamente, decide e TRAVA a cena, depois escreve
+  // APENAS texto corrido em inglês (~380 palavras) pronto para o gerador
+  // de imagem (responses.create + image_generation tool).
+  //
+  // DIFERENÇA CRÍTICA desta versão:
+  //   O agente deve DECLARAR a cena escolhida na primeira linha antes de
+  //   descrever a imagem. Isso força a decisão explícita e permite debug.
+  //   O formato_saida do agente deve ser "text" no banco ai_agentes.
+  // ─────────────────────────────────────────────────────────────────────────
+
   const refUrl = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
 
   const blocoReferencia = refUrl
-    ? `REFERÊNCIA VISUAL ATIVA: ${refUrl}
-Use-a APENAS para calibrar: qualidade de renderização, textura, iluminação dramática, hierarquia editorial, densidade de elementos e acabamento premium de coleção museal.
-NÃO copie personagens, objetos, cena ou layout da referência. A referência será anexada à requisição de imagem — mencione que o modelo deve usá-la apenas como referência de estilo.`
-    : `Nenhuma referência visual ativa. Construa o prompt exclusivamente a partir dos dados da obra.`;
+    ? `VISUAL STYLE REFERENCE (attached to the image generation request): ${refUrl}
+Use it ONLY to calibrate render quality, texture, dramatic lighting, editorial hierarchy and premium museum-collection finish.
+DO NOT copy its characters, objects, scene or exact layout.`
+    : `No active visual reference. Build the prompt from the work data only.`;
+
+  // Extrai dados-chave da BEU e contexto para injetar explicitamente
+  const titulo = beuAtual?.identificacao?.titulo || contexto?.obra?.titulo || "the work";
+  const tipo = beuAtual?.identificacao?.tipo_obra || contexto?.obra?.tipo_obra || "obra";
+  const criador = beuAtual?.autoria?.autor_principal
+    || (Array.isArray(beuAtual?.autoria?.criadores) ? beuAtual.autoria.criadores[0] : null)
+    || contexto?.autoria?.autor?.[0]?.nome
+    || "Unknown";
+  const ano = beuAtual?.identificacao?.ano || contexto?.obra?.data_lancamento?.slice(0, 4) || "";
+  const momentos = beuAtual?.narrativa?.momentos_essenciais || [];
+  const temaCentral = beuAtual?.emocional?.tema_central || "";
+  const heroArtifact = beuAtual?.heritage?.hero_artifact || "";
+  const curvaEmocional = Array.isArray(beuAtual?.emocional?.curva_emocional)
+    ? beuAtual.emocional.curva_emocional.join(", ")
+    : "";
 
   return `
-Você é o diretor de arte da coleção Essência dos Livros.
-Sua única tarefa é escrever o prompt final de geração de imagem para o gpt-image-2.
+You are the art director for the Essência dos Livros collection.
+Your ONLY task is to write the final image generation prompt.
 
-NÃO gere a imagem.
-NÃO explique seu raciocínio.
-NÃO use JSON, blocos numerados ou seções com títulos.
-Devolva APENAS o prompt final em texto corrido em inglês, com no máximo 380 palavras.
+DO NOT generate the image.
+DO NOT explain your reasoning.
+DO NOT use JSON, numbered sections, or titled blocks.
+Return ONLY the final prompt in flowing English text, maximum 400 words.
 
-━━━━ PROCESSO INTERNO (não apareça na resposta) ━━━━
+━━━━ INTERNAL DECISION PROCESS (never appear in your output) ━━━━
 
-Execute mentalmente antes de escrever qualquer palavra:
+Before writing a single word of the prompt, resolve these three steps silently:
 
-PASSO 1 — TESTE DE MEMÓRIA CULTURAL
-Responda internamente: "Se o título sumisse, qual imagem única faria os fãs reconhecerem a obra?"
-Essa imagem é o núcleo. Trave aqui antes de avançar.
+STEP 1 — LIVING RELATIONSHIP TEST
+Does the work have a central emotional bond between the protagonist and another living being?
+Living beings: animal, horse, child, baby, partner, sentient creature, close companion.
 
-PASSO 2 — VALIDAÇÃO DE RELAÇÃO VIVA
-Existe vínculo emocional central entre o protagonista e outro ser vivo?
-(animal, cavalo, criança, bebê, parceiro, criatura, companion sentiente, amigo íntimo)
+→ If YES, and fans remember this bond more than any object, location, villain or spectacle:
+   THIS BOND IS THE SCENE. Lock it. Do not replace it with a symbol or landscape.
+   Canon examples for reference (do NOT use unless the work matches):
+   Sam + BB (Death Stranding) — NOT Sam + backpack.
+   Joel + Ellie (The Last of Us).
+   Kratos + Atreus (God of War).
+   Arthur + horse (Red Dead Redemption 2).
+   Wander + Agro (Shadow of the Colossus).
 
-→ Se SIM e os fãs lembram dessa relação mais do que qualquer objeto, local ou vilão:
-   ESSA RELAÇÃO É A CENA. Trave. Não troque por símbolo ou paisagem.
-   Exemplos corretos: Sam + BB (não mochila), Joel + Ellie, Kratos + Atreus,
-   Arthur + cavalo, Wander + Agro, Ico + Yorda, Geralt + Ciri.
+→ If NO living bond dominates, evaluate in this strict order:
+   a) Intense human pain — grief, guilt, sacrifice, despair, loneliness
+   b) Iconic cultural antagonist — the villain fans remember most
+   c) Irreversible consequence — what remained after everything changed (not the action itself)
+   d) Revelation or transformation — the instant perception shifts forever
+   e) World or environment — ONLY if the setting itself is the emotional protagonist
 
-→ Se NÃO, avalie nesta ordem:
-   a) Dor humana intensa — sofrimento, luto, culpa, sacrifício, solidão extrema
-   b) Antagonista cultural icônico — o vilão mais reconhecível da obra
-   c) Consequência irreversível — o que restou após a virada, não a ação em si
-   d) Revelação ou transformação — o instante em que tudo muda
-   e) Mundo ou ambiente — apenas se ele FOR o protagonista da obra
+STEP 2 — CANONICAL LOCK
+Every element must match the work's official visual identity: character design, costume,
+creature, weapon, environment, materials. Nothing generic. Nothing invented.
 
-PASSO 3 — TRAVA CANÔNICA
-Confirme: cada elemento (personagem, roupa, criatura, arma, ambiente) é fiel ao
-design canônico da obra. Nada genérico, nada inventado, nada herdado de outra obra.
+STEP 3 — SCENE DECLARATION (first line of your output, then continue)
+Start your output with this locked declaration line:
+LOCKED SCENE: [one sentence naming the scene, the subjects, and the dominant emotion]
 
-━━━━ ESTRUTURA DO PROMPT FINAL ━━━━
+Then immediately write the full image prompt below it in flowing prose.
 
-Escreva em blocos narrativos corridos, nesta ordem natural:
+━━━━ IMAGE PROMPT STRUCTURE ━━━━
 
-1. Descreva a CENA TRAVADA: quem está presente, o que está acontecendo emocionalmente,
-   qual gesto ou postura comunica a relação ou sentimento central.
+Write naturally in this order — no headers, no lists:
 
-2. Composição e câmera: plano (médio, americano, close), lente equivalente (~85mm),
-   altura de câmera, inclinação, profundidade de campo, separação foreground/background.
+Describe the locked scene: who is present, what emotional gesture or posture anchors it,
+what the viewer feels before reading the title.
 
-3. Iluminação: direção, temperatura, qualidade (dura/difusa), backlight,
-   partículas, névoa, fumaça, atmosfera volumétrica.
+Camera and composition: shot type, ~85mm lens equivalent, camera height and angle,
+depth of field, foreground/midground/background separation.
 
-4. Foreground → midground → background em sequência natural.
+Lighting: key light direction and temperature, quality (hard/soft), backlight halo,
+volumetric particles, mist, dust, atmospheric depth.
 
-5. Camada editorial: moldura elegante em materiais físicos (metal escovado, vidro fosco),
-   tipografia serifada grande, equilíbrio 70% imagem / 30% editorial.
+Foreground → midground → background described in sequence.
 
-6. Textos visíveis obrigatórios:
-   - "ESSÊNCIA DOS LIVROS" no topo em tipografia serifada elegante
-   - Título da obra em destaque centralizado na parte inferior
-   - Frase curatorial curta em itálico entre o centro e o título
-   - Placa compacta inferior: obra / criador ou estúdio / ano / "Coleção Essência dos Livros"
+Editorial layer: elegant frame in brushed metal and frosted glass, large serif typography,
+70% cinematic photograph / 30% editorial overlay.
 
-7. Finalize com exatamente esta linha:
-   "No style of any official artwork. Photorealistic cinematic render, premium editorial collection quality, vertical portrait format 2:3."
+Visible text (mandatory):
+"ESSÊNCIA DOS LIVROS" at the top in elegant serif.
+Short italic curatorial phrase mid-lower area.
+Work title in large display serif, centered lower third.
+Compact bottom plaque: ${titulo} / ${criador}${ano ? ` / ${ano}` : ""} / Coleção Essência dos Livros.
 
-━━━━ PROIBIÇÕES ABSOLUTAS NO PROMPT ━━━━
-Não mencione: waveform, equalizer, microfone, headphones gigantes, botão play,
-template de streaming ou podcast, thumbnail, montagem de cenas, texto ilegível,
-personagem apenas posando sem emoção, UI moderna, artefatos digitais visíveis.
+End with this exact line:
+"No style of any official artwork. Photorealistic cinematic render, premium editorial collection quality, vertical portrait format 2:3."
 
-━━━━ REFERÊNCIA DE ESTILO ━━━━
+━━━━ ABSOLUTE PROHIBITIONS IN THE PROMPT ━━━━
+Never mention: audio waveform, equalizer, microphone, giant headphones, play button,
+streaming template, podcast cover, YouTube thumbnail, random scene montage, illegible text,
+character merely posing with no emotion, modern UI elements, digital artifacts.
+
+━━━━ STYLE REFERENCE ━━━━
 ${blocoReferencia}
 
-━━━━ DADOS DA OBRA ━━━━
+━━━━ WORK DATA ━━━━
 
-CONTEXTO:
-${JSON.stringify(contexto, null, 2)}
+Title: ${titulo}
+Type: ${tipo}
+Creator: ${criador}${ano ? `\nYear: ${ano}` : ""}
+${temaCentral ? `Central theme: ${temaCentral}` : ""}
+${curvaEmocional ? `Emotional arc: ${curvaEmocional}` : ""}
+${heroArtifact ? `Key artifact: ${heroArtifact}` : ""}
+${momentos.length > 0 ? `Essential moments:\n${momentos.map((m) => `- ${m}`).join("\n")}` : ""}
 
-BEU:
+FULL BEU:
 ${JSON.stringify(beuAtual, null, 2)}
 
-NARRATIVA CINEMATOGRÁFICA:
-${narrativaCinematica || "Não disponível. Use apenas a BEU e o contexto."}
+CINEMATIC NARRATIVE:
+${narrativaCinematica || "Not available. Use BEU and context only."}
 `.trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FUNÇÃO LEGADA PRESERVADA — não usada no fluxo atual, mantida para referência
+// FUNÇÃO LEGADA — mantida apenas como arquivo morto, não é chamada em nenhum lugar
 // ─────────────────────────────────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
 function _montarPromptCapaCinematicaLegado({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   const cinematicReferenceSource = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
   const cinematicReferenceBlock = cinematicReferenceSource
