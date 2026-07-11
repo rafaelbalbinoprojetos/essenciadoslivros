@@ -12,6 +12,7 @@ const BOOK_SELECT_FIELDS = `
   capa_url,
   capa_cinematica_url,
   pdf_url,
+  pdf_cinematica_url,
   audio_url,
   tem_experiencia_cinematica,
   titulo_cinematico,

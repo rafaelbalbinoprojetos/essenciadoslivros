@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Film, ListMusic, Pause, Pencil, Play } from "lucide-react";
+import { FileText, Film, ListMusic, Pause, Pencil, Play } from "lucide-react";
 import { getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 import { resolveAudioSource, resolveNarrativeSource, resolvePdfSource } from "../utils/media.js";
@@ -134,6 +134,7 @@ export default function BookDetailsPage() {
   }, [book?.audio_url]);
   const hasAudio = Boolean(book?.audio_url);
   const hasPdf = Boolean(book?.pdf_url);
+  const hasCinematicPdf = Boolean(book?.pdf_cinematica_url);
   const playlistTrack = useMemo(() => {
     if (!book || !audioSource) return null;
     return {
@@ -159,6 +160,15 @@ export default function BookDetailsPage() {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   }, [book?.pdf_url]);
+
+  const handleOpenCinematicPdf = useCallback(async () => {
+    const raw = book?.pdf_cinematica_url;
+    if (!raw) return;
+    const url = await resolvePdfSource(raw);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }, [book?.pdf_cinematica_url]);
 
   // Este livro é a faixa atual do player global?
   const isCurrentTrack = Boolean(playlistTrack?.id && currentTrack?.id === playlistTrack.id);
@@ -300,6 +310,15 @@ export default function BookDetailsPage() {
                 <Film className="h-4 w-4" /> Iniciar experiência
               </button>
             )}
+            {experience === "cinematic" && hasCinematicPdf && (
+              <button
+                type="button"
+                onClick={handleOpenCinematicPdf}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.4)] px-4 py-2 text-sm font-semibold text-[color:rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.08)]"
+              >
+                <FileText className="h-4 w-4" /> Abrir PDF da narrativa
+              </button>
+            )}
             {admin && (
               <Link
                 to={`/biblioteca/${bookId}/editar`}
@@ -320,6 +339,7 @@ export default function BookDetailsPage() {
             <span>{hasPdf ? "E-book disponível" : "Sem e-book"}</span>
             <span>{hasAudio ? "Áudio disponível" : "Sem podcast"}</span>
             {narrativeTracks.length > 0 && <span>{narrativeTracks.length} cenas</span>}
+            {hasCinematicPdf && <span>PDF da narrativa disponível</span>}
           </div>
         </aside>
 
