@@ -42,7 +42,18 @@ function extrairAno(value) {
   return match ? Number(match[1]) : null;
 }
 
-async function buscarOuCriarPorNome({ tabela, nome }) {
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "sem-nome";
+}
+
+// universos e franquias têm coluna slug obrigatória (not null); autores e
+// generos não. Passe comSlug: true só para as tabelas que exigem.
+async function buscarOuCriarPorNome({ tabela, nome, comSlug = false }) {
   const nomeLimpo = nome?.trim();
   if (!nomeLimpo) return null;
 
@@ -61,9 +72,13 @@ async function buscarOuCriarPorNome({ tabela, nome }) {
     return existente.id;
   }
 
+  const novoRegistro = comSlug
+    ? { nome: nomeLimpo, slug: slugify(nomeLimpo) }
+    : { nome: nomeLimpo };
+
   const { data, error } = await supabaseAdmin
     .from(tabela)
-    .insert({ nome: nomeLimpo })
+    .insert(novoRegistro)
     .select("id")
     .single();
 
@@ -156,13 +171,13 @@ export async function atualizarDadosAusentesDaObra({ obraId, beu }) {
 
   if ("universo_id" in livro && isEmptyValue(livro.universo_id)) {
     const nomeUniverso = valorNome(beu.classificacao?.universo);
-    const universoId = nomeUniverso ? await buscarOuCriarPorNome({ tabela: "universos", nome: nomeUniverso }) : null;
+    const universoId = nomeUniverso ? await buscarOuCriarPorNome({ tabela: "universos", nome: nomeUniverso, comSlug: true }) : null;
     adicionarCampoSeVazio({ livro, payload, atualizados, campo: "universo_id", valor: universoId });
   }
 
   if ("franquia_id" in livro && isEmptyValue(livro.franquia_id)) {
     const nomeFranquia = valorNome(beu.classificacao?.franquia);
-    const franquiaId = nomeFranquia ? await buscarOuCriarPorNome({ tabela: "franquias", nome: nomeFranquia }) : null;
+    const franquiaId = nomeFranquia ? await buscarOuCriarPorNome({ tabela: "franquias", nome: nomeFranquia, comSlug: true }) : null;
     adicionarCampoSeVazio({ livro, payload, atualizados, campo: "franquia_id", valor: franquiaId });
   }
 
