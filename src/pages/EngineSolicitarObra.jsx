@@ -66,6 +66,7 @@ const PIPELINE_STEP_DEFS = [
   { key: "capa_cinematica_prompt", label: "Prompt Capa Cinemática", colorClass: "text-fuchsia-500 focus:ring-fuchsia-500" },
   { key: "capa_cinematica_image", label: "Imagem Cinemática", colorClass: "text-rose-500 focus:ring-rose-500" },
   { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-cyan-500 focus:ring-cyan-500" },
+  { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
 ];
 
 function criarSelecaoDeEtapas(valor) {
@@ -445,7 +446,9 @@ export default function EngineSolicitarObra() {
 
     try {
       for (const etapa of etapasParaRodar) {
-        const resultado = await executarEtapaManual(etapa.key, obraId);
+        const resultado = etapa.key === "atualizar_dados"
+          ? await atualizarDadosAusentes(obraId)
+          : await executarEtapaManual(etapa.key, obraId);
 
         if (!resultado?.ok) {
           toast.error(`Pipeline interrompida em "${etapa.label}". Corrija e rode as etapas restantes manualmente se quiser.`);
@@ -677,7 +680,7 @@ export default function EngineSolicitarObra() {
     },
     {
       key: "atualizar_dados",
-      label: "Atualizando dados ausentes",
+      label: "Salvando/atualizando dados da obra",
       status: getStepStatus({ active: atualizandoDados, result: resultadoAtualizacao }),
     },
   ];
@@ -999,7 +1002,7 @@ export default function EngineSolicitarObra() {
                   onClick={() => atualizarDadosAusentes()}
                   className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
                 >
-                  Atualizar dados ausentes
+                  Salvar / Atualizar dados da obra
                 </button>
               </div>
             )}
@@ -1042,7 +1045,7 @@ export default function EngineSolicitarObra() {
         {resultadoAtualizacao && (
           <section className="mt-6">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
-              Resultado da atualização de dados ausentes
+              Resultado do salvamento/atualização de dados da obra
             </h2>
             <pre className={`bg-black border rounded-2xl p-5 overflow-auto text-sm ${resultadoAtualizacao.ok ? "border-zinc-800 text-emerald-300" : "border-red-900 text-red-300"}`}>
               {JSON.stringify(resultadoAtualizacao, null, 2)}

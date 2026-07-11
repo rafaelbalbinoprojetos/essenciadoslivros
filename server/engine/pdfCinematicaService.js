@@ -76,6 +76,24 @@ function linhaEhSomenteTag(linha) {
   return /^\[[^\]]+\]$/.test(linha.trim());
 }
 
+// A seção do prelúdio já ganha o título "O CONVITE" desenhado manualmente
+// (ver criarDocumentoPdf). Se o próprio roteiro também abrir com essa palavra
+// como linha isolada, removemos para não duplicar o título na página.
+function removerTituloConviteDuplicado(linhas) {
+  const resultado = [...linhas];
+  let indice = 0;
+
+  while (indice < resultado.length && resultado[indice].trim() === "") {
+    indice += 1;
+  }
+
+  if (indice < resultado.length && /^(o\s+)?convite$/i.test(normalizarComparacao(resultado[indice]))) {
+    resultado.splice(indice, 1);
+  }
+
+  return resultado;
+}
+
 export function parseNarrativa(textoBruto) {
   const linhas = String(textoBruto || "").replace(/\r\n/g, "\n").split("\n");
   const cenas = [];
@@ -155,12 +173,6 @@ function desenharCabecalhoCorrente(doc, tituloObra) {
     });
   }
 
-  doc
-    .moveTo(MARGIN_SIDE, 70)
-    .lineTo(doc.page.width - MARGIN_SIDE, 70)
-    .lineWidth(0.5)
-    .strokeColor(COR_ACCENT)
-    .stroke();
   doc.restore();
 }
 
@@ -349,11 +361,13 @@ export async function criarDocumentoPdf({
   doc.addPage();
   desenharFolhaDeRosto(doc, { tituloObra, tituloCinematico, autor, ano, tipoObra, fraseCuratorial });
 
-  if (preludio.some((linha) => linha.trim() !== "")) {
+  const preludioSemTituloDuplicado = removerTituloConviteDuplicado(preludio);
+
+  if (preludioSemTituloDuplicado.some((linha) => linha.trim() !== "")) {
     doc.addPage();
     doc.font("titulo").fontSize(13).fillColor(COR_TITULO).text("O CONVITE", { align: "left" });
     doc.moveDown(0.8);
-    renderizarBlocoNarrativo(doc, preludio, {
+    renderizarBlocoNarrativo(doc, preludioSemTituloDuplicado, {
       fonte: "corpo",
       tamanho: 12,
       cor: COR_TINTA,
