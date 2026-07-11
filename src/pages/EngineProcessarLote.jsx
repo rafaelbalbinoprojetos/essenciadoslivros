@@ -44,6 +44,18 @@ const ETAPA_LABELS = {
   atualizar_dados: "Salvar/Atualizar dados da obra",
 };
 
+const ETAPA_LABELS_CURTOS = {
+  curador_beu: "Curador",
+  editor_beu: "Editor",
+  diretor_criativo: "Diretor",
+  narrativa_cinematica: "Narrativa",
+  heritage_prompt: "H. Prompt",
+  heritage_image: "H. Imagem",
+  capa_cinematica_prompt: "C. Prompt",
+  capa_cinematica_image: "C. Imagem",
+  pdf_cinematica: "PDF",
+};
+
 async function chamarExecutarEtapa(obraId, tipoEtapa) {
   const response = await fetch("/api/engine/executar-etapa", {
     method: "POST",
@@ -254,12 +266,18 @@ export default function EngineProcessarLote() {
                   <th className="px-3 py-2">Título</th>
                   <th className="px-3 py-2">Tipo</th>
                   <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Etapas</th>
+                  {ETAPAS_PIPELINE.map((etapa) => (
+                    <th key={etapa} className="whitespace-nowrap px-2 py-2 text-center" title={ETAPA_LABELS[etapa]}>
+                      {ETAPA_LABELS_CURTOS[etapa]}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 text-center">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {obrasFiltradas.map((obra) => {
                   const concluidas = contarEtapasConcluidas(obra);
+                  const concluidasSet = new Set(obra.etapas_concluidas || []);
                   return (
                     <tr key={obra.id} className="border-t border-zinc-800/70 hover:bg-black/30">
                       <td className="px-3 py-2">
@@ -283,13 +301,23 @@ export default function EngineProcessarLote() {
                           {obra.status || "—"}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-zinc-400">{concluidas}/{ETAPAS_PIPELINE.length}</td>
+                      {ETAPAS_PIPELINE.map((etapa) => {
+                        const feita = concluidasSet.has(etapa);
+                        return (
+                          <td key={etapa} className="px-2 py-2 text-center" title={ETAPA_LABELS[etapa]}>
+                            <span className={feita ? "font-semibold text-emerald-400" : "text-zinc-700"}>
+                              {feita ? "✓" : "—"}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td className="px-3 py-2 text-center text-zinc-400">{concluidas}/{ETAPAS_PIPELINE.length}</td>
                     </tr>
                   );
                 })}
                 {!carregando && obrasFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={5 + ETAPAS_PIPELINE.length} className="px-3 py-6 text-center text-zinc-500">
                       Nenhuma obra encontrada com esses filtros.
                     </td>
                   </tr>
