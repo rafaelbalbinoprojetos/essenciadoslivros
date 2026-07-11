@@ -954,6 +954,10 @@ Before evaluating any priority category, determine whether the emotional identit
 
 Living beings include:
 
+• animal
+• horse
+• pet
+• companion creature
 • child
 • baby
 • parent
@@ -963,10 +967,6 @@ Living beings include:
 • close friend
 • mentor
 • disciple
-• animal
-• horse
-• pet
-• companion creature
 • sentient artificial life
 • any character capable of reciprocal emotional connection.
 
