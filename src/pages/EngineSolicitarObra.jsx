@@ -53,6 +53,12 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   capa_cinematica_prompt: 15,
   capa_cinematica_image: 180,
   pdf_cinematica: 30,
+  enciclopedia_parte1: 120,
+  enciclopedia_parte2: 180,
+  enciclopedia_parte3: 180,
+  enciclopedia_parte4: 180,
+  enciclopedia_parte5: 120,
+  enciclopedia_pdf: 40,
   atualizar_dados: 15,
 };
 
@@ -66,8 +72,38 @@ const PIPELINE_STEP_DEFS = [
   { key: "capa_cinematica_prompt", label: "Prompt Capa Cinemática", colorClass: "text-fuchsia-500 focus:ring-fuchsia-500" },
   { key: "capa_cinematica_image", label: "Imagem Cinemática", colorClass: "text-rose-500 focus:ring-rose-500" },
   { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-cyan-500 focus:ring-cyan-500" },
+  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-teal-500 focus:ring-teal-500" },
   { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
 ];
+
+const ENCICLOPEDIA_STEP_KEYS = [
+  "enciclopedia_parte1",
+  "enciclopedia_parte2",
+  "enciclopedia_parte3",
+  "enciclopedia_parte4",
+  "enciclopedia_parte5",
+  "enciclopedia_pdf",
+];
+
+const ETAPA_LABELS_ENCICLOPEDIA = Object.fromEntries(
+  PIPELINE_STEP_DEFS
+    .filter((etapa) => ENCICLOPEDIA_STEP_KEYS.includes(etapa.key))
+    .map((etapa) => [etapa.key, etapa.label]),
+);
+
+const ENCICLOPEDIA_PROGRESS_LABELS = {
+  enciclopedia_parte1: "Gerando enciclopédia — parte 1",
+  enciclopedia_parte2: "Gerando enciclopédia — parte 2",
+  enciclopedia_parte3: "Gerando enciclopédia — parte 3",
+  enciclopedia_parte4: "Gerando enciclopédia — parte 4",
+  enciclopedia_parte5: "Gerando enciclopédia — parte 5",
+  enciclopedia_pdf: "Montando PDF da enciclopédia",
+};
 
 function criarSelecaoDeEtapas(valor) {
   return Object.fromEntries(PIPELINE_STEP_DEFS.map((etapa) => [etapa.key, valor]));
@@ -194,6 +230,8 @@ export default function EngineSolicitarObra() {
   const [resultadoCapaImage, setResultadoCapaImage] = useState(null);
   const [resultadoPdfCinematica, setResultadoPdfCinematica] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
+  const [executandoEnciclopedia, setExecutandoEnciclopedia] = useState({});
+  const [resultadosEnciclopedia, setResultadosEnciclopedia] = useState({});
   const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
   const [testesAtivo, setTestesAtivo] = useState(false);
   const [testesLoading, setTestesLoading] = useState(true);
@@ -202,7 +240,7 @@ export default function EngineSolicitarObra() {
   const [executandoPipelineSelecionada, setExecutandoPipelineSelecionada] = useState(false);
   const [stepStartedAt, setStepStartedAt] = useState({});
   const [timerNow, setTimerNow] = useState(() => Date.now());
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados || Object.values(executandoEnciclopedia).some(Boolean);
 
   const loadEngineReferences = useCallback(async () => {
     setReferencesLoading(true);
@@ -283,6 +321,7 @@ export default function EngineSolicitarObra() {
       capa_cinematica_prompt: executandoCapaPrompt,
       capa_cinematica_image: executandoCapaImage,
       pdf_cinematica: executandoPdfCinematica,
+      ...executandoEnciclopedia,
       atualizar_dados: atualizandoDados,
     };
 
@@ -315,6 +354,7 @@ export default function EngineSolicitarObra() {
     executandoCapaPrompt,
     executandoCapaImage,
     executandoPdfCinematica,
+    executandoEnciclopedia,
     atualizandoDados,
   ]);
 
@@ -393,6 +433,7 @@ export default function EngineSolicitarObra() {
     const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
     const isCapaImage = tipoEtapa === "capa_cinematica_image";
     const isPdfCinematica = tipoEtapa === "pdf_cinematica";
+    const isEnciclopedia = ENCICLOPEDIA_STEP_KEYS.includes(tipoEtapa);
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
@@ -403,6 +444,7 @@ export default function EngineSolicitarObra() {
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
     if (isCapaImage) setExecutandoCapaImage(true);
     if (isPdfCinematica) setExecutandoPdfCinematica(true);
+    if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: true }));
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -430,6 +472,7 @@ export default function EngineSolicitarObra() {
       if (isCapaPrompt) setResultadoCapaPrompt(data);
       if (isCapaImage) setResultadoCapaImage(data);
       if (isPdfCinematica) setResultadoPdfCinematica(data);
+      if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: data }));
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -464,6 +507,7 @@ export default function EngineSolicitarObra() {
       if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
       if (isCapaImage) setResultadoCapaImage((atual) => atual || fallback);
       if (isPdfCinematica) setResultadoPdfCinematica((atual) => atual || fallback);
+      if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: atual[tipoEtapa] || fallback }));
 
       return null;
     } finally {
@@ -476,6 +520,7 @@ export default function EngineSolicitarObra() {
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
       if (isCapaImage) setExecutandoCapaImage(false);
       if (isPdfCinematica) setExecutandoPdfCinematica(false);
+      if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: false }));
     }
   }
 
@@ -580,6 +625,7 @@ export default function EngineSolicitarObra() {
     setExecutandoCapaImage(false);
     setExecutandoPdfCinematica(false);
     setAtualizandoDados(false);
+    setExecutandoEnciclopedia({});
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
@@ -591,6 +637,7 @@ export default function EngineSolicitarObra() {
     setResultadoCapaImage(null);
     setResultadoPdfCinematica(null);
     setResultadoAtualizacao(null);
+    setResultadosEnciclopedia({});
     setDecisaoObraExistente(null);
     setSelectedSteps(criarSelecaoDeEtapas(true));
 
@@ -660,6 +707,7 @@ export default function EngineSolicitarObra() {
     || resultadoCapaImage
     || resultadoPdfCinematica
     || resultadoAtualizacao
+    || Object.keys(resultadosEnciclopedia).length > 0
     || loading,
   );
   const optionalStepsEnabled = Boolean(resultadoCriacao?.livro?.id);
@@ -738,6 +786,15 @@ export default function EngineSolicitarObra() {
         manualWhenIdle: Boolean(resultadoCapaImage?.ok),
       }),
     },
+    ...ENCICLOPEDIA_STEP_KEYS.map((key) => ({
+      key,
+      label: ENCICLOPEDIA_PROGRESS_LABELS[key],
+      status: getStepStatus({
+        active: Boolean(executandoEnciclopedia[key]),
+        result: resultadosEnciclopedia[key],
+        manualWhenIdle: optionalStepsEnabled,
+      }),
+    })),
     {
       key: "atualizar_dados",
       label: "Salvando/atualizando dados da obra",
@@ -1301,6 +1358,58 @@ export default function EngineSolicitarObra() {
             )}
           </section>
         )}
+
+        {ENCICLOPEDIA_STEP_KEYS.filter((key) => resultadosEnciclopedia[key]).map((key) => {
+          const resultado = resultadosEnciclopedia[key];
+          const isPdfFinal = key === "enciclopedia_pdf";
+
+          return (
+            <section key={key} className="mt-6">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+                Resultado — {ETAPA_LABELS_ENCICLOPEDIA[key] || key}
+              </h2>
+              {isPdfFinal ? (
+                resultado.ok && resultado.pdfUrl ? (
+                  <div className="rounded-2xl border border-teal-900 bg-black p-5">
+                    <a
+                      href={resultado.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl border border-teal-500/60 px-4 py-2 text-sm font-semibold text-teal-100 hover:bg-teal-500/10"
+                    >
+                      Abrir documento enciclopédico
+                    </a>
+                    <a
+                      href={resultado.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 block truncate text-sm font-semibold text-teal-200 hover:text-teal-100"
+                    >
+                      {resultado.pdfUrl}
+                    </a>
+                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-teal-100">
+                      {JSON.stringify(resultado, null, 2)}
+                    </pre>
+                  </div>
+                ) : (
+                  <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                    {JSON.stringify(resultado, null, 2)}
+                  </pre>
+                )
+              ) : resultado.ok && typeof resultado.saida === "string" ? (
+                <textarea
+                  readOnly
+                  value={resultado.saida}
+                  className="min-h-[420px] w-full rounded-2xl border border-teal-900 bg-black p-5 text-sm leading-7 text-teal-100 outline-none"
+                />
+              ) : (
+                <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                  {JSON.stringify(resultado, null, 2)}
+                </pre>
+              )}
+            </section>
+          );
+        })}
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ const CAMPOS_LIVRO = [
   "capa_url",
   "capa_cinematica_url",
   "pdf_cinematica_url",
+  "pdf_enciclopedico_url",
   "sinopse",
   "autor_id",
   "genero_id",
@@ -30,6 +31,12 @@ const ETAPAS_RASTREADAS = [
   "capa_cinematica_prompt",
   "capa_cinematica_image",
   "pdf_cinematica",
+  "enciclopedia_parte1",
+  "enciclopedia_parte2",
+  "enciclopedia_parte3",
+  "enciclopedia_parte4",
+  "enciclopedia_parte5",
+  "enciclopedia_pdf",
 ];
 
 export async function listarObrasParaEngine() {

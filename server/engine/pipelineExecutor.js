@@ -20,8 +20,17 @@ import {
 } from "./imageGenerationService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
+import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
 import { montarPromptAgente } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
+
+const PARTES_ENCICLOPEDIA_ORDEM = [
+  "enciclopedia_parte1",
+  "enciclopedia_parte2",
+  "enciclopedia_parte3",
+  "enciclopedia_parte4",
+  "enciclopedia_parte5",
+];
 
 const DEFINICOES_ETAPAS = {
   curador_beu: {
@@ -65,6 +74,35 @@ const DEFINICOES_ETAPAS = {
   pdf_cinematica: {
     ordem: 9,
     executor: executarPdfCinematica,
+  },
+  enciclopedia_parte1: {
+    ordem: 10,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_parte2: {
+    ordem: 11,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_parte3: {
+    ordem: 12,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_parte4: {
+    ordem: 13,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_parte5: {
+    ordem: 14,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_pdf: {
+    ordem: 15,
+    executor: executarEnciclopediaPdf,
   },
 };
 
@@ -1101,6 +1139,220 @@ async function executarPdfCinematica({ obraId, tipoEtapa }) {
     });
 
     const resultado = await gerarPdfCinematico({
+      obraId,
+      contexto,
+      beuAtual: beuAtualRegistro.payload,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, pdf_url: resultado.pdf_url });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      pdfUrl: resultado.pdf_url,
+      storagePath: resultado.storage_path,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarEnciclopediaParte({ obraId, tipoEtapa }) {
+  let execucao = null;
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+  const indiceParte = PARTES_ENCICLOPEDIA_ORDEM.indexOf(tipoEtapa);
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const agente = await buscarAgentePorSlug(definicao.agenteSlug);
+
+    engineStep("Context Builder", "→");
+    const contexto = await buildContext(obraId);
+    engineStep("Context Builder", "✓");
+
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const beuAtual = beuAtualRegistro.payload;
+    engineStep("BEU atual carregada", "✓", { payloadId: beuAtualRegistro.id });
+
+    const partesAnterioresTipos = PARTES_ENCICLOPEDIA_ORDEM.slice(0, indiceParte);
+    const partesAnteriores = [];
+
+    for (const tipoAnterior of partesAnterioresTipos) {
+      const saidaAnterior = await buscarUltimaSaidaEtapa({ obraId, tipoEtapa: tipoAnterior });
+      if (typeof saidaAnterior === "string" && saidaAnterior.trim()) {
+        partesAnteriores.push(saidaAnterior);
+      }
+    }
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      agente_slug: agente.slug,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      partes_anteriores_disponiveis: partesAnteriores.length,
+      persistencia: "ai_pipeline_etapas.saida",
+    };
+
+    const promptMontado = await montarPromptAgente({
+      agente,
+      contexto,
+      tipoEtapa,
+      beuAtual,
+      partesEnciclopediaAnteriores: partesAnteriores,
+    });
+
+    entrada.prompt_montado = Boolean(promptMontado);
+    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    execucao = await criarExecucaoAgente({
+      agenteId: agente.id,
+      obraId,
+      contexto,
+      entrada,
+      modelo: agente.modelo,
+    });
+
+    const resultado = await executarAgenteOpenAI({
+      agente,
+      contexto,
+      schema: null,
+      promptMontado,
+      tipoEtapa,
+    });
+
+    const custoEstimado = calcularCustoEstimado({
+      modelo: resultado.modelo,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+    });
+
+    engineStep("Parte da enciclopédia gerada", "✓", {
+      caracteres: typeof resultado.saida === "string" ? resultado.saida.length : null,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
+
+    await concluirExecucaoAgente({
+      execucaoId: execucao.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    engineStep("Pipeline concluída", "✓", {
+      obraId,
+      tipoEtapa,
+      payloadId: beuAtualRegistro.id,
+    });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tokens: {
+        input: resultado.tokens_input,
+        output: resultado.tokens_output,
+        total: resultado.tokens_total,
+      },
+      saida: resultado.saida,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (execucao?.id) {
+      await falharExecucaoAgente({ execucaoId: execucao.id, erro });
+    }
+
+    if (etapa?.id) {
+      await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    }
+
+    throw error;
+  }
+}
+
+async function executarEnciclopediaPdf({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      persistencia: "storage.pdfs + livros.pdf_enciclopedico_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarPdfEnciclopedico({
       obraId,
       contexto,
       beuAtual: beuAtualRegistro.payload,

@@ -135,6 +135,7 @@ export default function BookDetailsPage() {
   const hasAudio = Boolean(book?.audio_url);
   const hasPdf = Boolean(book?.pdf_url);
   const hasCinematicPdf = Boolean(book?.pdf_cinematica_url);
+  const hasEncyclopedicPdf = Boolean(book?.pdf_enciclopedico_url);
   const playlistTrack = useMemo(() => {
     if (!book || !audioSource) return null;
     return {
@@ -169,6 +170,15 @@ export default function BookDetailsPage() {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   }, [book?.pdf_cinematica_url]);
+
+  const handleOpenEncyclopedicPdf = useCallback(async () => {
+    const raw = book?.pdf_enciclopedico_url;
+    if (!raw) return;
+    const url = await resolvePdfSource(raw);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }, [book?.pdf_enciclopedico_url]);
 
   // Este livro é a faixa atual do player global?
   const isCurrentTrack = Boolean(playlistTrack?.id && currentTrack?.id === playlistTrack.id);
@@ -300,6 +310,15 @@ export default function BookDetailsPage() {
                 Abrir PDF
               </button>
             )}
+            {experience === "editorial" && hasEncyclopedicPdf && (
+              <button
+                type="button"
+                onClick={handleOpenEncyclopedicPdf}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.4)] px-4 py-2 text-sm font-semibold text-[color:rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.08)]"
+              >
+                <FileText className="h-4 w-4" /> Abrir Documento Enciclopédico
+              </button>
+            )}
             {experience === "podcast" && hasAudio && (
               <button type="button" onClick={handlePlaybackToggle} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white">
                 {displayIsPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />} {displayIsPlaying ? "Pausar podcast" : "Ouvir podcast"}
@@ -340,6 +359,7 @@ export default function BookDetailsPage() {
             <span>{hasAudio ? "Áudio disponível" : "Sem podcast"}</span>
             {narrativeTracks.length > 0 && <span>{narrativeTracks.length} cenas</span>}
             {hasCinematicPdf && <span>PDF da narrativa disponível</span>}
+            {hasEncyclopedicPdf && <span>Documento enciclopédico disponível</span>}
           </div>
         </aside>
 

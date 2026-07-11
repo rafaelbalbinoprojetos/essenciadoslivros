@@ -29,6 +29,12 @@ const ETAPAS_PIPELINE = [
   "capa_cinematica_prompt",
   "capa_cinematica_image",
   "pdf_cinematica",
+  "enciclopedia_parte1",
+  "enciclopedia_parte2",
+  "enciclopedia_parte3",
+  "enciclopedia_parte4",
+  "enciclopedia_parte5",
+  "enciclopedia_pdf",
 ];
 
 const ETAPA_LABELS = {
@@ -41,6 +47,12 @@ const ETAPA_LABELS = {
   capa_cinematica_prompt: "Prompt Capa Cinemática",
   capa_cinematica_image: "Imagem Cinemática",
   pdf_cinematica: "PDF Cinemático",
+  enciclopedia_parte1: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)",
+  enciclopedia_parte2: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)",
+  enciclopedia_parte3: "Enciclopédia — Parte 3 (Criação da Obra, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)",
+  enciclopedia_parte4: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto Cultural, Recepção, Premiações, Dados Comerciais)",
+  enciclopedia_parte5: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)",
+  enciclopedia_pdf: "Enciclopédia — Montar PDF Final",
   atualizar_dados: "Salvar/Atualizar dados da obra",
 };
 
@@ -54,6 +66,12 @@ const ETAPA_LABELS_CURTOS = {
   capa_cinematica_prompt: "C. Prompt",
   capa_cinematica_image: "C. Imagem",
   pdf_cinematica: "PDF",
+  enciclopedia_parte1: "Encicl. 1",
+  enciclopedia_parte2: "Encicl. 2",
+  enciclopedia_parte3: "Encicl. 3",
+  enciclopedia_parte4: "Encicl. 4",
+  enciclopedia_parte5: "Encicl. 5",
+  enciclopedia_pdf: "Encicl. PDF",
 };
 
 async function chamarExecutarEtapa(obraId, tipoEtapa) {
