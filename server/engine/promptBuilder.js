@@ -27,6 +27,12 @@ const CAMPOS_PRIORITARIOS_CURADOR = [
   "heritage.emotional_tone",
   "heritage.color_palette",
   "heritage.museum_editorial_aesthetic",
+  // Módulo capa_cinematica — alimenta o gerador de capa cinemática
+  "capa_cinematica.relacao_viva",
+  "capa_cinematica.ser_vivo_descricao",
+  "capa_cinematica.gesto_emocional",
+  "capa_cinematica.emocao_dominante",
+  "capa_cinematica.frase_curatorial",
 ];
 
 const CAMPOS_PRIORITARIOS_EDITOR = [
@@ -438,6 +444,49 @@ Preencha, quando houver base confiavel:
 
 Para The Last of Us, por exemplo, o hero artifact correto tende a ser emocional e especifico como fita cassete, pingente Firefly, canivete de Ellie, relogio quebrado de Joel ou mapa da QZ; uma mascara generica de quarentena pode ser bonita, mas e menos representativa da obra.
 Para qualquer obra, prefira artefatos com memoria emocional e reconhecimento narrativo, nao objetos genericos do genero.
+
+BRIEFING CAPA CINEMATICA
+Se o contrato permitir campos no modulo capa_cinematica, preencha-os para alimentar diretamente o gerador de capa cinemática da Essência dos Livros.
+Este módulo define a ÂNCORA EMOCIONAL da capa — o elemento visual que será injetado como decisão já tomada no prompt do gerador, evitando que o modelo escolha um símbolo genérico no lugar da relação emocional central.
+
+REGRA DE RELAÇÃO VIVA
+Antes de qualquer outro campo, avalie se a obra possui uma relação emocional central entre o protagonista e outro ser vivo.
+Ser vivo inclui: animal, cavalo, égua, criatura de estimação, criatura companheira, criança, bebê, parceiro, amigo íntimo, mentor, discípulo, vida artificial sentiente — qualquer ser capaz de conexão emocional recíproca.
+
+Se essa relação existir E os fãs da obra a lembram com mais força do que qualquer objeto, arma, vilão, local ou espetáculo visual:
+
+→ Preencha capa_cinematica.relacao_viva com os dois sujeitos: "[Protagonista] + [Ser vivo]"
+   Exemplos canônicos de como preencher:
+   - "Sam Porter Bridges + BB (Bridge Baby)" — Death Stranding
+   - "Joel + Ellie" — The Last of Us
+   - "Kratos + Atreus" — God of War (2018)
+   - "Arthur Morgan + cavalo (Topaz ou cavalo principal do jogador)" — Red Dead Redemption 2
+   - "Wander + Agro (égua)" — Shadow of the Colossus
+   - "Ico + Yorda" — Ico
+   - "Geralt + Ciri" — The Witcher 3
+   - "Harry Potter + Hedwig" — Harry Potter
+   Se não houver relação viva dominante: preencha com null.
+
+→ Preencha capa_cinematica.ser_vivo_descricao com uma descrição física precisa e canônica do ser vivo.
+   Seja específico: não "um bebê" mas "bebê dentro de pod de suporte de vida transparente conectado ao peito de Sam".
+   Não invente detalhes físicos que não existam canonicamente.
+   Se relacao_viva for null: preencha com null.
+
+→ Preencha capa_cinematica.gesto_emocional com o gesto físico que melhor representa a relação.
+   Prefira: segurar, proteger, olhar nos olhos, testa-com-testa, abraço, carregar, caminhar junto antes do perigo, despedida, luto compartilhado, silêncio junto.
+   Seja específico: "Sam olha para o rosto do BB dentro do pod, o bebê olha de volta" — não "estão juntos".
+   Se relacao_viva for null: descreva a cena emocional dominante da obra (dor, antagonista, consequência irreversível, revelação).
+
+→ Preencha capa_cinematica.emocao_dominante com 1 a 2 palavras: a emoção que o gesto transmite.
+   Exemplos: "ternura + proteção", "luto", "sacrifício", "medo + determinação", "saudade", "esperança frágil".
+
+→ Preencha capa_cinematica.frase_curatorial com uma frase curta, poética e original em português brasileiro.
+   Esta frase aparecerá em itálico na capa. Não use frases genéricas de motivação.
+   Exemplos do nível esperado:
+   - "No entrelaçar das distâncias, renasce a humanidade." — Death Stranding
+   - "O amor sobrevive ao fim do mundo." — The Last of Us
+   - "Entre deuses e filhos, nasce um novo destino." — God of War
+   Se não tiver certeza, prefira uma frase que capture o tema central da obra, não o plot.
 
 EXEMPLO DE CALIBRAÇÃO FACTUAL
 Para uma solicitação inequívoca de “God of War 2” como jogo, a resposta não deve tratar seus metadados básicos como desconhecidos. A identificação factual esperada é equivalente a:
@@ -915,17 +964,14 @@ ${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 
 function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   // ─────────────────────────────────────────────────────────────────────────
-  // ARQUITETURA DE DOIS ESTÁGIOS — v4 (definitiva)
+  // ARQUITETURA DE DOIS ESTÁGIOS — v5 (com anchor de relação viva)
   //
   // Esta função gera um META-PROMPT para o agente LLM (capa-cinematica-prompt).
-  // O LLM raciocina internamente, decide e TRAVA a cena, depois escreve
-  // APENAS texto corrido em inglês (~380 palavras) pronto para o gerador
-  // de imagem (responses.create + image_generation tool).
+  // O LLM recebe a cena ÂNCORA já preenchida pelo Curador na BEU (módulo
+  // capa_cinematica) e usa como decisão tomada — não precisa mais descobrir.
   //
-  // DIFERENÇA CRÍTICA desta versão:
-  //   O agente deve DECLARAR a cena escolhida na primeira linha antes de
-  //   descrever a imagem. Isso força a decisão explícita e permite debug.
-  //   O formato_saida do agente deve ser "text" no banco ai_agentes.
+  // Se o Curador não preencheu capa_cinematica (BEU antiga), o LLM ainda
+  // funciona com o raciocínio interno como fallback.
   // ─────────────────────────────────────────────────────────────────────────
 
   const refUrl = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
@@ -936,20 +982,66 @@ Use it ONLY to calibrate render quality, texture, dramatic lighting, editorial h
 DO NOT copy its characters, objects, scene or exact layout.`
     : `No active visual reference. Build the prompt from the work data only.`;
 
-  // Extrai dados-chave da BEU e contexto para injetar explicitamente
-  const titulo = beuAtual?.identificacao?.titulo || contexto?.obra?.titulo || "the work";
-  const tipo = beuAtual?.identificacao?.tipo_obra || contexto?.obra?.tipo_obra || "obra";
-  const criador = beuAtual?.autoria?.autor_principal
+  // ── Lê o anchor de relação viva da BEU (preenchido pelo Curador) ──
+  const capaCin = beuAtual?.capa_cinematica || {};
+  const relacaoViva      = capaCin.relacao_viva      || null;
+  const serVivoDesc      = capaCin.ser_vivo_descricao || null;
+  const gestoEmocional   = capaCin.gesto_emocional    || null;
+  const emocaoDominante  = capaCin.emocao_dominante   || null;
+  const fraseCuratorial  = capaCin.frase_curatorial   || null;
+
+  // ── Dados de identificação extraídos da BEU ──
+  const titulo   = beuAtual?.identificacao?.titulo || contexto?.obra?.titulo || "the work";
+  const tipo     = beuAtual?.identificacao?.tipo_obra || contexto?.obra?.tipo_obra || "obra";
+  const criador  = beuAtual?.autoria?.autor_principal
     || (Array.isArray(beuAtual?.autoria?.criadores) ? beuAtual.autoria.criadores[0] : null)
     || contexto?.autoria?.autor?.[0]?.nome
     || "Unknown";
-  const ano = beuAtual?.identificacao?.ano || contexto?.obra?.data_lancamento?.slice(0, 4) || "";
+  const ano      = beuAtual?.identificacao?.ano || contexto?.obra?.data_lancamento?.slice(0, 4) || "";
   const momentos = beuAtual?.narrativa?.momentos_essenciais || [];
-  const temaCentral = beuAtual?.emocional?.tema_central || "";
-  const heroArtifact = beuAtual?.heritage?.hero_artifact || "";
+  const temaCentral    = beuAtual?.emocional?.tema_central || "";
   const curvaEmocional = Array.isArray(beuAtual?.emocional?.curva_emocional)
     ? beuAtual.emocional.curva_emocional.join(", ")
     : "";
+
+  // ── Bloco de âncora: injeta a cena travada quando o Curador a preencheu ──
+  const blocoAncora = relacaoViva
+    ? `
+━━━━ MANDATORY SCENE ANCHOR — THIS OVERRIDES ALL OTHER DECISIONS ━━━━
+
+The Curator has identified the central emotional relationship of this work.
+Do NOT reason about scene selection. The scene is already decided.
+
+LIVING RELATIONSHIP: ${relacaoViva}
+${serVivoDesc   ? `LIVING BEING (canonical description): ${serVivoDesc}` : ""}
+${gestoEmocional ? `EMOTIONAL GESTURE: ${gestoEmocional}` : ""}
+${emocaoDominante ? `DOMINANT EMOTION: ${emocaoDominante}` : ""}
+${fraseCuratorial ? `CURATORIAL PHRASE (use this in the cover): "${fraseCuratorial}"` : ""}
+
+The image MUST be built around this relationship and this gesture.
+Never replace the living being with an object, a symbol, a landscape or a backpack.
+The object (if any) may appear only as a supporting element in the background or midground.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+    : `
+━━━━ SCENE SELECTION (no living relationship anchor found in BEU) ━━━━
+
+Reason through these steps silently before writing:
+
+STEP 1 — LIVING RELATIONSHIP TEST
+Does this work have a central emotional bond between the protagonist and another living being?
+(animal, horse, child, baby, partner, sentient creature, close companion)
+If YES and fans remember this bond more than any object or spectacle → this bond IS the scene.
+Canon examples: Sam + BB (not backpack), Joel + Ellie, Kratos + Atreus, Wander + Agro, Ico + Yorda.
+
+STEP 2 — If no living bond dominates, evaluate in strict order:
+  a) Intense human pain — grief, guilt, sacrifice, despair, extreme loneliness
+  b) Iconic cultural antagonist — the villain fans remember most
+  c) Irreversible consequence — what remained after everything changed
+  d) Revelation or transformation — the instant perception shifts forever
+  e) World or environment — ONLY if the setting itself is the emotional protagonist
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
   return `
 You are the art director for the Essência dos Livros collection.
@@ -957,48 +1049,21 @@ Your ONLY task is to write the final image generation prompt.
 
 DO NOT generate the image.
 DO NOT explain your reasoning.
-DO NOT use JSON, numbered sections, or titled blocks.
+DO NOT use JSON, numbered sections, or titled blocks in your output.
 Return ONLY the final prompt in flowing English text, maximum 400 words.
+${blocoAncora}
 
-━━━━ INTERNAL DECISION PROCESS (never appear in your output) ━━━━
-
-Before writing a single word of the prompt, resolve these three steps silently:
-
-STEP 1 — LIVING RELATIONSHIP TEST
-Does the work have a central emotional bond between the protagonist and another living being?
-Living beings: animal, horse, child, baby, partner, sentient creature, close companion.
-
-→ If YES, and fans remember this bond more than any object, location, villain or spectacle:
-   THIS BOND IS THE SCENE. Lock it. Do not replace it with a symbol or landscape.
-   Canon examples for reference (do NOT use unless the work matches):
-   Sam + BB (Death Stranding) — NOT Sam + backpack.
-   Joel + Ellie (The Last of Us).
-   Kratos + Atreus (God of War).
-   Arthur + horse (Red Dead Redemption 2).
-   Wander + Agro (Shadow of the Colossus).
-
-→ If NO living bond dominates, evaluate in this strict order:
-   a) Intense human pain — grief, guilt, sacrifice, despair, loneliness
-   b) Iconic cultural antagonist — the villain fans remember most
-   c) Irreversible consequence — what remained after everything changed (not the action itself)
-   d) Revelation or transformation — the instant perception shifts forever
-   e) World or environment — ONLY if the setting itself is the emotional protagonist
-
-STEP 2 — CANONICAL LOCK
-Every element must match the work's official visual identity: character design, costume,
+━━━━ CANONICAL LOCK ━━━━
+Every visual element must match the work's official identity: character design, costume,
 creature, weapon, environment, materials. Nothing generic. Nothing invented.
 
-STEP 3 — SCENE DECLARATION (first line of your output, then continue)
-Start your output with this locked declaration line:
-LOCKED SCENE: [one sentence naming the scene, the subjects, and the dominant emotion]
-
+━━━━ START YOUR OUTPUT WITH THIS LINE ━━━━
+LOCKED SCENE: [one sentence — who is present, what gesture, what dominant emotion]
 Then immediately write the full image prompt below it in flowing prose.
 
-━━━━ IMAGE PROMPT STRUCTURE ━━━━
+━━━━ IMAGE PROMPT STRUCTURE (flowing prose, no headers) ━━━━
 
-Write naturally in this order — no headers, no lists:
-
-Describe the locked scene: who is present, what emotional gesture or posture anchors it,
+Describe the locked scene: who is present, what emotional gesture anchors it,
 what the viewer feels before reading the title.
 
 Camera and composition: shot type, ~85mm lens equivalent, camera height and angle,
@@ -1014,17 +1079,18 @@ Editorial layer: elegant frame in brushed metal and frosted glass, large serif t
 
 Visible text (mandatory):
 "ESSÊNCIA DOS LIVROS" at the top in elegant serif.
-Short italic curatorial phrase mid-lower area.
+${fraseCuratorial ? `Italic curatorial phrase: "${fraseCuratorial}"` : "Short italic curatorial phrase that captures the emotional theme of the work."}
 Work title in large display serif, centered lower third.
 Compact bottom plaque: ${titulo} / ${criador}${ano ? ` / ${ano}` : ""} / Coleção Essência dos Livros.
 
-End with this exact line:
+End with this exact closing line:
 "No style of any official artwork. Photorealistic cinematic render, premium editorial collection quality, vertical portrait format 2:3."
 
-━━━━ ABSOLUTE PROHIBITIONS IN THE PROMPT ━━━━
+━━━━ ABSOLUTE PROHIBITIONS ━━━━
 Never mention: audio waveform, equalizer, microphone, giant headphones, play button,
-streaming template, podcast cover, YouTube thumbnail, random scene montage, illegible text,
-character merely posing with no emotion, modern UI elements, digital artifacts.
+streaming template, podcast cover, YouTube thumbnail, scene montage, illegible text,
+character merely posing with no emotion, modern UI, digital artifacts.
+Never replace a living emotional relationship with a symbolic object.
 
 ━━━━ STYLE REFERENCE ━━━━
 ${blocoReferencia}
@@ -1036,7 +1102,6 @@ Type: ${tipo}
 Creator: ${criador}${ano ? `\nYear: ${ano}` : ""}
 ${temaCentral ? `Central theme: ${temaCentral}` : ""}
 ${curvaEmocional ? `Emotional arc: ${curvaEmocional}` : ""}
-${heroArtifact ? `Key artifact: ${heroArtifact}` : ""}
 ${momentos.length > 0 ? `Essential moments:\n${momentos.map((m) => `- ${m}`).join("\n")}` : ""}
 
 FULL BEU:
@@ -1046,6 +1111,7 @@ CINEMATIC NARRATIVE:
 ${narrativaCinematica || "Not available. Use BEU and context only."}
 `.trim();
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FUNÇÃO LEGADA — mantida apenas como arquivo morto, não é chamada em nenhum lugar
