@@ -166,6 +166,22 @@ export async function atualizarDadosAusentesDaObra({ obraId, beu }) {
     adicionarCampoSeVazio({ livro, payload, atualizados, campo: "franquia_id", valor: franquiaId });
   }
 
+  adicionarCampoSeVazio({
+    livro,
+    payload,
+    atualizados,
+    campo: "descricao_cinematica",
+    valor: beu.capa_cinematica?.frase_curatorial,
+  });
+
+  // Uma obra processada pela Engine deixa de ser rascunho e passa a aparecer
+  // na coleção. Só promove rascunho/vazio para ativo — nunca sobrescreve um
+  // status definido manualmente (ex: arquivado, excluido).
+  if ("status" in livro && (isEmptyValue(livro.status) || livro.status === "rascunho")) {
+    payload.status = "ativo";
+    atualizados.push("status");
+  }
+
   if (atualizados.length === 0) {
     return {
       atualizado: false,
