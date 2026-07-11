@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
-import { ENGINE_CONFIG, isEngineMockEnabled } from "./engineConfig.js";
+import { isEngineMockEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -443,7 +443,7 @@ async function gerarImagemComReferencia({
   if (!obraId) throw new Error(`obraId e obrigatorio para gerar imagem ${label}.`);
   if (!prompt) throw new Error(`Prompt ${label} nao encontrado para gerar imagem.`);
 
-  if (isEngineMockEnabled()) {
+  if (await isEngineMockEnabled()) {
     engineStep(`Imagem ${label}`, "->", { modo: "mock", modelo: "mock-engine" });
 
     return {

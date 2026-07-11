@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { isEngineMockEnabled } from "./engineConfig.js";
+import { isEngineMockEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -475,7 +475,7 @@ export async function gerarPdfCinematico({ obraId, contexto, beuAtual }) {
     throw new Error("obraId é obrigatório para gerar o PDF cinemático.");
   }
 
-  if (isEngineMockEnabled()) {
+  if (await isEngineMockEnabled()) {
     engineStep("PDF Cinemático", "->", { modo: "mock" });
 
     return {

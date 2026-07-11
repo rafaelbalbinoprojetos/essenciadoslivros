@@ -17,18 +17,10 @@ export const ENGINE_CONFIG = {
   ambienteVercel: parseBoolean(process.env.VERCEL, false),
 };
 
-export function isEngineMockEnabled() {
-  return ENGINE_CONFIG.mock === true;
-}
-
 export function isEngineDebugEnabled() {
   return ENGINE_CONFIG.debug === true;
 }
 
 export function shouldSaveEngineLogs() {
   return ENGINE_CONFIG.saveLogs === true;
-}
-
-export function isNarrativaTesteEnabled() {
-  return ENGINE_CONFIG.narrativaTeste === true;
 }

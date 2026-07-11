@@ -1,4 +1,5 @@
 import { ENGINE_CONFIG } from "./engineConfig.js";
+import { isNarrativaTesteEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -660,8 +661,8 @@ Exemplo:
 `.trim();
 }
 
-function aplicarModoTesteNarrativa(motor) {
-  if (ENGINE_CONFIG.narrativaTeste !== true) return motor;
+async function aplicarModoTesteNarrativa(motor) {
+  if (!(await isNarrativaTesteEnabled())) return motor;
 
   return motor
     .replace(
@@ -679,13 +680,15 @@ function aplicarModoTesteNarrativa(motor) {
     );
 }
 
-function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
+async function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
   const payloadObra = {
     contexto,
     beu: beuAtual,
   };
 
-  return aplicarModoTesteNarrativa(MOTOR_NARRATIVA_CINEMATICA_V3).replace(
+  const motor = await aplicarModoTesteNarrativa(MOTOR_NARRATIVA_CINEMATICA_V3);
+
+  return motor.replace(
     "[PAYLOAD DA OBRA]",
     JSON.stringify(payloadObra, null, 2),
   );
@@ -1604,7 +1607,7 @@ export async function montarPromptAgente({
   const referenciaVisual = config.tipoReferenciaVisual
     ? await buscarReferenciaVisualAtiva(config.tipoReferenciaVisual)
     : null;
-  const promptMontado = config.montar({ campos, referenciaVisual });
+  const promptMontado = await config.montar({ campos, referenciaVisual });
 
   engineStep("PromptBuilder", "✓", {
     tipoEtapa,

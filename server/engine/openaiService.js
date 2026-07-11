@@ -1,7 +1,8 @@
 /* global process */
 
 import OpenAI from "openai";
-import { ENGINE_CONFIG, isEngineMockEnabled } from "./engineConfig.js";
+import { ENGINE_CONFIG } from "./engineConfig.js";
+import { isEngineMockEnabled } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 
 let openaiClient = null;
@@ -390,7 +391,7 @@ export async function executarAgenteOpenAI({
     throw new Error("Contexto é obrigatório.");
   }
 
-  if (isEngineMockEnabled()) {
+  if (await isEngineMockEnabled()) {
     return executarMock({ agente, contexto, tipoEtapa });
   }
 

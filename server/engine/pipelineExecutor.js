@@ -7,6 +7,7 @@ import {
 } from "./beuService.js";
 import { buildContext } from "./contextBuilder.js";
 import { ENGINE_CONFIG } from "./engineConfig.js";
+import { obterEngineConfigDinamica } from "./engineConfigService.js";
 import { engineStep, saveEngineJsonLog } from "./engineLogger.js";
 import {
   concluirExecucaoAgente,
@@ -210,10 +211,12 @@ async function executarCuradorBEU({ obraId }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
+    const { mock } = await obterEngineConfigDinamica();
+
     engineStep("Pipeline iniciada", "→", {
       obraId,
       tipoEtapa,
-      mock: ENGINE_CONFIG.mock,
+      mock,
     });
 
     const agente = await buscarAgentePorSlug(definicao.agenteSlug);
@@ -226,7 +229,7 @@ async function executarCuradorBEU({ obraId }) {
       tipo_etapa: tipoEtapa,
       agente_slug: agente.slug,
       obra_id: obraId,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
     };
 
@@ -341,10 +344,12 @@ async function executarEditorBEU({ obraId }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
+    const { mock } = await obterEngineConfigDinamica();
+
     engineStep("Pipeline iniciada", "→", {
       obraId,
       tipoEtapa,
-      mock: ENGINE_CONFIG.mock,
+      mock,
     });
 
     const agente = await buscarAgentePorSlug(definicao.agenteSlug);
@@ -366,7 +371,7 @@ async function executarEditorBEU({ obraId }) {
       agente_slug: agente.slug,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
     };
 
@@ -490,10 +495,12 @@ async function executarDiretorCriativo({ obraId }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
+    const { mock } = await obterEngineConfigDinamica();
+
     engineStep("Pipeline iniciada", "→", {
       obraId,
       tipoEtapa,
-      mock: ENGINE_CONFIG.mock,
+      mock,
     });
 
     const agente = await buscarAgentePorSlug(definicao.agenteSlug);
@@ -515,7 +522,7 @@ async function executarDiretorCriativo({ obraId }) {
       agente_slug: agente.slug,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
     };
 
@@ -640,11 +647,13 @@ async function executarNarrativaCinematica({ obraId }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
+    const { mock, narrativaTeste } = await obterEngineConfigDinamica();
+
     engineStep("Pipeline iniciada", "→", {
       obraId,
       tipoEtapa,
-      mock: ENGINE_CONFIG.mock,
-      narrativa_teste: ENGINE_CONFIG.narrativaTeste,
+      mock,
+      narrativa_teste: narrativaTeste,
     });
 
     const agente = await buscarAgentePorSlug(definicao.agenteSlug);
@@ -666,8 +675,8 @@ async function executarNarrativaCinematica({ obraId }) {
       agente_slug: agente.slug,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
-      narrativa_teste: ENGINE_CONFIG.narrativaTeste,
+      mock,
+      narrativa_teste: narrativaTeste,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       persistencia: "ai_pipeline_etapas.saida",
     };
@@ -782,7 +791,9 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
-    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+    const { mock } = await obterEngineConfigDinamica();
+
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock });
 
     const agente = await buscarAgentePorSlug(definicao.agenteSlug);
     const contexto = await buildContext(obraId);
@@ -798,7 +809,7 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
       agente_slug: agente.slug,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       narrativa_cinematica_disponivel: Boolean(narrativaCinematica),
       persistencia: "ai_pipeline_etapas.saida",
@@ -897,7 +908,9 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
-    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+    const { mock } = await obterEngineConfigDinamica();
+
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock });
 
     const contexto = await buildContext(obraId);
     const beuAtualRegistro = await buscarBEUAtual({
@@ -917,7 +930,7 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       tipo_etapa: tipoEtapa,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       prompt_origem: "ai_pipeline_etapas.heritage_prompt.saida",
       prompt_tamanho_aproximado: promptHeritage.length,
@@ -981,7 +994,9 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
-    engineStep("Pipeline iniciada", "â†’", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+    const { mock } = await obterEngineConfigDinamica();
+
+    engineStep("Pipeline iniciada", "â†’", { obraId, tipoEtapa, mock });
 
     const contexto = await buildContext(obraId);
     const beuAtualRegistro = await buscarBEUAtual({
@@ -1001,7 +1016,7 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       tipo_etapa: tipoEtapa,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       prompt_origem: "ai_pipeline_etapas.capa_cinematica_prompt.saida",
       prompt_tamanho_aproximado: promptCinematico.length,
@@ -1065,7 +1080,9 @@ async function executarPdfCinematica({ obraId, tipoEtapa }) {
   const runId = criarRunId({ obraId, tipoEtapa });
 
   try {
-    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock: ENGINE_CONFIG.mock });
+    const { mock } = await obterEngineConfigDinamica();
+
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa, mock });
 
     const contexto = await buildContext(obraId);
     const beuAtualRegistro = await buscarBEUAtual({
@@ -1077,7 +1094,7 @@ async function executarPdfCinematica({ obraId, tipoEtapa }) {
       tipo_etapa: tipoEtapa,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
-      mock: ENGINE_CONFIG.mock,
+      mock,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       persistencia: "storage.pdfs + livros.pdf_cinematica_url + ai_pipeline_etapas.saida",
     };
