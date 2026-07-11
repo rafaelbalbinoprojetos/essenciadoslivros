@@ -14,6 +14,7 @@ import MuralPage from "./pages/Mural.jsx";
 import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
 import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
+import EngineProcessarLote from "./pages/EngineProcessarLote.jsx";
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="biblioteca/:bookId/editar" element={<BookCreatePage />} />
             <Route path="assistente" element={<ChatbotPage />} />
             <Route path="engine" element={<EngineSolicitarObra />} />
+            <Route path="engine/lote" element={<EngineProcessarLote />} />
             <Route path="configuracoes" element={<SettingsPage />} />
             
 

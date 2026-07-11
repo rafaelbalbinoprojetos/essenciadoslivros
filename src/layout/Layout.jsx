@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   Dices,
   Cpu,
+  ListChecks,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu.jsx";
 import ThemeMenu from "../components/ThemeMenu.jsx";
@@ -42,6 +43,7 @@ const ICON_MAP = {
   "unexpected-encounter": Dices,
   catalog: BookOpen,
   engine: Cpu,
+  "engine-lote": ListChecks,
   assistant: Sparkles,
   settings: SettingsIcon,
 };

@@ -56,6 +56,13 @@ export const NAV_LINKS = [
     description: "Crie obras com a Essência Engine",
   },
   {
+    id: "engine-lote",
+    to: "/engine/lote",
+    label: "Processar em lote",
+    shortLabel: "Em lote",
+    description: "Selecione várias obras e processe a pipeline de uma vez",
+  },
+  {
     id: "assistant",
     to: "/assistente",
     label: "Assistente IA",
