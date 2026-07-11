@@ -95,6 +95,22 @@ function contarEtapasConcluidas(obra) {
   return ETAPAS_PIPELINE.filter((etapa) => concluidas.has(etapa)).length;
 }
 
+function valorOrdenavel(obra, coluna) {
+  if (coluna === "titulo") return (obra.titulo || "").toLowerCase();
+  if (coluna === "tipo_obra") return (obra.tipo_obra || "").toLowerCase();
+  if (coluna === "status") return (obra.status || "").toLowerCase();
+  if (coluna === "total") return contarEtapasConcluidas(obra);
+  if (ETAPAS_PIPELINE.includes(coluna)) {
+    return new Set(obra.etapas_concluidas || []).has(coluna) ? 1 : 0;
+  }
+  return "";
+}
+
+function IndicadorOrdenacao({ coluna, ordenacao }) {
+  if (ordenacao.coluna !== coluna) return null;
+  return <span className="ml-1 inline-block">{ordenacao.direcao === "asc" ? "▲" : "▼"}</span>;
+}
+
 export default function EngineProcessarLote() {
   const [obras, setObras] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -105,6 +121,7 @@ export default function EngineProcessarLote() {
   const [processandoLote, setProcessandoLote] = useState(false);
   const [progresso, setProgresso] = useState(null);
   const [resultados, setResultados] = useState([]);
+  const [ordenacao, setOrdenacao] = useState({ coluna: null, direcao: "asc" });
 
   const carregarObras = useCallback(async () => {
     setCarregando(true);
@@ -141,6 +158,21 @@ export default function EngineProcessarLote() {
     });
   }, [obras, busca, filtroTipo, filtroStatus]);
 
+  const obrasOrdenadas = useMemo(() => {
+    if (!ordenacao.coluna) return obrasFiltradas;
+
+    const fator = ordenacao.direcao === "asc" ? 1 : -1;
+
+    return [...obrasFiltradas].sort((a, b) => {
+      const valorA = valorOrdenavel(a, ordenacao.coluna);
+      const valorB = valorOrdenavel(b, ordenacao.coluna);
+
+      if (valorA < valorB) return -1 * fator;
+      if (valorA > valorB) return 1 * fator;
+      return 0;
+    });
+  }, [obrasFiltradas, ordenacao]);
+
   const quantidadeSelecionada = useMemo(
     () => obrasFiltradas.filter((obra) => selecionadas[obra.id]).length,
     [obrasFiltradas, selecionadas],
@@ -148,6 +180,13 @@ export default function EngineProcessarLote() {
 
   function alternarSelecao(obraId) {
     setSelecionadas((atual) => ({ ...atual, [obraId]: !atual[obraId] }));
+  }
+
+  function alternarOrdenacao(coluna) {
+    setOrdenacao((atual) => {
+      if (atual.coluna !== coluna) return { coluna, direcao: "asc" };
+      return { coluna, direcao: atual.direcao === "asc" ? "desc" : "asc" };
+    });
   }
 
   function selecionarVisiveis(valor) {
@@ -263,19 +302,42 @@ export default function EngineProcessarLote() {
               <thead className="sticky top-0 bg-zinc-950 text-xs uppercase tracking-wider text-zinc-500">
                 <tr>
                   <th className="px-3 py-2"> </th>
-                  <th className="px-3 py-2">Título</th>
-                  <th className="px-3 py-2">Tipo</th>
-                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">
+                    <button type="button" onClick={() => alternarOrdenacao("titulo")} className="flex items-center hover:text-zinc-200">
+                      Título
+                      <IndicadorOrdenacao coluna="titulo" ordenacao={ordenacao} />
+                    </button>
+                  </th>
+                  <th className="px-3 py-2">
+                    <button type="button" onClick={() => alternarOrdenacao("tipo_obra")} className="flex items-center hover:text-zinc-200">
+                      Tipo
+                      <IndicadorOrdenacao coluna="tipo_obra" ordenacao={ordenacao} />
+                    </button>
+                  </th>
+                  <th className="px-3 py-2">
+                    <button type="button" onClick={() => alternarOrdenacao("status")} className="flex items-center hover:text-zinc-200">
+                      Status
+                      <IndicadorOrdenacao coluna="status" ordenacao={ordenacao} />
+                    </button>
+                  </th>
                   {ETAPAS_PIPELINE.map((etapa) => (
                     <th key={etapa} className="whitespace-nowrap px-2 py-2 text-center" title={ETAPA_LABELS[etapa]}>
-                      {ETAPA_LABELS_CURTOS[etapa]}
+                      <button type="button" onClick={() => alternarOrdenacao(etapa)} className="mx-auto flex items-center hover:text-zinc-200">
+                        {ETAPA_LABELS_CURTOS[etapa]}
+                        <IndicadorOrdenacao coluna={etapa} ordenacao={ordenacao} />
+                      </button>
                     </th>
                   ))}
-                  <th className="px-3 py-2 text-center">Total</th>
+                  <th className="px-3 py-2 text-center">
+                    <button type="button" onClick={() => alternarOrdenacao("total")} className="mx-auto flex items-center hover:text-zinc-200">
+                      Total
+                      <IndicadorOrdenacao coluna="total" ordenacao={ordenacao} />
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {obrasFiltradas.map((obra) => {
+                {obrasOrdenadas.map((obra) => {
                   const concluidas = contarEtapasConcluidas(obra);
                   const concluidasSet = new Set(obra.etapas_concluidas || []);
                   return (
