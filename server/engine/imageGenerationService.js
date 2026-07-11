@@ -326,16 +326,25 @@ async function salvarImagemNoStorage({
   };
 }
 
+function normalizarParaComparacao(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
 function ehRecusaPorModeracao(error) {
-  const codigo = String(error?.code || error?.error?.code || "").toLowerCase();
-  const tipo = String(error?.type || error?.error?.type || "").toLowerCase();
-  const mensagem = String(error?.message || "").toLowerCase();
+  const codigo = normalizarParaComparacao(error?.code || error?.error?.code);
+  const tipo = normalizarParaComparacao(error?.type || error?.error?.type);
+  const mensagem = normalizarParaComparacao(error?.message);
   const status = error?.status ?? error?.response?.status ?? null;
 
   const marcadores = [
+    // inglês
     "content_policy_violation",
     "moderation_blocked",
     "content policy",
+    "content policies",
     "safety system",
     "our safety",
     "content filter",
@@ -344,12 +353,24 @@ function ehRecusaPorModeracao(error) {
     "not allowed to generate",
     "cannot generate",
     "unable to generate",
+    "may violate our content polic",
+    "might violate our content polic",
+    "may violate our usage polic",
+    "try again or edit your prompt",
+    // português (mensagem real observada: "Infelizmente, a imagem que criamos
+    // pode violar nossas políticas de conteúdo. Se você considera que foi um
+    // engano, tente novamente ou edite o prompt.")
+    "pode violar nossas politicas",
+    "viola nossas politicas",
+    "politicas de conteudo",
+    "tente novamente ou edite",
+    "edite o prompt",
   ];
 
   const alvo = `${codigo} ${tipo} ${mensagem}`;
 
   if (marcadores.some((marcador) => alvo.includes(marcador))) return true;
-  if (status === 400 && /polic|moderat|safety|violat/i.test(mensagem)) return true;
+  if (status === 400 && /polic|moderat|safety|violat/.test(mensagem)) return true;
 
   return false;
 }
@@ -363,7 +384,7 @@ async function ajustarPromptAposRecusa({ promptOriginal, motivoRecusa }) {
     messages: [
       {
         role: "system",
-        content: "Você é um editor de prompts de geração de imagem. Reescreva prompts recusados pelo sistema de moderação da OpenAI, removendo elementos que possam violar políticas de conteúdo (violência gráfica explícita, sangue, nudez, personagens reais/celebridades, ódio, autolesão, armas em detalhe realista excessivo, conteúdo perturbador), mas preservando ao máximo a composição, atmosfera, estilo cinematográfico, artefatos simbólicos e fidelidade emocional à obra original. Responda apenas com o prompt reescrito em inglês, sem explicações, sem aspas, sem markdown.",
+        content: "Você é um editor de prompts de geração de imagem. Reescreva prompts recusados pelo sistema de moderação da OpenAI, removendo elementos que possam violar políticas de conteúdo: violência gráfica explícita, sangue, nudez, ódio, autolesão, conteúdo perturbador, armas descritas de forma agressiva ou em detalhe realista excessivo, e retratos foto-realistas extremos de personagens (reais ou fictícios/protegidos por direitos autorais) que possam ser confundidos com o retrato de uma pessoa real. Quando o prompt descrever um personagem fictício conhecido, mantenha silhueta, vestuário, objetos icônicos e pose reconhecíveis, mas reduza a especificidade fotorrealista do rosto/expressão e suavize verbos de ação agressivos (ex.: 'gripping tightly', 'blazing eyes') por descrições mais neutras. Preserve ao máximo a composição, atmosfera, estilo cinematográfico, artefatos simbólicos e fidelidade emocional à obra original. Responda apenas com o prompt reescrito em inglês, sem explicações, sem aspas, sem markdown.",
       },
       {
         role: "user",
