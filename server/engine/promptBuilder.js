@@ -893,7 +893,124 @@ ${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 `.trim();
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ARQUITETURA DE DOIS ESTÁGIOS — CAPA CINEMATOGRÁFICA
+//
+// ESTÁGIO 1: montarPromptCapaCinematica()
+//   → Gera um meta-prompt para o GPT-4o (diretor de arte)
+//   → O GPT-4o pensa, decide a cena e devolve TEXTO CORRIDO limpo (~300 palavras)
+//   → Esse texto vai para onPromptGerado() (seu painel de debug já existente)
+//
+// ESTÁGIO 2: gerarImagemCapaCinematica()  [chamada no seu runner/engine]
+//   → Recebe o texto limpo do estágio 1
+//   → Envia para gpt-image-2 junto com a imagem de referência
+//
+// MOTIVO DA MUDANÇA:
+//   O prompt anterior (JSON estruturado com hierarquias) era instrução para
+//   um LLM raciocinar — não input para um modelo de imagem renderizar.
+//   O gpt-image-2 ignorava as prioridades e escolhia o primeiro símbolo forte
+//   que encontrava (ex: mochila em vez de BB em Death Stranding).
+//   Agora o GPT-4o faz o raciocínio e entrega apenas a cena já resolvida.
+// ─────────────────────────────────────────────────────────────────────────────
+
 function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+  const refUrl = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
+
+  const blocoReferencia = refUrl
+    ? `REFERÊNCIA VISUAL ATIVA: ${refUrl}
+Use-a APENAS para calibrar: qualidade de renderização, textura, iluminação dramática, hierarquia editorial, densidade de elementos e acabamento premium de coleção museal.
+NÃO copie personagens, objetos, cena ou layout da referência. A referência será anexada à requisição de imagem — mencione que o modelo deve usá-la apenas como referência de estilo.`
+    : `Nenhuma referência visual ativa. Construa o prompt exclusivamente a partir dos dados da obra.`;
+
+  return `
+Você é o diretor de arte da coleção Essência dos Livros.
+Sua única tarefa é escrever o prompt final de geração de imagem para o gpt-image-2.
+
+NÃO gere a imagem.
+NÃO explique seu raciocínio.
+NÃO use JSON, blocos numerados ou seções com títulos.
+Devolva APENAS o prompt final em texto corrido em inglês, com no máximo 380 palavras.
+
+━━━━ PROCESSO INTERNO (não apareça na resposta) ━━━━
+
+Execute mentalmente antes de escrever qualquer palavra:
+
+PASSO 1 — TESTE DE MEMÓRIA CULTURAL
+Responda internamente: "Se o título sumisse, qual imagem única faria os fãs reconhecerem a obra?"
+Essa imagem é o núcleo. Trave aqui antes de avançar.
+
+PASSO 2 — VALIDAÇÃO DE RELAÇÃO VIVA
+Existe vínculo emocional central entre o protagonista e outro ser vivo?
+(animal, cavalo, criança, bebê, parceiro, criatura, companion sentiente, amigo íntimo)
+
+→ Se SIM e os fãs lembram dessa relação mais do que qualquer objeto, local ou vilão:
+   ESSA RELAÇÃO É A CENA. Trave. Não troque por símbolo ou paisagem.
+   Exemplos corretos: Sam + BB (não mochila), Joel + Ellie, Kratos + Atreus,
+   Arthur + cavalo, Wander + Agro, Ico + Yorda, Geralt + Ciri.
+
+→ Se NÃO, avalie nesta ordem:
+   a) Dor humana intensa — sofrimento, luto, culpa, sacrifício, solidão extrema
+   b) Antagonista cultural icônico — o vilão mais reconhecível da obra
+   c) Consequência irreversível — o que restou após a virada, não a ação em si
+   d) Revelação ou transformação — o instante em que tudo muda
+   e) Mundo ou ambiente — apenas se ele FOR o protagonista da obra
+
+PASSO 3 — TRAVA CANÔNICA
+Confirme: cada elemento (personagem, roupa, criatura, arma, ambiente) é fiel ao
+design canônico da obra. Nada genérico, nada inventado, nada herdado de outra obra.
+
+━━━━ ESTRUTURA DO PROMPT FINAL ━━━━
+
+Escreva em blocos narrativos corridos, nesta ordem natural:
+
+1. Descreva a CENA TRAVADA: quem está presente, o que está acontecendo emocionalmente,
+   qual gesto ou postura comunica a relação ou sentimento central.
+
+2. Composição e câmera: plano (médio, americano, close), lente equivalente (~85mm),
+   altura de câmera, inclinação, profundidade de campo, separação foreground/background.
+
+3. Iluminação: direção, temperatura, qualidade (dura/difusa), backlight,
+   partículas, névoa, fumaça, atmosfera volumétrica.
+
+4. Foreground → midground → background em sequência natural.
+
+5. Camada editorial: moldura elegante em materiais físicos (metal escovado, vidro fosco),
+   tipografia serifada grande, equilíbrio 70% imagem / 30% editorial.
+
+6. Textos visíveis obrigatórios:
+   - "ESSÊNCIA DOS LIVROS" no topo em tipografia serifada elegante
+   - Título da obra em destaque centralizado na parte inferior
+   - Frase curatorial curta em itálico entre o centro e o título
+   - Placa compacta inferior: obra / criador ou estúdio / ano / "Coleção Essência dos Livros"
+
+7. Finalize com exatamente esta linha:
+   "No style of any official artwork. Photorealistic cinematic render, premium editorial collection quality, vertical portrait format 2:3."
+
+━━━━ PROIBIÇÕES ABSOLUTAS NO PROMPT ━━━━
+Não mencione: waveform, equalizer, microfone, headphones gigantes, botão play,
+template de streaming ou podcast, thumbnail, montagem de cenas, texto ilegível,
+personagem apenas posando sem emoção, UI moderna, artefatos digitais visíveis.
+
+━━━━ REFERÊNCIA DE ESTILO ━━━━
+${blocoReferencia}
+
+━━━━ DADOS DA OBRA ━━━━
+
+CONTEXTO:
+${JSON.stringify(contexto, null, 2)}
+
+BEU:
+${JSON.stringify(beuAtual, null, 2)}
+
+NARRATIVA CINEMATOGRÁFICA:
+${narrativaCinematica || "Não disponível. Use apenas a BEU e o contexto."}
+`.trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FUNÇÃO LEGADA PRESERVADA — não usada no fluxo atual, mantida para referência
+// ─────────────────────────────────────────────────────────────────────────────
+function _montarPromptCapaCinematicaLegado({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   const cinematicReferenceSource = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
   const cinematicReferenceBlock = cinematicReferenceSource
     ? `

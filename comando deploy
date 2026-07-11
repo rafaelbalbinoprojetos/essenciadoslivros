@@ -1,0 +1,3 @@
+cd "C:\Users\Mãezoka\Desktop\Essencia-livros"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\deploy-github.ps1 -Message "Sua mensagem"cd "C:\Users\Mãezoka\Desktop\Essencia-livros"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\deploy-github.ps1 -Message "Sua mensagem"
