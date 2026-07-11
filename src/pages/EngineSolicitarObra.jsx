@@ -52,6 +52,7 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   heritage_image: 180,
   capa_cinematica_prompt: 15,
   capa_cinematica_image: 180,
+  pdf_cinematica: 30,
   atualizar_dados: 15,
 };
 
@@ -111,6 +112,7 @@ export default function EngineSolicitarObra() {
   const [executandoHeritageImage, setExecutandoHeritageImage] = useState(false);
   const [executandoCapaPrompt, setExecutandoCapaPrompt] = useState(false);
   const [executandoCapaImage, setExecutandoCapaImage] = useState(false);
+  const [executandoPdfCinematica, setExecutandoPdfCinematica] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
   const [resultadoCurador, setResultadoCurador] = useState(null);
@@ -121,10 +123,11 @@ export default function EngineSolicitarObra() {
   const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
   const [resultadoCapaImage, setResultadoCapaImage] = useState(null);
+  const [resultadoPdfCinematica, setResultadoPdfCinematica] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
   const [stepStartedAt, setStepStartedAt] = useState({});
   const [timerNow, setTimerNow] = useState(() => Date.now());
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || atualizandoDados;
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || atualizandoDados;
 
   const loadEngineReferences = useCallback(async () => {
     setReferencesLoading(true);
@@ -155,6 +158,7 @@ export default function EngineSolicitarObra() {
       heritage_image: executandoHeritageImage,
       capa_cinematica_prompt: executandoCapaPrompt,
       capa_cinematica_image: executandoCapaImage,
+      pdf_cinematica: executandoPdfCinematica,
       atualizar_dados: atualizandoDados,
     };
 
@@ -186,6 +190,7 @@ export default function EngineSolicitarObra() {
     executandoHeritageImage,
     executandoCapaPrompt,
     executandoCapaImage,
+    executandoPdfCinematica,
     atualizandoDados,
   ]);
 
@@ -263,6 +268,7 @@ export default function EngineSolicitarObra() {
     const isHeritageImage = tipoEtapa === "heritage_image";
     const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
     const isCapaImage = tipoEtapa === "capa_cinematica_image";
+    const isPdfCinematica = tipoEtapa === "pdf_cinematica";
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
@@ -272,6 +278,7 @@ export default function EngineSolicitarObra() {
     if (isHeritageImage) setExecutandoHeritageImage(true);
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
     if (isCapaImage) setExecutandoCapaImage(true);
+    if (isPdfCinematica) setExecutandoPdfCinematica(true);
 
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
@@ -298,6 +305,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setResultadoHeritageImage(data);
       if (isCapaPrompt) setResultadoCapaPrompt(data);
       if (isCapaImage) setResultadoCapaImage(data);
+      if (isPdfCinematica) setResultadoPdfCinematica(data);
 
       if (!response.ok || data?.ok === false) {
         throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
@@ -323,6 +331,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setResultadoHeritageImage((atual) => atual || fallback);
       if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
       if (isCapaImage) setResultadoCapaImage((atual) => atual || fallback);
+      if (isPdfCinematica) setResultadoPdfCinematica((atual) => atual || fallback);
 
       return null;
     } finally {
@@ -334,6 +343,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setExecutandoHeritageImage(false);
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
       if (isCapaImage) setExecutandoCapaImage(false);
+      if (isPdfCinematica) setExecutandoPdfCinematica(false);
     }
   }
 
@@ -393,6 +403,7 @@ export default function EngineSolicitarObra() {
     setExecutandoHeritageImage(false);
     setExecutandoCapaPrompt(false);
     setExecutandoCapaImage(false);
+    setExecutandoPdfCinematica(false);
     setAtualizandoDados(false);
     setResultadoCriacao(null);
     setResultadoCurador(null);
@@ -403,6 +414,7 @@ export default function EngineSolicitarObra() {
     setResultadoHeritageImage(null);
     setResultadoCapaPrompt(null);
     setResultadoCapaImage(null);
+    setResultadoPdfCinematica(null);
     setResultadoAtualizacao(null);
 
     try {
@@ -463,6 +475,7 @@ export default function EngineSolicitarObra() {
       setExecutandoHeritageImage(false);
       setExecutandoCapaPrompt(false);
       setExecutandoCapaImage(false);
+      setExecutandoPdfCinematica(false);
       setAtualizandoDados(false);
     }
   }
@@ -477,6 +490,7 @@ export default function EngineSolicitarObra() {
     || resultadoHeritageImage
     || resultadoCapaPrompt
     || resultadoCapaImage
+    || resultadoPdfCinematica
     || resultadoAtualizacao
     || loading,
   );
@@ -545,6 +559,15 @@ export default function EngineSolicitarObra() {
         active: executandoCapaImage,
         result: resultadoCapaImage,
         manualWhenIdle: Boolean(resultadoCapaPrompt?.ok),
+      }),
+    },
+    {
+      key: "pdf_cinematica",
+      label: "Gerando PDF cinematográfico",
+      status: getStepStatus({
+        active: executandoPdfCinematica,
+        result: resultadoPdfCinematica,
+        manualWhenIdle: Boolean(resultadoCapaImage?.ok),
       }),
     },
     {
@@ -637,9 +660,11 @@ export default function EngineSolicitarObra() {
                             ? "Gerando prompt da capa cinematográfica..."
                             : executandoCapaImage
                               ? "Gerando imagem cinematográfica..."
-                              : atualizandoDados
-                                ? "Atualizando dados..."
-                                : "Solicitar obra"}
+                              : executandoPdfCinematica
+                                ? "Gerando PDF cinematográfico..."
+                                : atualizandoDados
+                                  ? "Atualizando dados..."
+                                  : "Solicitar obra"}
           </button>
         </form>
 
@@ -898,6 +923,14 @@ export default function EngineSolicitarObra() {
                   >
                     Gerar Imagem Cinemática
                   </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("pdf_cinematica")}
+                    className="rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10 disabled:opacity-60"
+                  >
+                    Gerar PDF Cinemático
+                  </button>
                 </div>
               </div>
             )}
@@ -950,6 +983,14 @@ export default function EngineSolicitarObra() {
                     className="rounded-xl border border-rose-500/60 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/10 disabled:opacity-60"
                   >
                     Gerar Imagem Cinemática
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => executarEtapaManual("pdf_cinematica")}
+                    className="rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10 disabled:opacity-60"
+                  >
+                    Gerar PDF Cinemático
                   </button>
                 </div>
               </div>
@@ -1117,6 +1158,41 @@ export default function EngineSolicitarObra() {
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
                 {JSON.stringify(resultadoCapaImage, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoPdfCinematica && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do pdf_cinematica
+            </h2>
+            {resultadoPdfCinematica.ok && resultadoPdfCinematica.pdfUrl ? (
+              <div className="rounded-2xl border border-cyan-900 bg-black p-5">
+                <a
+                  href={resultadoPdfCinematica.pdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10"
+                >
+                  Abrir PDF cinemático
+                </a>
+                <a
+                  href={resultadoPdfCinematica.pdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block truncate text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+                >
+                  {resultadoPdfCinematica.pdfUrl}
+                </a>
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-cyan-100">
+                  {JSON.stringify(resultadoPdfCinematica, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoPdfCinematica, null, 2)}
               </pre>
             )}
           </section>
