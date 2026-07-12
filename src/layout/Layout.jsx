@@ -433,6 +433,7 @@ export default function Layout() {
           </button>
         </div>
 
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <nav className="sidebar-nav flex flex-col gap-1 px-3 py-5">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -465,6 +466,10 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="px-3 pb-2 md:hidden">
+          <ThemeMenu variant="sidebar" />
+        </div>
 
         <div className={`mt-auto space-y-4 px-5 pb-6 ${collapsed ? "md:px-2.5" : ""}`}>
           {currentTrack && (
@@ -551,6 +556,7 @@ export default function Layout() {
             <span className={collapsed ? "md:hidden" : ""}>Sair da conta</span>
           </button>
         </div>
+        </div>
       </aside>
 
       {menuOpen && (
@@ -625,7 +631,9 @@ export default function Layout() {
                       </span>
                     ) : null}
                   </button>
-                  <ThemeMenu />
+                  <div className="hidden md:block">
+                    <ThemeMenu />
+                  </div>
 
                   <SettingsMenu
                     onSignOut={handleSignOut}

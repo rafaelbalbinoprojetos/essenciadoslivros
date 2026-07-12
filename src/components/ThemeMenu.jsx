@@ -1,8 +1,8 @@
 import React from "react";
-import { Palette, Check } from "lucide-react";
+import { Palette, Check, ChevronDown } from "lucide-react";
 import { useTheme } from "../context/ThemeContext.jsx";
 
-export default function ThemeMenu() {
+export default function ThemeMenu({ variant = "header" }) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef(null);
   const { themes, theme, selectTheme } = useTheme();
@@ -38,6 +38,38 @@ export default function ThemeMenu() {
     setOpen(false);
   };
 
+  if (variant === "sidebar") {
+    return (
+      <div ref={containerRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={open}
+          aria-controls="theme-menu-sidebar"
+          className="sidebar-link group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-[#4b3f35]/80 transition duration-200 hover:bg-[#f2ede4] hover:text-[rgb(var(--color-accent-dark))] dark:text-[#a89fc1] dark:hover:bg-white/5 dark:hover:text-white"
+        >
+          <Palette className="h-5 w-5 flex-shrink-0" />
+          <span className="flex-1 text-left text-sm font-semibold">Temas</span>
+          <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+
+        {open && (
+          <div
+            id="theme-menu-sidebar"
+            className="mt-2 flex max-h-[60vh] flex-col overflow-y-auto rounded-xl border border-gray-200 bg-white p-3 text-sm shadow-inner dark:border-gray-800 dark:bg-gray-900/60"
+          >
+            <ThemeSections
+              lightThemes={lightThemes}
+              darkThemes={darkThemes}
+              activeId={theme?.id}
+              onSelect={handleSelect}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="relative" ref={containerRef}>
       <button
@@ -70,23 +102,36 @@ export default function ThemeMenu() {
           </header>
 
           <div className="mt-3 flex-1 overflow-y-auto pr-1">
-            <section>
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Temas claros
-              </span>
-              <ThemeGrid themes={lightThemes} activeId={theme?.id} onSelect={handleSelect} />
-            </section>
-
-            <section className="mt-4">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Temas escuros
-              </span>
-              <ThemeGrid themes={darkThemes} activeId={theme?.id} onSelect={handleSelect} />
-            </section>
+            <ThemeSections
+              lightThemes={lightThemes}
+              darkThemes={darkThemes}
+              activeId={theme?.id}
+              onSelect={handleSelect}
+            />
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function ThemeSections({ lightThemes, darkThemes, activeId, onSelect }) {
+  return (
+    <>
+      <section>
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Temas claros
+        </span>
+        <ThemeGrid themes={lightThemes} activeId={activeId} onSelect={onSelect} />
+      </section>
+
+      <section className="mt-4">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Temas escuros
+        </span>
+        <ThemeGrid themes={darkThemes} activeId={activeId} onSelect={onSelect} />
+      </section>
+    </>
   );
 }
 
