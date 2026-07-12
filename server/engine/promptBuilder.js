@@ -229,6 +229,60 @@ A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresen
 ━━━ OBRA ━━━
 [PAYLOAD DA OBRA]`;
 
+const MOTOR_ICN_V1 = String.raw`Você é o NARRATIVE SCALE ENGINE da Essência dos Livros — o módulo que mede a complexidade narrativa real de uma obra antes de qualquer narrativa cinematográfica ser escrita.
+
+Sua única tarefa: analisar a obra recebida e retornar um ÍNDICE DE COMPLEXIDADE NARRATIVA (ICN), de 1 a 10, que decide quantas cenas a narrativa cinematográfica desta obra precisa para preservar sua fidelidade emocional — sem comprimir obras extensas nem inflar obras simples.
+
+A duração deve ser determinada pela complexidade narrativa real da obra, nunca apenas pelo tipo de mídia. Um filme pode exigir mais densidade que um jogo longo cheio de conteúdo repetitivo. Uma obra curta pode ser emocionalmente densa. Julgue pela obra, não pelo rótulo.
+
+━━━ FATORES (avalie cada um de 0 a 10, mentalmente) ━━━
+1. Extensão real da história (sem contar filler, grind ou repetição)
+2. Quantidade de arcos narrativos que realmente transformam personagem, mundo ou relação
+3. Complexidade dos personagens indispensáveis (não conte quantidade, conte profundidade)
+4. Complexidade do universo (facções, regras, política, mitologia, geografia)
+5. Densidade temática (temas vividos através de escolha e consequência, não só mencionados)
+6. Dependência emocional do tempo (o vínculo exige convivência prolongada?)
+7. Complexidade cronológica (flashbacks, linhas temporais, saltos, pontos de vista)
+8. Quantidade de momentos indispensáveis (cenas que, se removidas, descaracterizam a obra)
+9. Complexidade de pontos de vista (protagonista único vs. elenco coral)
+10. Necessidade de contexto prévio para os acontecimentos terem peso
+
+Pesos: extensão 10%, arcos 15%, personagens 15%, universo 10%, temas 10%, dependência emocional do tempo 15%, cronologia 5%, momentos indispensáveis 10%, pontos de vista 5%, contexto 5%.
+
+Calcule a média ponderada, converta para a escala 1–10, depois valide editorialmente: a duração sugerida preserva os vínculos? Os personagens essenciais têm espaço? A narrativa evita virar lista de acontecimentos? Ajuste o ICN em até 1 ponto se a validação editorial exigir — e explique o motivo em "justificativa".
+
+REGRA FUNDAMENTAL: nunca comprima uma obra extensa só para caber em poucas cenas. Nunca infle uma obra simples só para gerar mais conteúdo. A duração serve à obra — a obra nunca é deformada para servir à duração.
+
+━━━ FAIXAS DE REFERÊNCIA ━━━
+ICN 1–2 — Obra concentrada: história curta, poucos personagens essenciais, um conflito central.
+ICN 3–4 — Obra desenvolvida: protagonista com arco claro, alguns coadjuvantes importantes, 2–3 conflitos relevantes.
+ICN 5–6 — Obra ampla: múltiplos arcos relevantes, vários personagens indispensáveis, universo desenvolvido.
+ICN 7–8 — Obra épica: muitos personagens centrais, diversos arcos transformadores, universo complexo, múltiplas fases.
+ICN 9–10 — Obra monumental ou saga: centenas de capítulos ou episódios, várias gerações ou fases, elenco extenso, vínculos construídos ao longo de anos.
+
+━━━ FORMATO DE RESPOSTA ━━━
+Retorne SOMENTE um objeto JSON válido, sem texto fora dele:
+{
+  "icn": <número de 1 a 10>,
+  "faixa": "<nome da faixa, ex.: \"Obra ampla\">",
+  "fatores": {
+    "extensao_historia": <0-10>,
+    "arcos_narrativos": <0-10>,
+    "complexidade_personagens": <0-10>,
+    "complexidade_universo": <0-10>,
+    "densidade_tematica": <0-10>,
+    "dependencia_emocional_do_tempo": <0-10>,
+    "complexidade_cronologica": <0-10>,
+    "momentos_indispensaveis": <0-10>,
+    "pontos_de_vista": <0-10>,
+    "necessidade_de_contexto": <0-10>
+  },
+  "justificativa": "<2 a 4 frases explicando a nota e, se houve, o ajuste editorial de até 1 ponto>"
+}
+
+━━━ OBRA ━━━
+[PAYLOAD DA OBRA]`;
+
 const MOTOR_ENCICLOPEDIA_V1 = String.raw`Você é a ESSENCE ENGINE — o motor de documento enciclopédico do sistema Essência dos Livros.
 
 Sua única missão é produzir o documento de referência mais completo, mais denso e mais rico já escrito sobre qualquer obra que receba.
@@ -1035,15 +1089,68 @@ async function aplicarModoTesteNarrativa(motor) {
     );
 }
 
-async function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual }) {
+// Faixas do Índice de Complexidade Narrativa (ICN) → quantidade de cenas.
+// Somente a quantidade de cenas varia por faixa; formato, proporção por cena,
+// comandos, regras de escrita e verificação do MOTOR_NARRATIVA_CINEMATICA_V3
+// permanecem exatamente os mesmos para qualquer obra.
+const FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN = [
+  { icnMax: 2, cenasMin: 8, cenasMax: 12 },
+  { icnMax: 4, cenasMin: 12, cenasMax: 16 },
+  { icnMax: 6, cenasMin: 16, cenasMax: 20 },
+  { icnMax: 8, cenasMin: 20, cenasMax: 24 },
+  { icnMax: 10, cenasMin: 23, cenasMax: 26 },
+];
+
+export function calcularEstruturaCenasPorICN(icnBruto) {
+  const valor = Number(icnBruto);
+  const icn = Number.isFinite(valor) ? Math.min(10, Math.max(1, Math.round(valor))) : 4;
+  const faixa =
+    FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN.find((item) => icn <= item.icnMax) ??
+    FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN[FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN.length - 1];
+
+  return { icn, cenasMin: faixa.cenasMin, cenasMax: faixa.cenasMax };
+}
+
+function aplicarEstruturaCenas(motor, estruturaCenas) {
+  if (!estruturaCenas?.cenasMin || !estruturaCenas?.cenasMax) return motor;
+
+  const { cenasMin, cenasMax } = estruturaCenas;
+
+  return motor
+    .replace(
+      "12 a 14 cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.",
+      `${cenasMin} a ${cenasMax} cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.`,
+    )
+    .replace(
+      "Global: ✓ 12–14 cenas?",
+      `Global: ✓ ${cenasMin}–${cenasMax} cenas?`,
+    );
+}
+
+async function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual, estruturaCenas = null }) {
   const payloadObra = {
     contexto,
     beu: beuAtual,
   };
 
-  const motor = await aplicarModoTesteNarrativa(MOTOR_NARRATIVA_CINEMATICA_V3);
+  const testeAtivo = await isEngineTestesAtivo();
+  const motor = testeAtivo
+    ? await aplicarModoTesteNarrativa(MOTOR_NARRATIVA_CINEMATICA_V3)
+    : aplicarEstruturaCenas(MOTOR_NARRATIVA_CINEMATICA_V3, estruturaCenas);
 
   return motor.replace(
+    "[PAYLOAD DA OBRA]",
+    JSON.stringify(payloadObra, null, 2),
+  );
+}
+
+export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtual = null }) {
+  const payloadObra = {
+    contexto,
+    beu: beuAtual,
+  };
+
+  return MOTOR_ICN_V1.replace(
     "[PAYLOAD DA OBRA]",
     JSON.stringify(payloadObra, null, 2),
   );
@@ -1902,6 +2009,7 @@ export async function montarPromptAgente({
   beuAtual = null,
   narrativaCinematica = null,
   partesEnciclopediaAnteriores = [],
+  estruturaCenas = null,
 }) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
@@ -1926,7 +2034,8 @@ export async function montarPromptAgente({
     },
     narrativa_cinematica: {
       responsavel: "Narrador Cinemático",
-      montar: () => montarPromptNarrativaCinematicaEssencia({ agente, contexto, beuAtual }),
+      montar: () =>
+        montarPromptNarrativaCinematicaEssencia({ agente, contexto, beuAtual, estruturaCenas }),
     },
     heritage_prompt: {
       responsavel: "Heritage Prompt",

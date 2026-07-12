@@ -21,7 +21,11 @@ import {
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
-import { montarPromptAgente } from "./promptBuilder.js";
+import {
+  calcularEstruturaCenasPorICN,
+  montarPromptAgente,
+  montarPromptIndiceComplexidadeNarrativa,
+} from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
 const PARTES_ENCICLOPEDIA_ORDEM = [
@@ -668,6 +672,52 @@ async function executarDiretorCriativo({ obraId }) {
   }
 }
 
+// Narrative Scale Engine: analisa a complexidade real da obra (ICN) e devolve
+// a faixa de cenas correspondente, para que a narrativa cinematográfica escale
+// com o tamanho/densidade da obra em vez de usar sempre a mesma quantidade fixa.
+// Chamada de IA independente, dedicada apenas a essa análise — não altera o
+// formato, as regras ou a estrutura da narrativa em si, só a quantidade de cenas.
+async function calcularIndiceComplexidadeNarrativa({ contexto, beuAtual, runId }) {
+  const agenteICN = {
+    slug: "narrative-scale-engine",
+    nome: "Narrative Scale Engine (ICN)",
+    modelo: ENGINE_CONFIG.modeloDefault,
+    temperatura: 0.2,
+    formato_saida: "json",
+    prompt_sistema:
+      "Você é um analista de complexidade narrativa. Responda somente com o objeto JSON solicitado, sem nenhum texto fora dele.",
+  };
+
+  const promptMontado = await montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtual });
+
+  const resultado = await executarAgenteOpenAI({
+    agente: agenteICN,
+    contexto,
+    promptMontado,
+  });
+
+  const saida = resultado.saida ?? {};
+  const estrutura = calcularEstruturaCenasPorICN(saida.icn);
+
+  const analise = {
+    icn: estrutura.icn,
+    icn_bruto: saida.icn ?? null,
+    faixa: typeof saida.faixa === "string" ? saida.faixa : null,
+    fatores: saida.fatores ?? null,
+    justificativa: typeof saida.justificativa === "string" ? saida.justificativa : null,
+    cenas_min: estrutura.cenasMin,
+    cenas_max: estrutura.cenasMax,
+    tokens_input: resultado.tokens_input,
+    tokens_output: resultado.tokens_output,
+  };
+
+  if (runId) {
+    await saveEngineJsonLog({ runId, name: "icn", data: analise });
+  }
+
+  return analise;
+}
+
 async function executarNarrativaCinematica({ obraId }) {
   let execucao = null;
   let etapa = null;
@@ -694,6 +744,29 @@ async function executarNarrativaCinematica({ obraId }) {
     const beuAtual = beuAtualRegistro.payload;
     engineStep("BEU atual carregada", "✓", { payloadId: beuAtualRegistro.id });
 
+    let analiseICN = null;
+    if (!testes) {
+      try {
+        engineStep("Narrative Scale Engine (ICN)", "→");
+        analiseICN = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual, runId });
+        engineStep("Narrative Scale Engine (ICN)", "✓", {
+          icn: analiseICN.icn,
+          faixa: analiseICN.faixa,
+          cenas: `${analiseICN.cenas_min}-${analiseICN.cenas_max}`,
+        });
+      } catch (erroICN) {
+        analiseICN = null;
+        engineStep("Narrative Scale Engine (ICN)", "✕", {
+          erro: normalizarErro(erroICN),
+          fallback: "estrutura padrão de cenas do motor",
+        });
+      }
+    }
+
+    const estruturaCenas = analiseICN
+      ? { cenasMin: analiseICN.cenas_min, cenasMax: analiseICN.cenas_max }
+      : null;
+
     const entrada = {
       tipo_etapa: tipoEtapa,
       agente_slug: agente.slug,
@@ -702,6 +775,10 @@ async function executarNarrativaCinematica({ obraId }) {
       testes,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       persistencia: "ai_pipeline_etapas.saida",
+      icn: analiseICN?.icn ?? null,
+      icn_faixa: analiseICN?.faixa ?? null,
+      icn_cenas_min: analiseICN?.cenas_min ?? null,
+      icn_cenas_max: analiseICN?.cenas_max ?? null,
     };
 
     const promptMontado = await montarPromptAgente({
@@ -709,6 +786,7 @@ async function executarNarrativaCinematica({ obraId }) {
       contexto,
       tipoEtapa,
       beuAtual,
+      estruturaCenas,
     });
 
     entrada.prompt_montado = Boolean(promptMontado);
