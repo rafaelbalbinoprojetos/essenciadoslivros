@@ -94,18 +94,10 @@ async function chamarAtualizarDados(obraId) {
   return response.json();
 }
 
-function etapasFaltantesDaObra(obra) {
-  const concluidas = new Set(obra.etapas_concluidas || []);
-  const faltantes = ETAPAS_PIPELINE.filter((etapa) => !concluidas.has(etapa));
+const ETAPAS_SELECIONAVEIS = [...ETAPAS_PIPELINE, "atualizar_dados"];
 
-  // "Salvar/Atualizar dados da obra" sempre entra: é ela quem promove o
-  // status de rascunho para ativo, e isso deve acontecer toda vez que a
-  // obra é tocada, não só quando falta algum campo.
-  return [...faltantes, "atualizar_dados"];
-}
-
-function todasAsEtapas() {
-  return [...ETAPAS_PIPELINE, "atualizar_dados"];
+function criarSelecaoDeEtapas(valor) {
+  return Object.fromEntries(ETAPAS_SELECIONAVEIS.map((etapa) => [etapa, valor]));
 }
 
 function contarEtapasConcluidas(obra) {
@@ -129,6 +121,42 @@ function IndicadorOrdenacao({ coluna, ordenacao }) {
   return <span className="ml-1 inline-block">{ordenacao.direcao === "asc" ? "▲" : "▼"}</span>;
 }
 
+function EtapaSelector({ selectedSteps, onToggle, onSelectAll, disabled }) {
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-800 bg-black/30 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-zinc-200">Selecione quais etapas processar</p>
+        <div className="flex gap-3 text-xs">
+          <button type="button" onClick={() => onSelectAll(true)} className="font-semibold text-emerald-300 hover:underline">
+            Marcar todas
+          </button>
+          <button type="button" onClick={() => onSelectAll(false)} className="font-semibold text-zinc-400 hover:underline">
+            Desmarcar todas
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {ETAPAS_SELECIONAVEIS.map((etapa) => (
+          <label
+            key={etapa}
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-200"
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(selectedSteps[etapa])}
+              onChange={() => onToggle(etapa)}
+              disabled={disabled}
+              className="h-4 w-4 rounded border-zinc-700 bg-black text-amber-500 focus:ring-amber-500"
+            />
+            {ETAPA_LABELS[etapa]}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function EngineProcessarLote() {
   const [obras, setObras] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -136,6 +164,7 @@ export default function EngineProcessarLote() {
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [selecionadas, setSelecionadas] = useState({});
+  const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
   const [processandoLote, setProcessandoLote] = useState(false);
   const [progresso, setProgresso] = useState(null);
   const [resultados, setResultados] = useState([]);
@@ -196,8 +225,21 @@ export default function EngineProcessarLote() {
     [obrasFiltradas, selecionadas],
   );
 
+  const etapasSelecionadas = useMemo(
+    () => ETAPAS_SELECIONAVEIS.filter((etapa) => selectedSteps[etapa]),
+    [selectedSteps],
+  );
+
   function alternarSelecao(obraId) {
     setSelecionadas((atual) => ({ ...atual, [obraId]: !atual[obraId] }));
+  }
+
+  function alternarEtapaSelecionada(etapa) {
+    setSelectedSteps((atual) => ({ ...atual, [etapa]: !atual[etapa] }));
+  }
+
+  function definirTodasAsEtapas(valor) {
+    setSelectedSteps(criarSelecaoDeEtapas(valor));
   }
 
   function alternarOrdenacao(coluna) {
@@ -225,12 +267,20 @@ export default function EngineProcessarLote() {
       return;
     }
 
+    if (etapasSelecionadas.length === 0) {
+      toast.error("Selecione ao menos uma etapa para processar.");
+      return;
+    }
+
     setProcessandoLote(true);
     setResultados([]);
 
     for (let indice = 0; indice < alvo.length; indice += 1) {
       const obra = alvo[indice];
-      const etapas = modo === "todas" ? todasAsEtapas() : etapasFaltantesDaObra(obra);
+      const concluidasObra = new Set(obra.etapas_concluidas || []);
+      const etapas = modo === "faltantes"
+        ? etapasSelecionadas.filter((etapa) => !concluidasObra.has(etapa))
+        : etapasSelecionadas;
       const etapasResultado = [];
 
       for (const etapa of etapas) {
@@ -406,28 +456,34 @@ export default function EngineProcessarLote() {
             </table>
           </div>
 
+          <EtapaSelector
+            selectedSteps={selectedSteps}
+            onToggle={alternarEtapaSelecionada}
+            onSelectAll={definirTodasAsEtapas}
+            disabled={processandoLote}
+          />
+
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
-              disabled={processandoLote || quantidadeSelecionada === 0}
+              disabled={processandoLote || quantidadeSelecionada === 0 || etapasSelecionadas.length === 0}
               onClick={() => processarLote("todas")}
               className="rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60"
             >
-              Atualizar todos os itens ({quantidadeSelecionada})
+              Atualizar todos os itens selecionados ({quantidadeSelecionada} obra{quantidadeSelecionada === 1 ? "" : "s"} · {etapasSelecionadas.length} etapa{etapasSelecionadas.length === 1 ? "" : "s"})
             </button>
             <button
               type="button"
-              disabled={processandoLote || quantidadeSelecionada === 0}
+              disabled={processandoLote || quantidadeSelecionada === 0 || etapasSelecionadas.length === 0}
               onClick={() => processarLote("faltantes")}
               className="rounded-xl border border-emerald-500/60 px-4 py-3 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
             >
-              Atualizar somente os itens faltantes ({quantidadeSelecionada})
+              Atualizar somente os itens faltantes ({quantidadeSelecionada} obra{quantidadeSelecionada === 1 ? "" : "s"} · {etapasSelecionadas.length} etapa{etapasSelecionadas.length === 1 ? "" : "s"})
             </button>
           </div>
           <p className="mt-2 text-xs text-zinc-500">
-            "Somente faltantes" pula etapas que essa obra já tem concluídas e vai direto para o que falta. Em
-            ambos os modos, "Salvar/Atualizar dados da obra" roda sempre por último — é o que promove o status de
-            rascunho para ativo.
+            Só as etapas marcadas acima são processadas. "Somente faltantes" pula, entre as etapas marcadas, as que
+            essa obra já tem concluídas e vai direto para o que falta.
           </p>
         </section>
 
