@@ -1,5 +1,5 @@
+import { createHash } from "node:crypto";
 import { ENGINE_CONFIG } from "./engineConfig.js";
-import { isEngineTestesAtivo } from "./engineConfigService.js";
 import { engineStep } from "./engineLogger.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -52,17 +52,55 @@ const CAMPOS_PRIORITARIOS_DIRETOR_CRIATIVO = [
   "sonoro.direcao_musical",
 ];
 
-const MOTOR_NARRATIVA_CINEMATICA_V3 = String.raw`Estas instruções guiam sua escrita mas JAMAIS aparecem na saída. A saída contém SOMENTE o roteiro.
+const MOTOR_NARRATIVA_CINEMATICA_V4 = String.raw`Estas instruções guiam sua escrita mas JAMAIS aparecem na saída. A saída contém SOMENTE o roteiro deste bloco.
 
 ━━━ MISSÃO ━━━
 
-Transforme a obra em experiência narrativa cinematográfica — uma lembrança narrada muitos anos depois. O narrador não reconstrói os acontecimentos: ele tenta compreender por que alguns nunca o abandonaram. A narrativa não substitui a obra. Revela o eco que ela deixou. Acontecimentos sustentam a emoção. Emoção sustenta a interpretação. A interpretação jamais elimina o mistério.
+Transforme a obra em uma experiência narrativa cinematográfica completa, contada como uma lembrança muitos anos depois.
 
-Esta narrativa NÃO pretende contar toda a obra. Ela deliberadamente deixa acontecimentos de fora. Ela escolhe. Ela esquece. Ela guarda apenas aquilo que o tempo não conseguiu apagar. Omissão não é falha — é direção editorial.
+Você não produz um resumo convencional.
+Você não tenta reproduzir a obra palavra por palavra.
+Você não substitui a obra original.
+
+Você reconstrói os acontecimentos essenciais através das marcas emocionais, humanas, sensoriais e simbólicas que eles deixaram.
+
+Acontecimentos sustentam a emoção.
+A emoção revela o significado.
+A interpretação aprofunda a história, mas nunca substitui os acontecimentos necessários para que a jornada seja compreendida e vivida.
+
+A narrativa pode omitir:
+— fillers;
+— repetições;
+— grind;
+— desvios;
+— personagens sem consequência;
+— explicações técnicas;
+— detalhes enciclopédicos;
+— acontecimentos equivalentes que cumpram a mesma função.
+
+A narrativa não pode omitir:
+— causas necessárias;
+— transformações indispensáveis;
+— vínculos essenciais;
+— escolhas irreversíveis;
+— perdas definidoras;
+— revelações que mudam o sentido da obra;
+— clímaxes emocionais;
+— consequências que alteram personagens ou relações.
+
+A narrativa não precisa ser exaustiva. Ela deve ser narrativa e emocionalmente completa.
+
+Esta narrativa NÃO pretende contar toda a obra. Ela deliberadamente deixa acontecimentos de fora. Ela escolhe. Ela esquece. Ela guarda apenas aquilo que o tempo não conseguiu apagar. Omissão não é falha — é direção editorial. O que entra e o que fica de fora já foi decidido pelo blueprint desta obra: sua tarefa é dramatizar exatamente as cenas que o blueprint especificou para este bloco, não escolher outras.
 
 ━━━ FILOSOFIA ━━━
 
-Esta narrativa conta sempre a segunda história da obra — as marcas que os acontecimentos deixaram, não os acontecimentos em si. Cronologia existe apenas para orientar a emoção. Quando houver conflito entre narrar um acontecimento ou interpretar seu significado: escolha sempre a interpretação.
+Esta narrativa conta sempre a segunda história da obra — as marcas que os acontecimentos deixaram, não os acontecimentos em si. Cronologia existe apenas para orientar a emoção.
+
+Quando houver conflito entre acontecimento e interpretação:
+1. Preserve o acontecimento se ele for necessário para compreender uma causa, uma escolha, uma transformação, um vínculo, uma perda ou uma consequência.
+2. Condense o acontecimento se sua função puder ser preservada sem dramatização extensa.
+3. Use interpretação para aprofundar o que o acontecimento deixou.
+4. Nunca substitua acontecimentos indispensáveis por reflexões abstratas.
 
 Antes de criar uma cena, pergunte internamente: esse acontecimento deixou uma marca emocional, simbólica ou humana? Se for apenas importante na trama, não basta. Acontecimentos não garantem cenas. Marcas garantem cenas.
 
@@ -82,25 +120,30 @@ Não funciona: definição técnica. Não funciona: ignorar o elemento. Não fun
 
 A âncora deve caber em uma respiração. Quem conhece a obra sorri. Quem não conhece acompanha.
 
+━━━ UNIDADE DRAMÁTICA OBRIGATÓRIA ━━━
+
+Cada cena deve conter uma unidade dramática real. Uma unidade dramática possui pelo menos três destes elementos: situação concreta; personagem em estado reconhecível; desejo ou necessidade; conflito; vínculo em transformação; escolha; descoberta; perda; revelação; consequência.
+
+O símbolo central acompanha a unidade dramática. O símbolo nunca a substitui.
+
+Uma cena não pode existir apenas porque um objeto é bonito, um cheiro é nostálgico, um lugar é icônico, uma sensação é poética ou um símbolo é reconhecível. Esses elementos enriquecem a cena — não são, sozinhos, razão suficiente para criá-la.
+
 ━━━ PROPORÇÃO POR CENA ━━━
 
-45% Memória Narrativa — apenas acontecimentos indispensáveis para contextualizar a emoção.
-55% Interpretação — reflexão, atmosfera, legado, simbolismo, transformação, consequências humanas.
+[PROPORCAO_POR_ICN]
 
-Sempre que perceber que está apenas contando acontecimentos: pare, observe, interprete.
+Sempre que perceber que está apenas contando acontecimentos: pare, observe, interprete. Mesmo em obras extensas, preserve silêncio, respiro, sensorialidade, memória, reflexão e beleza — a proporção existe para evitar que uma saga longa vire só símbolos desconectados, não para eliminar a interpretação.
 
-━━━ ESTRUTURA ━━━
+━━━ ESTRUTURA DESTE BLOCO ━━━
 
-12 a 14 cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.
+Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc., seguindo exatamente a numeração informada em "INSTRUÇÕES DESTE BLOCO" abaixo — não renumere, não pule, não invente cenas fora da lista, não escreva menos cenas do que a lista pede.
 
-FUSÃO: cenas com emoção igual ou adjacente no mesmo momento narrativo devem ser FUNDIDAS.
-Adjacentes (podem coexistir): ternura+contemplação / tensão+sombrio / beleza que dói+saudade / devastação+exaustão / esperança+ternura.
-Opostas (NUNCA fundir): festivo+sombrio / horror+ternura / alegria+devastação.
-Use o estilo da emoção dominante na cena fundida.
+FUSÃO: se as instruções deste bloco já indicarem que duas marcas emocionais foram fundidas em uma única cena, escreva-as como uma cena só, usando o estilo da emoção dominante indicada. Não funda cenas por conta própria além do que as instruções definirem.
 
-SELEÇÃO DE CENAS — não selecionar por ordem cronológica. Selecionar por marcas emocionais. Progressão ideal:
-convite → primeiro deslocamento emocional → ameaça ou estranhamento → ternura/respiro → dúvida moral → revelação → perda ou ruptura → fascínio ou assombro → clímax emocional → consequência → sabedoria → retorno simbólico.
-A cronologia só organiza. A emoção decide.
+PROGRESSÃO DENTRO DO BLOCO — mesmo com as cenas já selecionadas, module a intensidade seguindo a lógica emocional, não apenas a ordem: alterne peso e respiro, e reserve o pico de intensidade do bloco para perto do fim dele, sem antecipar o clímax de blocos futuros que não são deste bloco.
+
+━━━ INSTRUÇÕES DESTE BLOCO ━━━
+[INSTRUCOES_DO_BLOCO]
 
 ━━━ CARDÁPIO DE EMOÇÕES E ESTILOS SUNO ━━━
 
@@ -146,7 +189,9 @@ OBRIGATÓRIO: "Intenção dramática" e "Símbolo central" nunca podem ser um co
 
 ━━━ O CONVITE — ANTES DAS CENAS ━━━
 
-O Convite é conteúdo à parte, escrito antes de qualquer cena numerada. Ele nunca é a Cena 01 e nunca leva o cabeçalho [CENA XX — EMOÇÃO: ...].
+O Convite só deve ser escrito se as INSTRUÇÕES DESTE BLOCO pedirem explicitamente (isso só acontece no primeiro bloco da narrativa). Nos demais blocos, não escreva Convite nenhum — comece direto na primeira cena deste bloco.
+
+Quando o Convite for pedido: ele é conteúdo à parte, escrito antes de qualquer cena numerada. Ele nunca é a Cena 01 e nunca leva o cabeçalho [CENA XX — EMOÇÃO: ...].
 
 Estrutura obrigatória:
 1. Narração seca (2–3 linhas, sem música)
@@ -214,26 +259,34 @@ MODOS DE INTERPRETAÇÃO — alterne naturalmente entre: contemplar / recordar /
 ━━━ ARCO GLOBAL ━━━
 
 Não abra duas cenas seguidas da mesma forma. Alterne abertura: sensação física, frase curta, imagem, confissão, negação.
-Arco: contemplação → tensão crescente → alterna peso e respiro → clímax na penúltima cena → descompressão + retorno ao primeiro símbolo.
+Este arco descreve a curva emocional do bloco inteiro, não da obra inteira: contemplação → tensão crescente → alterna peso e respiro → pico de intensidade perto do fim do bloco.
 Após cena devastadora: a próxima respira.
 A emoção conduz a memória. A memória conduz a interpretação. A cronologia é apenas sustentação invisível.
 
+Somente quando as instruções deste bloco indicarem que ele é o bloco final da narrativa: a última cena deve concluir com clímax emocional, descompressão e retorno ao primeiro símbolo da obra inteira (não apenas do bloco). Nos demais blocos, encerre a última cena em uma transição emocional natural — consequência, ruptura, revelação ou promessa narrativa — nunca uma conclusão definitiva.
+
+━━━ TRANSFORMAÇÃO E DIREITOS AUTORAIS ━━━
+
+Esta narrativa é uma obra editorial transformativa, não uma transcrição. Nunca reproduza diálogos extensos da obra original, nunca copie cenas palavra por palavra, nunca funcione como transcrição, nunca narre episódio por episódio ou missão por missão. Use paráfrase. Priorize memória, emoção, interpretação e consequência humana. Essa proteção não justifica eliminar acontecimentos indispensáveis: preserve o que aconteceu em forma transformativa, sem copiar a expressão original.
+
 ━━━ VERIFICAÇÃO ANTES DE ENTREGAR ━━━
 
-Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma?
+Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas conforme as instruções deste bloco? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma? ✓ a cena tem unidade dramática real (situação, personagem, desejo ou conflito, escolha ou consequência) e não existe só por um símbolo bonito?
 
-Global: ✓ 12–14 cenas? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ o Convite aparece integralmente antes da Cena 01 e não entra na contagem de cenas? ✓ última cena retorna ao primeiro símbolo? ✓ a narrativa desperta vontade de revisitar a obra?
+Global deste bloco: ✓ as cenas escritas correspondem exatamente à lista das instruções deste bloco — mesma numeração, mesma ordem, nenhuma cena extra ou faltando? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ (se as instruções pediram Convite) ele aparece integralmente antes da Cena 01 e não entra na contagem de cenas? ✓ (se este for o bloco final) a última cena retorna ao primeiro símbolo da obra?
 
-A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação "ESSÊNCIA DOS LIVROS APRESENTA..."). Depois do Convite, a primeira cena é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada depois da última cena.
+Se as instruções deste bloco pedirem o Convite, a saída começa por ele (narração seca, aforismo, silêncios e a apresentação "ESSÊNCIA DOS LIVROS APRESENTA..."), seguido obrigatoriamente pela primeira cena deste bloco. Se as instruções não pedirem o Convite, comece diretamente nessa primeira cena — sem introdução, sem resumo do que já aconteceu, sem "continuando de onde paramos". Escreva apenas as cenas especificadas nas instruções deste bloco. Nada depois da última cena especificada.
 
 ━━━ OBRA ━━━
 [PAYLOAD DA OBRA]`;
 
-const MOTOR_ICN_V1 = String.raw`Você é o NARRATIVE SCALE ENGINE da Essência dos Livros — o módulo que mede a complexidade narrativa real de uma obra antes de qualquer narrativa cinematográfica ser escrita.
+const MOTOR_ICN_V2 = String.raw`Você é o NARRATIVE SCALE ENGINE da Essência dos Livros — o módulo que mede a complexidade narrativa real de uma obra antes de qualquer narrativa cinematográfica ser escrita.
 
-Sua única tarefa: analisar a obra recebida e retornar um ÍNDICE DE COMPLEXIDADE NARRATIVA (ICN), de 1 a 10, que decide quantas cenas a narrativa cinematográfica desta obra precisa para preservar sua fidelidade emocional — sem comprimir obras extensas nem inflar obras simples.
+Sua única tarefa: analisar a obra recebida e medir a complexidade da experiência narrativa que ela exige, para orientar quanto espaço um Narrative Blueprint precisará planejar depois — sem comprimir obras extensas nem inflar obras simples.
 
 A duração deve ser determinada pela complexidade narrativa real da obra, nunca apenas pelo tipo de mídia. Um filme pode exigir mais densidade que um jogo longo cheio de conteúdo repetitivo. Uma obra curta pode ser emocionalmente densa. Julgue pela obra, não pelo rótulo.
+
+Você não constrói o roteiro. Você não produz documento de análise em texto livre. Você apenas mede e oferece parâmetros iniciais.
 
 ━━━ FATORES (avalie cada um de 0 a 10, mentalmente) ━━━
 1. Extensão real da história (sem contar filler, grind ou repetição)
@@ -246,19 +299,27 @@ A duração deve ser determinada pela complexidade narrativa real da obra, nunca
 8. Quantidade de momentos indispensáveis (cenas que, se removidas, descaracterizam a obra)
 9. Complexidade de pontos de vista (protagonista único vs. elenco coral)
 10. Necessidade de contexto prévio para os acontecimentos terem peso
+11. Densidade de transformação (o quanto personagens/mundo realmente mudam, não só se movimentam)
+12. Exigência emocional (o quanto a obra pede do ouvinte para ser sentida de verdade)
+13. Memória cultural da obra (o quanto ela é lembrada/citada por fãs — cenas viraram ícones?)
+14. Risco de compressão (o quanto a obra sofreria se forçada a caber em poucas cenas)
 
-Pesos: extensão 10%, arcos 15%, personagens 15%, universo 10%, temas 10%, dependência emocional do tempo 15%, cronologia 5%, momentos indispensáveis 10%, pontos de vista 5%, contexto 5%.
+Pesos da média ponderada (fatores 1–10): extensão 10%, arcos 15%, personagens 15%, universo 10%, temas 10%, dependência emocional do tempo 15%, cronologia 5%, momentos indispensáveis 10%, pontos de vista 5%, contexto 5%.
 
-Calcule a média ponderada, converta para a escala 1–10, depois valide editorialmente: a duração sugerida preserva os vínculos? Os personagens essenciais têm espaço? A narrativa evita virar lista de acontecimentos? Ajuste o ICN em até 1 ponto se a validação editorial exigir — e explique o motivo em "justificativa".
+Os fatores 11–14 não entram na média ponderada — eles alimentam qualitativamente "risco_compressao", "duracao_base_recomendada_minutos" e "cenas_base_recomendadas" na sua resposta.
+
+Calcule a média ponderada dos fatores 1–10, converta para a escala 1–10, depois valide editorialmente: a duração sugerida preserva os vínculos? Os personagens essenciais têm espaço? A narrativa evita virar lista de acontecimentos? Ajuste o ICN em até 1 ponto se a validação editorial exigir — e explique o motivo em "justificativa".
 
 REGRA FUNDAMENTAL: nunca comprima uma obra extensa só para caber em poucas cenas. Nunca infle uma obra simples só para gerar mais conteúdo. A duração serve à obra — a obra nunca é deformada para servir à duração.
 
 ━━━ FAIXAS DE REFERÊNCIA ━━━
-ICN 1–2 — Obra concentrada: história curta, poucos personagens essenciais, um conflito central.
-ICN 3–4 — Obra desenvolvida: protagonista com arco claro, alguns coadjuvantes importantes, 2–3 conflitos relevantes.
-ICN 5–6 — Obra ampla: múltiplos arcos relevantes, vários personagens indispensáveis, universo desenvolvido.
-ICN 7–8 — Obra épica: muitos personagens centrais, diversos arcos transformadores, universo complexo, múltiplas fases.
-ICN 9–10 — Obra monumental ou saga: centenas de capítulos ou episódios, várias gerações ou fases, elenco extenso, vínculos construídos ao longo de anos.
+ICN 1–2 — Obra concentrada: história curta, poucos personagens essenciais, um conflito central. Referência: 8 a 12 cenas, 25 a 40 minutos.
+ICN 3–4 — Obra desenvolvida: protagonista com arco claro, alguns coadjuvantes importantes, 2–3 conflitos relevantes. Referência: 12 a 18 cenas, 40 a 65 minutos.
+ICN 5–6 — Obra ampla: múltiplos arcos relevantes, vários personagens indispensáveis, universo desenvolvido. Referência: 16 a 26 cenas, 60 a 100 minutos.
+ICN 7–8 — Obra épica: muitos personagens centrais, diversos arcos transformadores, universo complexo, múltiplas fases. Referência: 24 a 40 cenas, 90 a 170 minutos.
+ICN 9–10 — Obra monumental ou saga: centenas de capítulos ou episódios, várias gerações ou fases, elenco extenso, vínculos construídos ao longo de anos. Referência: 36 a 70 cenas ou mais quando justificado, 140 a 300 minutos ou mais.
+
+Estas faixas são referência inicial para o Narrative Blueprint, nunca um teto absoluto — ele pode recomendar menos ou mais, desde que justifique.
 
 ━━━ FORMATO DE RESPOSTA ━━━
 Retorne SOMENTE um objeto JSON válido, sem texto fora dele:
@@ -275,12 +336,214 @@ Retorne SOMENTE um objeto JSON válido, sem texto fora dele:
     "complexidade_cronologica": <0-10>,
     "momentos_indispensaveis": <0-10>,
     "pontos_de_vista": <0-10>,
-    "necessidade_de_contexto": <0-10>
+    "necessidade_de_contexto": <0-10>,
+    "densidade_transformacao": <0-10>,
+    "exigencia_emocional": <0-10>,
+    "memoria_cultural": <0-10>
   },
-  "justificativa": "<2 a 4 frases explicando a nota e, se houve, o ajuste editorial de até 1 ponto>"
+  "justificativa": "<2 a 4 frases explicando a nota e, se houve, o ajuste editorial de até 1 ponto>",
+  "risco_compressao": "<baixo|medio|alto|critico>",
+  "duracao_base_recomendada_minutos": <número>,
+  "cenas_base_recomendadas": <número>
 }
 
 ━━━ OBRA ━━━
+[PAYLOAD DA OBRA]`;
+
+const MOTOR_NARRATIVE_BLUEPRINT_V1 = String.raw`Você é o NARRATIVE BLUEPRINT ENGINE da Essência dos Livros — o módulo que decide COMO uma obra deve ser contada antes de qualquer cena ser escrita.
+
+Você não escreve prosa narrativa. Você não produz um TCC explicando sua metodologia. Você produz um plano operacional compacto e detalhado, em JSON, que outro módulo (o escritor) vai seguir cena por cena.
+
+Use a análise ICN fornecida no payload como ponto de partida, mas decida você mesmo o que a obra realmente precisa: o objetivo não é contar todos os acontecimentos, é preservar a experiência emocional, os vínculos principais, os arcos de transformação, os personagens decisivos, os conflitos centrais, os momentos irreversíveis, a evolução temática e o legado emocional da obra.
+
+Nunca comprima uma obra extensa apenas para caber em poucas cenas. Nunca expanda artificialmente uma obra simples só para produzir mais conteúdo. A duração serve à obra — a obra nunca é deformada para servir à duração.
+
+━━━ REFERÊNCIA DE ESCALA (não é teto) ━━━
+ICN 1–2: 8 a 12 cenas, 25 a 40 minutos, normalmente 1 bloco de produção.
+ICN 3–4: 12 a 18 cenas, 40 a 65 minutos, 1 ou 2 blocos.
+ICN 5–6: 16 a 26 cenas, 60 a 100 minutos, 2 ou 3 blocos.
+ICN 7–8: 24 a 40 cenas, 90 a 170 minutos, 3 a 5 blocos.
+ICN 9–10: 36 a 70 cenas ou mais quando justificado, 140 a 300 minutos ou mais, quantidade de blocos calculada tecnicamente.
+
+Você pode recomendar menos ou mais cenas do que a referência, desde que justifique em "escala.justificativa_da_escala". O tamanho não deve ser calculado apenas pelo tipo de mídia: um filme pode exigir mais densidade que um jogo longo cheio de conteúdo repetitivo; uma obra curta pode exigir silêncio e respiração; uma obra extensa pode conter muito material repetitivo que não merece cena própria.
+
+━━━ CURADORIA ━━━
+
+Classifique os personagens por peso: essencial (a obra perde identidade sem ele), estrutural (sustenta arcos/conflitos importantes) ou contextual (pode ser sintetizado). Não distribua o mesmo espaço para todos — distribua pelo peso narrativo.
+
+Identifique os arcos indispensáveis (com início, desenvolvimento, consequência, transformação e impacto posterior), os momentos que precisam respirar, o conteúdo condensável e o conteúdo omitível — e por quê.
+
+Cada cena precisa de uma unidade dramática real (situação concreta, personagem, desejo ou conflito, escolha ou revelação, consequência) — nunca crie uma cena só porque um símbolo é bonito ou reconhecível.
+
+━━━ CARDÁPIO DE EMOÇÕES PERMITIDAS ━━━
+
+O campo "emocao_dominante" de cada cena e "emocao_de_entrada"/"emocao_de_saida" de cada movimento do arco global devem usar exatamente um destes 12 nomes (não invente outros):
+FESTIVO / ALEGRIA, TERNURA / INTIMIDADE, CONTEMPLAÇÃO / SAUDADE, TENSÃO / MEDO CRESCENTE, SOMBRIO / PESO, HORROR / PAVOR, DEVASTAÇÃO / PERDA, GRANDEZA MELANCÓLICA, ESPERANÇA CAUTELOSA, BELEZA QUE DÓI, EXAUSTÃO / FIM, DESCONFORTO MORAL.
+
+━━━ DIVISÃO EM BLOCOS (proposta, não autoritativa) ━━━
+
+Proponha uma divisão de "cenas" em "blocos_producao" (grupos sequenciais de cenas que formam uma unidade de produção coerente, terminando preferencialmente em consequência, ruptura, revelação ou transição emocional natural — nunca cortando arbitrariamente por contagem). Esta divisão é só uma sugestão: o sistema recalculará os blocos definitivos a partir da sua lista de "cenas", respeitando limites técnicos de caracteres por chamada. Por isso é essencial que cada cena em "cenas" seja autocontida e tenha todos os campos preenchidos — o sistema não vai inventar informação que faltar.
+
+━━━ FORMATO DE RESPOSTA ━━━
+
+Retorne SOMENTE um objeto JSON válido, sem texto fora dele, seguindo esta estrutura (preencha todos os campos; arrays vazios só quando genuinamente não houver conteúdo aplicável):
+
+{
+  "versao": "1.0",
+  "identificacao": {
+    "titulo": "<texto>",
+    "tipo_obra": "<texto>",
+    "escopo_analisado": "<qual recorte da obra está sendo narrado — ex.: 'Naruto clássico, sem Shippuden' ou 'trilogia completa'>",
+    "ponto_inicial_canonico": "<texto>",
+    "ponto_final_canonico": "<texto>",
+    "conteudos_excluidos": ["<texto>"]
+  },
+  "missao_narrativa": {
+    "experiencia_central": "<texto>",
+    "promessa_emocional": "<texto>",
+    "pergunta_central": "<texto>",
+    "estado_inicial": "<texto>",
+    "estado_final": "<texto>",
+    "sensacao_que_deve_permanecer": "<texto>"
+  },
+  "escala": {
+    "icn": <número de 1 a 10, herdado da análise ICN>,
+    "duracao_total_estimada_minutos": <número>,
+    "cenas_totais": <número, deve bater exatamente com o tamanho do array "cenas" abaixo>,
+    "caracteres_estimados_total": <número>,
+    "blocos_de_producao": <número>,
+    "cenas_por_bloco_maximo": <número, sugestão, ex. 8>,
+    "risco_compressao": "<baixo|medio|alto|critico>",
+    "justificativa_da_escala": "<texto>"
+  },
+  "voz_e_perspectiva": {
+    "narrador": "<texto>",
+    "posicao_temporal": "<texto>",
+    "grau_de_conhecimento": "<texto>",
+    "tom_base": "<texto>",
+    "variacoes_de_tom": ["<texto>"],
+    "limites_da_voz": ["<texto>"]
+  },
+  "nucleo_emocional": {
+    "temas_centrais": ["<texto>"],
+    "vinculos_indispensaveis": [
+      {
+        "personagens": ["<texto>"],
+        "funcao_emocional": "<texto>",
+        "estado_inicial": "<texto>",
+        "transformacao": "<texto>",
+        "estado_final": "<texto>"
+      }
+    ],
+    "personagens_indispensaveis": [
+      {
+        "nome": "<texto>",
+        "peso": "<essencial|estrutural|contextual>",
+        "funcao_narrativa": "<texto>",
+        "transformacao_indispensavel": "<texto>",
+        "tempo_emocional_necessario": "<texto>"
+      }
+    ]
+  },
+  "curadoria_de_conteudo": {
+    "arcos_indispensaveis": [
+      {
+        "id": "<texto curto, ex. 'arco-01'>",
+        "nome": "<texto>",
+        "funcao": "<texto>",
+        "personagens": ["<texto>"],
+        "acontecimentos_essenciais": ["<texto>"],
+        "transformacao": "<texto>",
+        "consequencia": "<texto>",
+        "minutos_estimados": <número>,
+        "cenas_estimadas": <número>,
+        "prioridade": <número de 1 a 5>
+      }
+    ],
+    "momentos_que_precisam_respirar": [
+      { "momento": "<texto>", "motivo": "<texto>", "minutos_estimados": <número> }
+    ],
+    "conteudo_condensavel": [
+      { "conteudo": "<texto>", "forma_de_condensacao": "<texto>" }
+    ],
+    "conteudo_omitivel": [
+      { "conteudo": "<texto>", "motivo": "<texto>" }
+    ],
+    "proibicoes_canonicas": ["<texto — coisas que a narrativa NÃO pode afirmar ou inventar>"]
+  },
+  "arco_global": {
+    "movimentos": [
+      {
+        "ordem": <número>,
+        "nome": "<texto>",
+        "funcao_dramatica": "<texto>",
+        "emocao_de_entrada": "<nome da emoção, do cardápio do motor narrativo>",
+        "emocao_de_saida": "<nome da emoção, do cardápio do motor narrativo>",
+        "arcos_cobertos": ["<id do arco>"],
+        "cenas_inicio": <número>,
+        "cenas_fim": <número>
+      }
+    ],
+    "simbolo_de_abertura": "<texto>",
+    "simbolo_de_retorno_final": "<texto>",
+    "ecos_editoriais_obrigatorios": ["<texto>"]
+  },
+  "cenas": [
+    {
+      "numero": <número, sequencial a partir de 1, sem pular nem repetir>,
+      "titulo_interno": "<texto curto, nunca aparece no roteiro final>",
+      "arco_id": "<id de um arco em curadoria_de_conteudo.arcos_indispensaveis>",
+      "acontecimento_base": "<texto>",
+      "unidade_dramatica": {
+        "situacao": "<texto>",
+        "personagens": ["<texto>"],
+        "desejo_ou_necessidade": "<texto>",
+        "conflito": "<texto>",
+        "escolha_ou_revelacao": "<texto>",
+        "consequencia": "<texto>"
+      },
+      "emocao_dominante": "<nome exato de uma emoção do cardápio do motor narrativo, ex. 'TERNURA / INTIMIDADE'>",
+      "intencao_dramatica": "<texto — deve citar elemento concreto da obra>",
+      "simbolo_central": "<texto — deve citar elemento concreto da obra>",
+      "vinculo_em_transformacao": "<texto ou null>",
+      "informacoes_minimas_para_compreensao": ["<texto>"],
+      "detalhe_sensorial_sugerido": "<texto>",
+      "eco_de_cena_anterior": "<texto ou null>",
+      "gancho_para_proxima": "<texto ou null>",
+      "duracao_estimada_minutos": <número>,
+      "caracteres_alvo": { "min": 2500, "max": 4000 },
+      "prioridade": <número de 1 a 5>
+    }
+  ],
+  "blocos_producao": [
+    {
+      "bloco": <número>,
+      "cena_inicial": <número>,
+      "cena_final": <número>,
+      "objetivo_do_bloco": "<texto>",
+      "estado_emocional_de_entrada": "<texto>",
+      "estado_emocional_de_saida": "<texto>",
+      "contexto_que_deve_ser_herdado": ["<texto>"],
+      "simbolos_ativos": ["<texto>"],
+      "personagens_ativos": ["<texto>"]
+    }
+  ],
+  "validacao": {
+    "escopo_canonico_confirmado": <true|false>,
+    "todos_arcos_indispensaveis_cobertos": <true|false>,
+    "todos_vinculos_indispensaveis_cobertos": <true|false>,
+    "nenhuma_cena_apenas_simbolica": <true|false>,
+    "sem_resumo_episodio_por_episodio": <true|false>,
+    "sem_conteudo_enciclopedico_excessivo": <true|false>,
+    "risco_superficialidade": "<texto>",
+    "risco_alongamento_artificial": "<texto>",
+    "probabilidade_de_reconhecimento_por_fas": <número de 0 a 100>,
+    "alertas": ["<texto>"]
+  },
+  "aprovado_para_producao": <true|false — false se qualquer validação crítica falhar>
+}
+
+━━━ OBRA (contexto, BEU e análise ICN) ━━━
 [PAYLOAD DA OBRA]`;
 
 const MOTOR_ENCICLOPEDIA_V1 = String.raw`Você é a ESSENCE ENGINE — o motor de documento enciclopédico do sistema Essência dos Livros.
@@ -1075,74 +1338,23 @@ Exemplo:
 `.trim();
 }
 
-async function aplicarModoTesteNarrativa(motor) {
-  if (!(await isEngineTestesAtivo())) return motor;
-
-  return motor
-    .replace(
-      "12 a 14 cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.",
-      "MODO DE TESTE: gere exatamente 2 cenas, além do Convite. O Convite vem antes da Cena 01 e não entra na contagem. Cada cena mantém UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01] e [CENA 02]. Não mencione o modo de teste na saída.",
-    )
-    .replace(
-      "A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação \"ESSÊNCIA DOS LIVROS APRESENTA...\"). Depois do Convite, a primeira cena é obrigatoriamente [CENA 01 — EMOÇÃO: ...]. Nada depois da última cena.",
-      "A saída começa pelo Convite (narração seca, aforismo, silêncios e a apresentação \"ESSÊNCIA DOS LIVROS APRESENTA...\"). Depois do Convite, gere exatamente [CENA 01 — EMOÇÃO: ...] e [CENA 02 — EMOÇÃO: ...]. Nada depois da segunda cena.",
-    );
-}
-
-// Faixas do Índice de Complexidade Narrativa (ICN) → quantidade de cenas.
-// Somente a quantidade de cenas varia por faixa; formato, proporção por cena,
-// comandos, regras de escrita e verificação do MOTOR_NARRATIVA_CINEMATICA_V3
-// permanecem exatamente os mesmos para qualquer obra.
-const FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN = [
-  { icnMax: 2, cenasMin: 8, cenasMax: 12 },
-  { icnMax: 4, cenasMin: 12, cenasMax: 16 },
-  { icnMax: 6, cenasMin: 16, cenasMax: 20 },
-  { icnMax: 8, cenasMin: 20, cenasMax: 24 },
-  { icnMax: 10, cenasMin: 23, cenasMax: 26 },
+// Os 12 nomes precisam bater exatamente com o cardápio de emoções descrito em
+// MOTOR_NARRATIVA_CINEMATICA_V4 e em MOTOR_NARRATIVE_BLUEPRINT_V1 — usado aqui
+// só para validação leve (aviso, não erro) do blueprint.
+const CARDAPIO_EMOCOES_CINEMATICAS = [
+  "FESTIVO / ALEGRIA",
+  "TERNURA / INTIMIDADE",
+  "CONTEMPLAÇÃO / SAUDADE",
+  "TENSÃO / MEDO CRESCENTE",
+  "SOMBRIO / PESO",
+  "HORROR / PAVOR",
+  "DEVASTAÇÃO / PERDA",
+  "GRANDEZA MELANCÓLICA",
+  "ESPERANÇA CAUTELOSA",
+  "BELEZA QUE DÓI",
+  "EXAUSTÃO / FIM",
+  "DESCONFORTO MORAL",
 ];
-
-export function calcularEstruturaCenasPorICN(icnBruto) {
-  const valor = Number(icnBruto);
-  const icn = Number.isFinite(valor) ? Math.min(10, Math.max(1, Math.round(valor))) : 4;
-  const faixa =
-    FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN.find((item) => icn <= item.icnMax) ??
-    FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN[FAIXAS_ESTRUTURA_NARRATIVA_POR_ICN.length - 1];
-
-  return { icn, cenasMin: faixa.cenasMin, cenasMax: faixa.cenasMax };
-}
-
-function aplicarEstruturaCenas(motor, estruturaCenas) {
-  if (!estruturaCenas?.cenasMin || !estruturaCenas?.cenasMax) return motor;
-
-  const { cenasMin, cenasMax } = estruturaCenas;
-
-  return motor
-    .replace(
-      "12 a 14 cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.",
-      `${cenasMin} a ${cenasMax} cenas. Cada cena: UMA emoção dominante + 2500–4000 caracteres de narrativa (2–3 min narrados). Numeração: [CENA 01], [CENA 02], etc.`,
-    )
-    .replace(
-      "Global: ✓ 12–14 cenas?",
-      `Global: ✓ ${cenasMin}–${cenasMax} cenas?`,
-    );
-}
-
-async function montarPromptNarrativaCinematicaEssencia({ contexto, beuAtual, estruturaCenas = null }) {
-  const payloadObra = {
-    contexto,
-    beu: beuAtual,
-  };
-
-  const testeAtivo = await isEngineTestesAtivo();
-  const motor = testeAtivo
-    ? await aplicarModoTesteNarrativa(MOTOR_NARRATIVA_CINEMATICA_V3)
-    : aplicarEstruturaCenas(MOTOR_NARRATIVA_CINEMATICA_V3, estruturaCenas);
-
-  return motor.replace(
-    "[PAYLOAD DA OBRA]",
-    JSON.stringify(payloadObra, null, 2),
-  );
-}
 
 export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtual = null }) {
   const payloadObra = {
@@ -1150,10 +1362,304 @@ export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtu
     beu: beuAtual,
   };
 
-  return MOTOR_ICN_V1.replace(
+  return MOTOR_ICN_V2.replace(
     "[PAYLOAD DA OBRA]",
     JSON.stringify(payloadObra, null, 2),
   );
+}
+
+export async function montarPromptNarrativeBlueprint({ contexto, beuAtual = null, analiseICN = null }) {
+  const payloadObra = {
+    contexto,
+    beu: beuAtual,
+    analise_icn: analiseICN,
+  };
+
+  return MOTOR_NARRATIVE_BLUEPRINT_V1.replace(
+    "[PAYLOAD DA OBRA]",
+    JSON.stringify(payloadObra, null, 2),
+  );
+}
+
+function textoProporcaoPorIcn(icnBruto) {
+  const icn = Number(icnBruto);
+  const base = "Esses percentuais são orientação editorial, não cálculo mecânico por parágrafo.";
+
+  if (Number.isFinite(icn) && icn >= 8) {
+    return `Aproximadamente 65% Memória Narrativa — acontecimentos essenciais para contextualizar a emoção.\nAproximadamente 35% Interpretação — reflexão, atmosfera, legado, simbolismo, transformação, consequências humanas.\n${base}`;
+  }
+
+  if (Number.isFinite(icn) && icn >= 5) {
+    return `Aproximadamente 60% Memória Narrativa — acontecimentos essenciais para contextualizar a emoção.\nAproximadamente 40% Interpretação — reflexão, atmosfera, legado, simbolismo, transformação, consequências humanas.\n${base}`;
+  }
+
+  return `Aproximadamente 50% Memória Narrativa — acontecimentos essenciais para contextualizar a emoção.\nAproximadamente 50% Interpretação — reflexão, atmosfera, legado, simbolismo, transformação, consequências humanas.\n${base}`;
+}
+
+function montarInstrucoesBloco({ bloco, incluirConvite, incluirEncerramento, continuidadeAnterior }) {
+  const linhas = [];
+
+  linhas.push(
+    incluirConvite
+      ? "Este é o PRIMEIRO bloco da narrativa: escreva o Convite antes da primeira cena, seguindo a seção O CONVITE."
+      : "Este NÃO é o primeiro bloco: não escreva Convite nenhum. Comece direto na primeira cena listada abaixo.",
+  );
+  linhas.push(
+    incluirEncerramento
+      ? "Este é o ÚLTIMO bloco da narrativa: a última cena deve funcionar como encerramento — clímax emocional, descompressão e retorno ao primeiro símbolo da obra."
+      : "Este NÃO é o último bloco: encerre a última cena em uma transição emocional natural (consequência, ruptura, revelação ou gancho) — nunca como se fosse o fim da narrativa.",
+  );
+
+  if (continuidadeAnterior) {
+    linhas.push("");
+    linhas.push("CONTINUIDADE DO BLOCO ANTERIOR (contexto para manter coerência — não repita isto literalmente no texto):");
+    if (continuidadeAnterior.ultimo_estado_narrativo) linhas.push(`Último estado narrativo: ${continuidadeAnterior.ultimo_estado_narrativo}`);
+    if (continuidadeAnterior.ultimo_estado_emocional) linhas.push(`Último estado emocional: ${continuidadeAnterior.ultimo_estado_emocional}`);
+    if (continuidadeAnterior.personagens_em_aberto?.length) linhas.push(`Personagens em aberto: ${continuidadeAnterior.personagens_em_aberto.join(", ")}`);
+    if (continuidadeAnterior.simbolos_ativos?.length) linhas.push(`Símbolos ativos: ${continuidadeAnterior.simbolos_ativos.join(", ")}`);
+    if (continuidadeAnterior.ecos_que_devem_retornar?.length) linhas.push(`Ecos que devem retornar (amadurecidos, não repetidos): ${continuidadeAnterior.ecos_que_devem_retornar.join(", ")}`);
+    if (continuidadeAnterior.ultima_frase) linhas.push(`Última frase do bloco anterior: "${continuidadeAnterior.ultima_frase}"`);
+  }
+
+  linhas.push("");
+  linhas.push(`CENAS DESTE BLOCO — escreva exatamente estas ${bloco.cenas.length}, nesta ordem, com estes números (nem mais, nem menos):`);
+
+  bloco.cenas.forEach((cena) => {
+    linhas.push("");
+    linhas.push(`[CENA ${String(cena.numero).padStart(2, "0")}] emoção planejada: ${cena.emocao_dominante || "—"}`);
+    linhas.push(`Situação: ${cena.unidade_dramatica?.situacao || cena.acontecimento_base || "—"}`);
+    if (cena.unidade_dramatica?.personagens?.length) linhas.push(`Personagens: ${cena.unidade_dramatica.personagens.join(", ")}`);
+    if (cena.unidade_dramatica?.desejo_ou_necessidade) linhas.push(`Desejo ou necessidade: ${cena.unidade_dramatica.desejo_ou_necessidade}`);
+    if (cena.unidade_dramatica?.conflito) linhas.push(`Conflito: ${cena.unidade_dramatica.conflito}`);
+    if (cena.unidade_dramatica?.escolha_ou_revelacao) linhas.push(`Escolha ou revelação: ${cena.unidade_dramatica.escolha_ou_revelacao}`);
+    if (cena.unidade_dramatica?.consequencia) linhas.push(`Consequência: ${cena.unidade_dramatica.consequencia}`);
+    if (cena.intencao_dramatica) linhas.push(`Intenção dramática sugerida: ${cena.intencao_dramatica}`);
+    if (cena.simbolo_central) linhas.push(`Símbolo central sugerido: ${cena.simbolo_central}`);
+    if (cena.detalhe_sensorial_sugerido) linhas.push(`Detalhe sensorial sugerido: ${cena.detalhe_sensorial_sugerido}`);
+    if (cena.eco_de_cena_anterior) linhas.push(`Eco da cena anterior: ${cena.eco_de_cena_anterior}`);
+    if (cena.gancho_para_proxima) linhas.push(`Gancho para a próxima: ${cena.gancho_para_proxima}`);
+  });
+
+  return linhas.join("\n");
+}
+
+export function montarPromptNarrativaCinematicaBloco({
+  contexto,
+  beuAtual = null,
+  analiseICN = null,
+  bloco,
+  continuidadeAnterior = null,
+  incluirConvite = false,
+  incluirEncerramento = false,
+}) {
+  if (!bloco?.cenas?.length) {
+    throw new Error("montarPromptNarrativaCinematicaBloco: 'bloco.cenas' precisa ser um array não vazio.");
+  }
+
+  const payloadObra = { contexto, beu: beuAtual };
+  const instrucoesBloco = montarInstrucoesBloco({ bloco, incluirConvite, incluirEncerramento, continuidadeAnterior });
+
+  return MOTOR_NARRATIVA_CINEMATICA_V4
+    .replace("[PROPORCAO_POR_ICN]", textoProporcaoPorIcn(analiseICN?.icn))
+    .replace("[INSTRUCOES_DO_BLOCO]", instrucoesBloco)
+    .replace("[PAYLOAD DA OBRA]", JSON.stringify(payloadObra, null, 2));
+}
+
+// Corta a lista de cenas do blueprint em blocos de produção sequenciais.
+// Autoritativo: o "blocos_producao" que o próprio blueprint sugere é só uma
+// referência — esta função sempre recalcula a divisão real, garantindo que
+// nenhuma cena é cortada ao meio e que nenhum bloco estoura o orçamento de
+// caracteres de uma única chamada de IA.
+export function calcularBlocosProducaoNarrativa({ cenas, maxCenasPorBloco = 8, maxCaracteresPorBloco = 26000 }) {
+  if (!Array.isArray(cenas) || cenas.length === 0) {
+    throw new Error("calcularBlocosProducaoNarrativa: 'cenas' precisa ser um array não vazio.");
+  }
+
+  const cenasOrdenadas = [...cenas].sort((a, b) => Number(a.numero) - Number(b.numero));
+  const caracteresDaCena = (cena) => {
+    const alvo = Number(cena?.caracteres_alvo?.max);
+    return Number.isFinite(alvo) ? alvo : 4000;
+  };
+
+  const blocos = [];
+  let atual = [];
+  let caracteresAtual = 0;
+
+  for (const cena of cenasOrdenadas) {
+    const caracteresCena = caracteresDaCena(cena);
+    const excederiaCenas = atual.length >= maxCenasPorBloco;
+    const excederiaCaracteres = atual.length > 0 && caracteresAtual + caracteresCena > maxCaracteresPorBloco;
+
+    if (atual.length > 0 && (excederiaCenas || excederiaCaracteres)) {
+      blocos.push(atual);
+      atual = [];
+      caracteresAtual = 0;
+    }
+
+    atual.push(cena);
+    caracteresAtual += caracteresCena;
+  }
+
+  if (atual.length > 0) blocos.push(atual);
+
+  return blocos.map((cenasDoBloco, indice) => ({
+    bloco: indice + 1,
+    cenaInicial: cenasDoBloco[0].numero,
+    cenaFinal: cenasDoBloco[cenasDoBloco.length - 1].numero,
+    cenas: cenasDoBloco,
+  }));
+}
+
+// Validação estrutural do blueprint, em JS puro — evita gastar tokens
+// escrevendo prosa a partir de um plano quebrado. Falhas aqui interrompem a
+// geração (fora do modo de testes); avisos não bloqueiam, só ficam no log.
+export function validarNarrativeBlueprint(blueprint) {
+  const erros = [];
+  const avisos = [];
+
+  if (!blueprint || typeof blueprint !== "object") {
+    return { valido: false, erros: ["Blueprint não é um objeto."], avisos };
+  }
+
+  if (blueprint.aprovado_para_producao !== true) {
+    erros.push("Blueprint não está marcado como aprovado_para_producao.");
+  }
+
+  if (!blueprint.identificacao?.escopo_analisado) {
+    erros.push("identificacao.escopo_analisado está vazio.");
+  }
+
+  if (!blueprint.escala || typeof blueprint.escala !== "object") {
+    erros.push("Blueprint não tem o objeto 'escala'.");
+  }
+
+  const cenas = Array.isArray(blueprint.cenas) ? blueprint.cenas : null;
+  if (!cenas || cenas.length === 0) {
+    erros.push("Blueprint não tem um array 'cenas' não vazio.");
+    return { valido: erros.length === 0, erros, avisos };
+  }
+
+  const numerosOrdenados = cenas.map((cena) => Number(cena?.numero)).sort((a, b) => a - b);
+  const numeracaoContinua = numerosOrdenados.every((numero, indice) => numero === indice + 1);
+  if (!numeracaoContinua) {
+    erros.push(`Numeração das cenas não é contínua de 1 a ${cenas.length}: [${numerosOrdenados.join(", ")}].`);
+  }
+
+  cenas.forEach((cena, indice) => {
+    const rotulo = `Cena ${cena?.numero ?? indice + 1}`;
+
+    if (!cena?.emocao_dominante) erros.push(`${rotulo}: sem emocao_dominante.`);
+    if (!cena?.simbolo_central) erros.push(`${rotulo}: sem simbolo_central.`);
+
+    if (!cena?.unidade_dramatica || typeof cena.unidade_dramatica !== "object") {
+      erros.push(`${rotulo}: sem unidade_dramatica.`);
+    } else {
+      const camposPreenchidos = ["situacao", "desejo_ou_necessidade", "conflito", "escolha_ou_revelacao", "consequencia"].filter(
+        (campo) => Boolean(cena.unidade_dramatica[campo]),
+      );
+      if (camposPreenchidos.length < 3) {
+        erros.push(`${rotulo}: unidade_dramatica com menos de 3 elementos preenchidos (situação/desejo/conflito/escolha/consequência).`);
+      }
+    }
+
+    if (
+      cena?.emocao_dominante &&
+      !CARDAPIO_EMOCOES_CINEMATICAS.some((nome) => nome.toLowerCase() === String(cena.emocao_dominante).toLowerCase())
+    ) {
+      avisos.push(`${rotulo}: emocao_dominante "${cena.emocao_dominante}" não bate exatamente com um nome do cardápio.`);
+    }
+  });
+
+  const cenasTotais = Number(blueprint?.escala?.cenas_totais);
+  if (Number.isFinite(cenasTotais) && cenasTotais !== cenas.length) {
+    avisos.push(`escala.cenas_totais (${cenasTotais}) não bate com o tamanho real do array cenas (${cenas.length}).`);
+  }
+
+  return { valido: erros.length === 0, erros, avisos };
+}
+
+export function calcularHashBlueprint(blueprint) {
+  return createHash("sha256").update(JSON.stringify(blueprint ?? {})).digest("hex");
+}
+
+// Assinatura de idempotência: mesma obra + mesma versão de BEU + mesmo
+// blueprint + mesma versão do motor + mesmo número de bloco ⇒ mesmo hash.
+// Usada para pular sub-etapas já concluídas em uma nova tentativa.
+export function calcularAssinaturaBloco({ obraId, versaoBEU, blueprintHash, versaoMotor, numeroBloco = null }) {
+  const chave = JSON.stringify({ obraId, versaoBEU, blueprintHash, versaoMotor, numeroBloco });
+  return createHash("sha256").update(chave).digest("hex");
+}
+
+function ultimasLinhasNaoVazias(texto, quantidade = 6) {
+  return String(texto ?? "")
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean)
+    .slice(-quantidade);
+}
+
+// Continuidade entre blocos, montada sem chamada de IA extra: usa os campos
+// que o próprio blueprint já planejou para este bloco + as últimas linhas
+// reais do texto gerado.
+export function gerarResumoContinuidadeBloco({ blueprintBloco, textoBlocoGerado }) {
+  const ultimasLinhas = ultimasLinhasNaoVazias(textoBlocoGerado);
+
+  return {
+    ultimo_estado_narrativo: blueprintBloco?.objetivo_do_bloco ?? null,
+    ultimo_estado_emocional: blueprintBloco?.estado_emocional_de_saida ?? null,
+    personagens_em_aberto: blueprintBloco?.personagens_ativos ?? [],
+    vinculos_em_aberto: [],
+    simbolos_ativos: blueprintBloco?.simbolos_ativos ?? [],
+    ecos_que_devem_retornar: blueprintBloco?.simbolos_ativos ?? [],
+    questoes_nao_resolvidas: [],
+    ultima_frase: ultimasLinhas[ultimasLinhas.length - 1] ?? null,
+  };
+}
+
+const REGEX_CABECALHO_CENA_CONSOLIDACAO = /^\[\s*cena\s+(\d+)/i;
+const REGEX_APRESENTACAO_CONSOLIDACAO = /^ess[êe]ncia dos livros apresenta/i;
+
+// Consolidação puramente programática (sem reescrita por IA, por pedido
+// explícito): concatena os blocos na ordem e valida numeração/duplicidade.
+export function consolidarBlocosNarrativa({ blocos }) {
+  const avisos = [];
+
+  if (!Array.isArray(blocos) || blocos.length === 0) {
+    return { textoFinal: "", valido: false, erros: ["Nenhum bloco para consolidar."], avisos };
+  }
+
+  const textoFinal = blocos.map((texto) => String(texto ?? "").trim()).join("\n\n");
+  const linhas = textoFinal.split("\n").map((linha) => linha.trim());
+
+  const numerosCena = [];
+  let apresentacoes = 0;
+
+  linhas.forEach((linha) => {
+    const linhaSemAcento = linha.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const matchCena = linhaSemAcento.match(REGEX_CABECALHO_CENA_CONSOLIDACAO);
+    if (matchCena) numerosCena.push(Number(matchCena[1]));
+    if (REGEX_APRESENTACAO_CONSOLIDACAO.test(linhaSemAcento)) apresentacoes += 1;
+  });
+
+  const erros = [];
+
+  if (numerosCena.length === 0) {
+    erros.push("Nenhum cabeçalho de cena ([CENA NN ...]) encontrado no texto consolidado.");
+  } else {
+    const numerosOrdenados = [...numerosCena].sort((a, b) => a - b);
+    const continuaSemRepetir = numerosOrdenados.every((numero, indice) => numero === indice + 1);
+    if (!continuaSemRepetir) {
+      erros.push(`Numeração de cenas consolidada não é contínua/única: [${numerosOrdenados.join(", ")}].`);
+    }
+  }
+
+  if (apresentacoes === 0) {
+    avisos.push("Linha \"ESSÊNCIA DOS LIVROS APRESENTA...\" não encontrada no texto consolidado.");
+  } else if (apresentacoes > 1) {
+    erros.push(`Linha "ESSÊNCIA DOS LIVROS APRESENTA..." aparece ${apresentacoes} vezes (deveria aparecer só uma).`);
+  }
+
+  return { textoFinal, valido: erros.length === 0, erros, avisos };
 }
 
 function montarPromptHeritage({
@@ -2009,7 +2515,6 @@ export async function montarPromptAgente({
   beuAtual = null,
   narrativaCinematica = null,
   partesEnciclopediaAnteriores = [],
-  estruturaCenas = null,
 }) {
   if (!agente) {
     throw new Error("agente é obrigatório para montar o prompt.");
@@ -2031,11 +2536,6 @@ export async function montarPromptAgente({
     diretor_criativo: {
       responsavel: "Diretor Criativo",
       montar: ({ campos }) => montarPromptDiretorCriativo({ agente, contexto, campos, beuAtual }),
-    },
-    narrativa_cinematica: {
-      responsavel: "Narrador Cinemático",
-      montar: () =>
-        montarPromptNarrativaCinematicaEssencia({ agente, contexto, beuAtual, estruturaCenas }),
     },
     heritage_prompt: {
       responsavel: "Heritage Prompt",

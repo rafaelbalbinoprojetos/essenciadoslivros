@@ -47,7 +47,10 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   curador_beu: 15,
   editor_beu: 15,
   diretor_criativo: 20,
-  narrativa_cinematica: 420,
+  // Agora inclui ICN + blueprint + N blocos sequenciais de escrita (a
+  // quantidade de blocos escala com a complexidade da obra), por isso a
+  // estimativa subiu — é só um ETA aproximado, o tempo real varia bastante.
+  narrativa_cinematica: 900,
   heritage_prompt: 15,
   heritage_image: 180,
   capa_cinematica_prompt: 15,
@@ -836,8 +839,8 @@ export default function EngineSolicitarObra() {
                 Narrativa cinematográfica reduzida
               </h2>
               <p className="mt-1 text-sm text-zinc-400">
-                Ativado: a narrativa cinematográfica gera só 2 cenas + Convite (chamada real à OpenAI, mais barata).
-                Desativado: gera as 12-14 cenas completas. As demais etapas não são afetadas por este modo.
+                Ativado: a narrativa cinematográfica gera só 2 cenas + Convite, sem ICN nem Blueprint por IA (um único bloco, mais barato).
+                Desativado: roda a pipeline completa — ICN mede a complexidade da obra, o Blueprint planeja as cenas e a escrita acontece em blocos, escalando com o tamanho real da obra. As demais etapas não são afetadas por este modo.
               </p>
               {!isAdmin && (
                 <p className="mt-2 text-xs text-zinc-500">

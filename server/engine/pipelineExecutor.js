@@ -22,9 +22,16 @@ import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
 import {
-  calcularEstruturaCenasPorICN,
+  calcularAssinaturaBloco,
+  calcularBlocosProducaoNarrativa,
+  calcularHashBlueprint,
+  consolidarBlocosNarrativa,
+  gerarResumoContinuidadeBloco,
   montarPromptAgente,
   montarPromptIndiceComplexidadeNarrativa,
+  montarPromptNarrativaCinematicaBloco,
+  montarPromptNarrativeBlueprint,
+  validarNarrativeBlueprint,
 } from "./promptBuilder.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
@@ -672,12 +679,70 @@ async function executarDiretorCriativo({ obraId }) {
   }
 }
 
-// Narrative Scale Engine: analisa a complexidade real da obra (ICN) e devolve
-// a faixa de cenas correspondente, para que a narrativa cinematográfica escale
-// com o tamanho/densidade da obra em vez de usar sempre a mesma quantidade fixa.
-// Chamada de IA independente, dedicada apenas a essa análise — não altera o
-// formato, as regras ou a estrutura da narrativa em si, só a quantidade de cenas.
-async function calcularIndiceComplexidadeNarrativa({ contexto, beuAtual, runId }) {
+// Sobe sempre que MOTOR_NARRATIVA_CINEMATICA_V4 ou MOTOR_NARRATIVE_BLUEPRINT_V1
+// mudarem de um jeito que invalide blocos já gerados — isso quebra a
+// assinatura de idempotência de propósito, forçando regeneração.
+const VERSAO_MOTOR_NARRATIVA_CINEMATICA = "narrativa-v4-blueprint-v1";
+
+// Agrupa registrarInicioEtapa + concluirEtapaPipeline/falharEtapaPipeline
+// para as sub-etapas internas da narrativa cinematográfica (ICN, blueprint,
+// cada bloco, consolidação). Cada uma vira uma linha própria e auditável em
+// ai_pipeline_etapas, com tipo_etapa distinto de "narrativa_cinematica" —
+// por isso fica invisível para ETAPAS_RASTREADAS/PIPELINE_STEP_DEFS do
+// frontend, que só conhecem a etapa pública final.
+async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, entrada, executor }) {
+  const etapa = await registrarInicioEtapa({ obraId, payloadId, tipoEtapa, entrada, ordem });
+
+  try {
+    const resultado = await executor();
+
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId,
+      saida: resultado.saida,
+      tokensInput: resultado.tokensInput ?? null,
+      tokensOutput: resultado.tokensOutput ?? null,
+      custoEstimado: calcularCustoEstimado(),
+    });
+
+    return resultado;
+  } catch (error) {
+    await falharEtapaPipeline({ etapaId: etapa.id, erro: normalizarErro(error) });
+    throw error;
+  }
+}
+
+// Idempotência: procura uma sub-etapa já concluída com a mesma assinatura
+// (mesma obra + versão de BEU + blueprint + motor + nº do bloco) para
+// reaproveitar em vez de gastar tokens de novo numa nova tentativa.
+async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinatura }) {
+  const { data, error } = await supabaseAdmin
+    .from("ai_pipeline_etapas")
+    .select("entrada, saida")
+    .eq("obra_id", obraId)
+    .eq("tipo_etapa", tipoEtapa)
+    .eq("status", "concluido")
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Erro ao buscar sub-etapa ${tipoEtapa}: ${error.message}`);
+  }
+
+  if (!data || data.entrada?.assinatura !== assinatura) {
+    return null;
+  }
+
+  return data.saida ?? null;
+}
+
+// Narrative Scale Engine: mede a complexidade real da obra (ICN). Chamada de
+// IA independente e barata, dedicada só a essa análise. Ao contrário da v1,
+// não engole erros silenciosamente — se a IA não devolver um ICN válido,
+// lança e interrompe a geração (a decisão de tolerar isso fica a cargo do
+// chamador, que só usa esse caminho fora do modo de testes).
+async function calcularIndiceComplexidadeNarrativa({ contexto, beuAtual }) {
   const agenteICN = {
     slug: "narrative-scale-engine",
     nome: "Narrative Scale Engine (ICN)",
@@ -697,25 +762,175 @@ async function calcularIndiceComplexidadeNarrativa({ contexto, beuAtual, runId }
   });
 
   const saida = resultado.saida ?? {};
-  const estrutura = calcularEstruturaCenasPorICN(saida.icn);
+  const icnBruto = Number(saida.icn);
 
-  const analise = {
-    icn: estrutura.icn,
-    icn_bruto: saida.icn ?? null,
+  if (!Number.isFinite(icnBruto) || icnBruto < 1 || icnBruto > 10) {
+    throw new Error(`Narrative Scale Engine devolveu um ICN inválido: ${JSON.stringify(saida.icn)}`);
+  }
+
+  return {
+    icn: Math.round(icnBruto),
     faixa: typeof saida.faixa === "string" ? saida.faixa : null,
     fatores: saida.fatores ?? null,
     justificativa: typeof saida.justificativa === "string" ? saida.justificativa : null,
-    cenas_min: estrutura.cenasMin,
-    cenas_max: estrutura.cenasMax,
+    risco_compressao: typeof saida.risco_compressao === "string" ? saida.risco_compressao : null,
+    duracao_base_recomendada_minutos: Number.isFinite(Number(saida.duracao_base_recomendada_minutos))
+      ? Number(saida.duracao_base_recomendada_minutos)
+      : null,
+    cenas_base_recomendadas: Number.isFinite(Number(saida.cenas_base_recomendadas))
+      ? Number(saida.cenas_base_recomendadas)
+      : null,
     tokens_input: resultado.tokens_input,
     tokens_output: resultado.tokens_output,
   };
+}
 
-  if (runId) {
-    await saveEngineJsonLog({ runId, name: "icn", data: analise });
+// Narrative Blueprint: decide COMO a obra deve ser contada (escopo, arcos,
+// personagens, lista exata de cenas) antes de qualquer prosa. Blueprint
+// inválido (estrutura quebrada, numeração de cenas errada, não aprovado
+// para produção) lança erro — a geração para em vez de escrever cenas a
+// partir de um plano ruim.
+async function executarNarrativeBlueprint({ contexto, beuAtual, analiseICN }) {
+  const agenteBlueprint = {
+    slug: "narrative-blueprint-engine",
+    nome: "Narrative Blueprint Engine",
+    modelo: ENGINE_CONFIG.modeloDefault,
+    temperatura: 0.3,
+    formato_saida: "json",
+    prompt_sistema:
+      "Você é um planejador narrativo. Responda somente com o objeto JSON solicitado, sem nenhum texto fora dele.",
+  };
+
+  const promptMontado = await montarPromptNarrativeBlueprint({ contexto, beuAtual, analiseICN });
+
+  const resultado = await executarAgenteOpenAI({
+    agente: agenteBlueprint,
+    contexto,
+    promptMontado,
+  });
+
+  const blueprint = resultado.saida ?? null;
+  const validacao = validarNarrativeBlueprint(blueprint);
+
+  if (!validacao.valido) {
+    throw new Error(`Narrative Blueprint inválido: ${validacao.erros.join(" | ")}`);
   }
 
-  return analise;
+  if (validacao.avisos.length) {
+    engineStep("Narrative Blueprint com avisos", "!", { avisos: validacao.avisos });
+  }
+
+  return {
+    blueprint,
+    avisos: validacao.avisos,
+    tokens_input: resultado.tokens_input,
+    tokens_output: resultado.tokens_output,
+  };
+}
+
+// Blueprint sintético usado só no modo de testes, sem nenhuma chamada de IA
+// para ICN/Blueprint — mantém o modo de testes tão barato quanto antes (uma
+// única chamada real, ao escritor). É um fallback explícito e registrado
+// (o escopo já deixa claro que é modo de teste), nunca usado em produção.
+function construirBlueprintSinteticoTeste({ contexto }) {
+  const titulo = contexto?.obra?.titulo || "a obra";
+
+  const cenaBase = (numero, emocao, resumo) => ({
+    numero,
+    titulo_interno: `Cena de teste ${numero}`,
+    arco_id: "teste",
+    acontecimento_base: resumo,
+    unidade_dramatica: {
+      situacao: resumo,
+      personagens: [],
+      desejo_ou_necessidade: "validar a infraestrutura de geração",
+      conflito: "nenhum — cena de teste",
+      escolha_ou_revelacao: "nenhuma — cena de teste",
+      consequencia: "nenhuma — cena de teste",
+    },
+    emocao_dominante: emocao,
+    intencao_dramatica: `Testar a geração da narrativa cinematográfica de ${titulo}.`,
+    simbolo_central: "modo de teste",
+    detalhe_sensorial_sugerido: null,
+    eco_de_cena_anterior: null,
+    gancho_para_proxima: null,
+    duracao_estimada_minutos: 3,
+    caracteres_alvo: { min: 2500, max: 4000 },
+    prioridade: 1,
+  });
+
+  return {
+    aprovado_para_producao: true,
+    identificacao: { escopo_analisado: `Modo de teste — ${titulo}` },
+    escala: { icn: 3, cenas_totais: 2 },
+    cenas: [
+      cenaBase(1, "CONTEMPLAÇÃO / SAUDADE", `Abertura de teste de ${titulo}.`),
+      cenaBase(2, "ESPERANÇA CAUTELOSA", `Encerramento de teste de ${titulo}.`),
+    ],
+  };
+}
+
+// Continuidade programática (sem chamada de IA extra): extrai personagens e
+// símbolos ativos direto das cenas do próprio bloco recém-planejado.
+function extrairContextoContinuidadeDoBloco(bloco) {
+  const ultimaCena = bloco.cenas[bloco.cenas.length - 1];
+  const personagens = new Set();
+  const simbolos = new Set();
+
+  bloco.cenas.forEach((cena) => {
+    (cena.unidade_dramatica?.personagens ?? []).forEach((nome) => personagens.add(nome));
+    if (cena.simbolo_central) simbolos.add(cena.simbolo_central);
+  });
+
+  return {
+    objetivo_do_bloco: ultimaCena?.gancho_para_proxima || ultimaCena?.unidade_dramatica?.consequencia || null,
+    estado_emocional_de_saida: ultimaCena?.emocao_dominante || null,
+    personagens_ativos: [...personagens],
+    simbolos_ativos: [...simbolos],
+  };
+}
+
+// Escreve a prosa de um único bloco (grupo de cenas) usando o agente real
+// narrador-cinematico — mesma voz/modelo/temperatura de sempre.
+async function executarBlocoNarrativaCinematica({
+  agente,
+  contexto,
+  beuAtual,
+  analiseICN,
+  bloco,
+  continuidadeAnterior,
+  incluirConvite,
+  incluirEncerramento,
+}) {
+  const promptMontado = montarPromptNarrativaCinematicaBloco({
+    contexto,
+    beuAtual,
+    analiseICN,
+    bloco,
+    continuidadeAnterior,
+    incluirConvite,
+    incluirEncerramento,
+  });
+
+  const resultado = await executarAgenteOpenAI({
+    agente,
+    contexto,
+    schema: null,
+    promptMontado,
+  });
+
+  const texto = typeof resultado.saida === "string" ? resultado.saida : "";
+  const continuidade = gerarResumoContinuidadeBloco({
+    blueprintBloco: extrairContextoContinuidadeDoBloco(bloco),
+    textoBlocoGerado: texto,
+  });
+
+  return {
+    texto,
+    continuidade,
+    tokens_input: resultado.tokens_input,
+    tokens_output: resultado.tokens_output,
+  };
 }
 
 async function executarNarrativaCinematica({ obraId }) {
@@ -742,63 +957,260 @@ async function executarNarrativaCinematica({ obraId }) {
     });
 
     const beuAtual = beuAtualRegistro.payload;
-    engineStep("BEU atual carregada", "✓", { payloadId: beuAtualRegistro.id });
+    const payloadId = beuAtualRegistro.id;
+    engineStep("BEU atual carregada", "✓", { payloadId });
 
-    let analiseICN = null;
-    if (!testes) {
-      try {
-        engineStep("Narrative Scale Engine (ICN)", "→");
-        analiseICN = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual, runId });
-        engineStep("Narrative Scale Engine (ICN)", "✓", {
-          icn: analiseICN.icn,
-          faixa: analiseICN.faixa,
-          cenas: `${analiseICN.cenas_min}-${analiseICN.cenas_max}`,
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
+
+    let analiseICN;
+    let blueprint;
+
+    if (testes) {
+      engineStep("Modo de testes ativo", "!", {
+        info: "ICN e Blueprint pulados — usando blueprint sintético de 2 cenas",
+      });
+      blueprint = construirBlueprintSinteticoTeste({ contexto });
+      analiseICN = { icn: blueprint.escala.icn, faixa: "Modo de teste", risco_compressao: null };
+    } else {
+      engineStep("Narrative Scale Engine (ICN)", "→");
+      const icnExecucao = await executarSubEtapaNarrativa({
+        obraId,
+        payloadId,
+        tipoEtapa: "narrativa_cinematica_icn",
+        ordem: definicao.ordem,
+        entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU },
+        executor: async () => {
+          const analise = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual });
+          return { saida: analise, tokensInput: analise.tokens_input, tokensOutput: analise.tokens_output };
+        },
+      });
+      analiseICN = icnExecucao.saida;
+      await saveEngineJsonLog({ runId, name: "icn", data: analiseICN });
+      engineStep("Narrative Scale Engine (ICN)", "✓", {
+        icn: analiseICN.icn,
+        faixa: analiseICN.faixa,
+        risco_compressao: analiseICN.risco_compressao,
+      });
+
+      const assinaturaBlueprint = calcularAssinaturaBloco({
+        obraId,
+        versaoBEU: ENGINE_CONFIG.versaoBEU,
+        blueprintHash: `icn-${analiseICN.icn}`,
+        versaoMotor: VERSAO_MOTOR_NARRATIVA_CINEMATICA,
+        numeroBloco: "blueprint",
+      });
+
+      engineStep("Narrative Blueprint", "→");
+      const blueprintReaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+        obraId,
+        tipoEtapa: "narrativa_cinematica_blueprint",
+        assinatura: assinaturaBlueprint,
+      });
+
+      if (blueprintReaproveitado) {
+        blueprint = blueprintReaproveitado;
+        engineStep("Narrative Blueprint", "↺", { info: "reaproveitado de uma tentativa anterior" });
+      } else {
+        const blueprintExecucao = await executarSubEtapaNarrativa({
+          obraId,
+          payloadId,
+          tipoEtapa: "narrativa_cinematica_blueprint",
+          ordem: definicao.ordem,
+          entrada: {
+            obra_id: obraId,
+            versao_beu: ENGINE_CONFIG.versaoBEU,
+            icn: analiseICN.icn,
+            assinatura: assinaturaBlueprint,
+          },
+          executor: async () => {
+            const resultado = await executarNarrativeBlueprint({ contexto, beuAtual, analiseICN });
+            return {
+              saida: resultado.blueprint,
+              tokensInput: resultado.tokens_input,
+              tokensOutput: resultado.tokens_output,
+            };
+          },
         });
-      } catch (erroICN) {
-        analiseICN = null;
-        engineStep("Narrative Scale Engine (ICN)", "✕", {
-          erro: normalizarErro(erroICN),
-          fallback: "estrutura padrão de cenas do motor",
-        });
+        blueprint = blueprintExecucao.saida;
       }
+
+      await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
+      engineStep("Narrative Blueprint", "✓", {
+        cenas_totais: blueprint.cenas.length,
+        escopo: blueprint.identificacao?.escopo_analisado,
+      });
     }
 
-    const estruturaCenas = analiseICN
-      ? { cenasMin: analiseICN.cenas_min, cenasMax: analiseICN.cenas_max }
-      : null;
+    const blocosPlanejados = calcularBlocosProducaoNarrativa({
+      cenas: blueprint.cenas,
+      maxCenasPorBloco: 8,
+      maxCaracteresPorBloco: 26000,
+    });
+
+    engineStep("Blocos de produção calculados", "✓", {
+      total_blocos: blocosPlanejados.length,
+      total_cenas: blueprint.cenas.length,
+    });
+
+    const blueprintHash = calcularHashBlueprint(blueprint);
+    const textosBlocos = [];
+    let continuidadeAnterior = null;
+    const tokensTotais = { input: 0, output: 0 };
+
+    for (const bloco of blocosPlanejados) {
+      const incluirConvite = bloco.bloco === 1;
+      const incluirEncerramento = bloco.bloco === blocosPlanejados.length;
+      const tipoEtapaBloco = `narrativa_cinematica_bloco_${String(bloco.bloco).padStart(2, "0")}`;
+
+      let textoBloco;
+      let continuidadeBloco;
+
+      if (testes) {
+        engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "→");
+        const resultadoBloco = await executarBlocoNarrativaCinematica({
+          agente,
+          contexto,
+          beuAtual,
+          analiseICN,
+          bloco,
+          continuidadeAnterior,
+          incluirConvite,
+          incluirEncerramento,
+        });
+        textoBloco = resultadoBloco.texto;
+        continuidadeBloco = resultadoBloco.continuidade;
+        tokensTotais.input += resultadoBloco.tokens_input || 0;
+        tokensTotais.output += resultadoBloco.tokens_output || 0;
+        engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "✓", { caracteres: textoBloco.length });
+      } else {
+        const assinaturaBloco = calcularAssinaturaBloco({
+          obraId,
+          versaoBEU: ENGINE_CONFIG.versaoBEU,
+          blueprintHash,
+          versaoMotor: VERSAO_MOTOR_NARRATIVA_CINEMATICA,
+          numeroBloco: bloco.bloco,
+        });
+
+        const reaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+          obraId,
+          tipoEtapa: tipoEtapaBloco,
+          assinatura: assinaturaBloco,
+        });
+
+        if (reaproveitado) {
+          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "↺", {
+            info: "reaproveitado de uma tentativa anterior",
+          });
+          textoBloco = reaproveitado.texto;
+          continuidadeBloco = reaproveitado.continuidade;
+        } else {
+          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "→", {
+            cenas: `${bloco.cenaInicial}-${bloco.cenaFinal}`,
+          });
+
+          const execucaoBloco = await executarSubEtapaNarrativa({
+            obraId,
+            payloadId,
+            tipoEtapa: tipoEtapaBloco,
+            ordem: definicao.ordem,
+            entrada: {
+              obra_id: obraId,
+              versao_beu: ENGINE_CONFIG.versaoBEU,
+              numero_bloco: bloco.bloco,
+              cena_inicial: bloco.cenaInicial,
+              cena_final: bloco.cenaFinal,
+              assinatura: assinaturaBloco,
+            },
+            executor: async () => {
+              const resultadoBloco = await executarBlocoNarrativaCinematica({
+                agente,
+                contexto,
+                beuAtual,
+                analiseICN,
+                bloco,
+                continuidadeAnterior,
+                incluirConvite,
+                incluirEncerramento,
+              });
+              return {
+                saida: { texto: resultadoBloco.texto, continuidade: resultadoBloco.continuidade },
+                tokensInput: resultadoBloco.tokens_input,
+                tokensOutput: resultadoBloco.tokens_output,
+              };
+            },
+          });
+
+          textoBloco = execucaoBloco.saida.texto;
+          continuidadeBloco = execucaoBloco.saida.continuidade;
+          tokensTotais.input += execucaoBloco.tokensInput || 0;
+          tokensTotais.output += execucaoBloco.tokensOutput || 0;
+          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "✓", { caracteres: textoBloco.length });
+        }
+      }
+
+      textosBlocos.push(textoBloco);
+      continuidadeAnterior = continuidadeBloco;
+    }
+
+    const consolidado = consolidarBlocosNarrativa({ blocos: textosBlocos });
+
+    if (!consolidado.valido) {
+      throw new Error(`Falha ao consolidar narrativa cinematográfica: ${consolidado.erros.join(" | ")}`);
+    }
+
+    if (consolidado.avisos.length) {
+      engineStep("Consolidação com avisos", "!", { avisos: consolidado.avisos });
+    }
+
+    if (!testes) {
+      await executarSubEtapaNarrativa({
+        obraId,
+        payloadId,
+        tipoEtapa: "narrativa_cinematica_consolidacao",
+        ordem: definicao.ordem,
+        entrada: {
+          obra_id: obraId,
+          blocos: blocosPlanejados.length,
+          cenas_totais: blueprint.cenas.length,
+          avisos: consolidado.avisos,
+        },
+        executor: async () => ({
+          saida: { caracteres: consolidado.textoFinal.length, avisos: consolidado.avisos },
+          tokensInput: 0,
+          tokensOutput: 0,
+        }),
+      });
+    }
+
+    await saveEngineJsonLog({ runId, name: "saida", data: consolidado.textoFinal });
+
+    engineStep("Narrativa cinematográfica gerada", "✓", {
+      caracteres: consolidado.textoFinal.length,
+      blocos: blocosPlanejados.length,
+      cenas: blueprint.cenas.length,
+    });
 
     const entrada = {
       tipo_etapa: tipoEtapa,
       agente_slug: agente.slug,
       obra_id: obraId,
-      payload_id: beuAtualRegistro.id,
+      payload_id: payloadId,
       testes,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       persistencia: "ai_pipeline_etapas.saida",
       icn: analiseICN?.icn ?? null,
       icn_faixa: analiseICN?.faixa ?? null,
-      icn_cenas_min: analiseICN?.cenas_min ?? null,
-      icn_cenas_max: analiseICN?.cenas_max ?? null,
+      blueprint_cenas_totais: blueprint?.cenas?.length ?? null,
+      blueprint_escopo: blueprint?.identificacao?.escopo_analisado ?? null,
+      blocos_producao: blocosPlanejados.length,
     };
 
-    const promptMontado = await montarPromptAgente({
-      agente,
-      contexto,
-      tipoEtapa,
-      beuAtual,
-      estruturaCenas,
-    });
-
-    entrada.prompt_montado = Boolean(promptMontado);
-    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
-
-    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
     await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
-    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
 
     etapa = await registrarInicioEtapa({
       obraId,
-      payloadId: beuAtualRegistro.id,
+      payloadId,
       tipoEtapa,
       entrada,
       ordem: definicao.ordem,
@@ -812,62 +1224,47 @@ async function executarNarrativaCinematica({ obraId }) {
       modelo: agente.modelo,
     });
 
-    const resultado = await executarAgenteOpenAI({
-      agente,
-      contexto,
-      schema: null,
-      promptMontado,
-      tipoEtapa,
-    });
-
     const custoEstimado = calcularCustoEstimado({
-      modelo: resultado.modelo,
-      tokensInput: resultado.tokens_input,
-      tokensOutput: resultado.tokens_output,
+      modelo: agente.modelo,
+      tokensInput: tokensTotais.input,
+      tokensOutput: tokensTotais.output,
     });
-
-    engineStep("Narrativa cinematográfica gerada", "✓", {
-      caracteres: typeof resultado.saida === "string" ? resultado.saida.length : null,
-    });
-
-    await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
 
     await concluirExecucaoAgente({
       execucaoId: execucao.id,
-      payloadId: beuAtualRegistro.id,
-      saida: resultado.saida,
-      tokensInput: resultado.tokens_input,
-      tokensOutput: resultado.tokens_output,
+      payloadId,
+      saida: consolidado.textoFinal,
+      tokensInput: tokensTotais.input,
+      tokensOutput: tokensTotais.output,
       custoEstimado,
     });
 
     await concluirEtapaPipeline({
       etapaId: etapa.id,
-      payloadId: beuAtualRegistro.id,
-      saida: resultado.saida,
-      tokensInput: resultado.tokens_input,
-      tokensOutput: resultado.tokens_output,
+      payloadId,
+      saida: consolidado.textoFinal,
+      tokensInput: tokensTotais.input,
+      tokensOutput: tokensTotais.output,
       custoEstimado,
     });
 
-    engineStep("Pipeline concluída", "✓", {
-      obraId,
-      tipoEtapa,
-      payloadId: beuAtualRegistro.id,
-    });
+    engineStep("Pipeline concluída", "✓", { obraId, tipoEtapa, payloadId });
 
     return {
       ok: true,
       etapa: tipoEtapa,
       obraId,
-      payloadId: beuAtualRegistro.id,
+      payloadId,
       tokens: {
-        input: resultado.tokens_input,
-        output: resultado.tokens_output,
-        total: resultado.tokens_total,
+        input: tokensTotais.input,
+        output: tokensTotais.output,
+        total: tokensTotais.input + tokensTotais.output,
       },
-      saida: resultado.saida,
+      saida: consolidado.textoFinal,
       testes,
+      icn: analiseICN?.icn ?? null,
+      blocos: blocosPlanejados.length,
+      cenas: blueprint?.cenas?.length ?? null,
     };
   } catch (error) {
     const erro = normalizarErro(error);
