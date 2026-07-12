@@ -433,7 +433,7 @@ export default function Layout() {
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch]">
         <nav className="sidebar-nav flex flex-col gap-1 px-3 py-5">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -712,7 +712,7 @@ export default function Layout() {
           trialEndsAt={trialEndsAt}
         />
       </div>
-      {(mobileNavItems.length || NAV_ITEMS.length) && (
+      {(mobileNavItems.length || NAV_ITEMS.length) && !menuOpen && (
         <nav className="pointer-events-auto md:hidden fixed inset-x-0 bottom-0 z-40">
           <div className="mx-auto flex w-full max-w-xl items-center justify-between rounded-t-3xl border border-[rgba(var(--color-accent-primary),0.2)] border-b-0 bg-white/95 px-4 py-3 shadow-[0_-20px_45px_-35px_rgba(186,123,79,0.4)] backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
             {(mobileNavItems.length ? mobileNavItems : NAV_ITEMS).map((item) => {
