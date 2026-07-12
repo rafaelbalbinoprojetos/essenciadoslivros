@@ -30,6 +30,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { authHeaders } from "../lib/supabase.js";
 import { NAV_LINKS, normalizeMobileNavSelection } from "../data/navigation.js";
 import { DEFAULT_PLAN_ID } from "../data/plans.js";
+import { listBooksAddedRecently } from "../services/books.js";
+import { formatAddedAgo, formatTipoObra } from "../utils/notifications.js";
 
 const BRAND_NAME = "Essência dos Livros";
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
@@ -199,22 +201,36 @@ export default function Layout() {
       return;
     }
 
+    let cancelado = false;
     setNotificationsLoading(true);
-    const sampleMessages = [
-      {
-        id: `library-welcome-${user.id}`,
-        type: "info",
-        title: "Bem-vindo à Essência dos Livros",
-        message: "Use o cadastro para adicionar novos títulos e acompanhar as leituras da sua comunidade.",
-        time: new Intl.DateTimeFormat("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }).format(new Date()),
-      },
-    ];
-    setNotifications(sampleMessages);
     setNotificationsError(null);
-    setNotificationsLoading(false);
+
+    listBooksAddedRecently({ days: 3, limit: 8 })
+      .then((obras) => {
+        if (cancelado) return;
+        setNotifications(
+          obras.map((obra) => ({
+            id: obra.id,
+            obraId: obra.id,
+            titulo: obra.titulo,
+            capaUrl: obra.capa_cinematica_url || obra.capa_url,
+            tipoObraLabel: formatTipoObra(obra.tipo_obra),
+            addedAgoLabel: formatAddedAgo(obra.data_adicao),
+          })),
+        );
+      })
+      .catch((error) => {
+        if (cancelado) return;
+        console.error("[layout] Erro ao carregar obras recentes:", error);
+        setNotificationsError("Não foi possível carregar as novidades agora.");
+      })
+      .finally(() => {
+        if (!cancelado) setNotificationsLoading(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
   }, [user, refreshVersion]);
 
   useEffect(() => {

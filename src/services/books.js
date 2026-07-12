@@ -116,6 +116,21 @@ export async function listRecentBooks(limit = 6) {
   return data ?? [];
 }
 
+export async function listBooksAddedRecently({ days = 3, limit = 8 } = {}) {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from(BOOKS_TABLE)
+    .select("id, titulo, tipo_obra, capa_url, capa_cinematica_url, data_adicao")
+    .eq("status", "ativo")
+    .gte("data_adicao", cutoff)
+    .order("data_adicao", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getBookById(bookId) {
   if (!bookId) throw new Error("Informe o identificador do livro.");
   const { data, error } = await baseBookQuery().eq("id", bookId).single();

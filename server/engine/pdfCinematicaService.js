@@ -11,7 +11,7 @@ const PDF_SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10; // 10 anos
 
 const PAGE_WIDTH = 396; // 5.5in — formato "digest", confortável para ler no celular
 const PAGE_HEIGHT = 612; // 8.5in
-const MARGIN_TOP = 92;
+const MARGIN_TOP = 58; // Sem cabeçalho corrente nas páginas — margem só de respiro para o conteúdo.
 const MARGIN_BOTTOM = 70;
 const MARGIN_SIDE = 54;
 
@@ -151,27 +151,6 @@ export function parseNarrativa(textoBruto) {
 function desenharFundo(doc) {
   doc.save();
   doc.rect(0, 0, doc.page.width, doc.page.height).fill(COR_FUNDO);
-  doc.restore();
-}
-
-function desenharCabecalhoCorrente(doc, tituloObra) {
-  doc.save();
-  doc.font("corpo").fontSize(8).fillColor(COR_ACCENT);
-  doc.text("ESSÊNCIA DOS LIVROS", MARGIN_SIDE, 36, {
-    width: doc.page.width - MARGIN_SIDE * 2,
-    align: "center",
-    characterSpacing: 2,
-  });
-
-  if (tituloObra) {
-    doc.font("corpoItalico").fontSize(7.5).fillColor(COR_ACCENT);
-    doc.text(String(tituloObra).toUpperCase(), MARGIN_SIDE, 50, {
-      width: doc.page.width - MARGIN_SIDE * 2,
-      align: "center",
-      characterSpacing: 1,
-    });
-  }
-
   doc.restore();
 }
 
@@ -358,10 +337,9 @@ export async function criarDocumentoPdf({
     desenharFundo(doc);
   }
 
-  // A partir daqui, toda página nova (manual ou por quebra automática de texto) recebe fundo + cabeçalho corrente
+  // A partir daqui, toda página nova (manual ou por quebra automática de texto) recebe o fundo — sem cabeçalho corrente.
   doc.on("pageAdded", () => {
     desenharFundo(doc);
-    desenharCabecalhoCorrente(doc, tituloCinematico || tituloObra);
   });
 
   doc.addPage();
