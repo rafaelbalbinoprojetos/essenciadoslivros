@@ -308,23 +308,6 @@ export default function Layout() {
     });
   }, []);
 
-  useEffect(() => {
-    if (!notificationsOpen) {
-      return undefined;
-    }
-    const handleClickOutside = (event) => {
-      if (!notificationContainerRef.current?.contains(event.target)) {
-        setNotificationsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [notificationsOpen]);
-
   const handleRefresh = useCallback(() => {
     setRefreshVersion((current) => current + 1);
   }, []);
