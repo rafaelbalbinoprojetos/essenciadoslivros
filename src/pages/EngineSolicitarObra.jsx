@@ -567,8 +567,9 @@ export default function EngineSolicitarObra() {
       );
 
       if (isNarrativa && data?.ok && data?.finalizado === false) {
+        const fase = descreverFaseNarrativa(data);
         throw new Error(
-          `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas. O progresso já feito foi salvo — clique novamente para continuar de onde parou.`,
+          `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas (parou em: ${fase || data.fase || "desconhecido"}). O progresso já feito foi salvo — clique novamente para continuar de onde parou.`,
         );
       }
 

@@ -64,10 +64,11 @@ async function chamarExecutarEtapa(obraId, tipoEtapa, onProgresso) {
   }
 
   if (tipoEtapa === "narrativa_cinematica" && resultado?.ok && resultado?.finalizado === false) {
+    const fase = descreverFaseNarrativa(resultado);
     return {
       ok: false,
       etapa: tipoEtapa,
-      error: `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas. Rode a etapa de novo para continuar de onde parou.`,
+      error: `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas (parou em: ${fase || resultado.fase || "desconhecido"}). Rode a etapa de novo para continuar de onde parou.`,
     };
   }
 

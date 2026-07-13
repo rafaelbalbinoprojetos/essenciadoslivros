@@ -25,7 +25,6 @@ import { gerarPdfGuiaEditorial } from "./pdfGuiaEditorialService.js";
 import {
   calcularAssinaturaBloco,
   calcularBlocosProducaoNarrativa,
-  calcularHashBlueprint,
   consolidarBlocosNarrativa,
   gerarResumoContinuidadeBloco,
   montarPromptAgente,
@@ -787,7 +786,7 @@ async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, 
       custoEstimado,
     });
 
-    return resultado;
+    return { ...resultado, etapaId: etapa.id };
   } catch (error) {
     await falharEtapaPipeline({ etapaId: etapa.id, erro: normalizarErro(error) });
     throw error;
@@ -802,7 +801,7 @@ async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, 
 async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinatura }) {
   const { data, error } = await supabaseAdmin
     .from("ai_pipeline_etapas")
-    .select("entrada, saida, tokens_input, tokens_output")
+    .select("id, entrada, saida, tokens_input, tokens_output")
     .eq("obra_id", obraId)
     .eq("tipo_etapa", tipoEtapa)
     .eq("status", "concluido")
@@ -819,6 +818,7 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
   }
 
   return {
+    etapaId: data.id,
     saida: data.saida ?? null,
     tokensInput: data.tokens_input || 0,
     tokensOutput: data.tokens_output || 0,
@@ -1053,6 +1053,13 @@ async function executarNarrativaCinematica({ obraId }) {
 
     let analiseICN;
     let blueprint;
+    // Identifica QUAL blueprint foi usado (id estável da linha em
+    // ai_pipeline_etapas) em vez de um hash do conteúdo do blueprint — um
+    // hash de JSON.stringify não é confiável entre chamadas HTTP porque o
+    // Postgres/JSONB não garante preservar a ordem original das chaves do
+    // objeto ao ser lido de volta, o que fazia os blocos nunca serem
+    // reconhecidos como já gerados (regeneração infinita).
+    let blueprintId;
     const tokensTotais = { input: 0, output: 0 };
 
     if (testes) {
@@ -1060,6 +1067,7 @@ async function executarNarrativaCinematica({ obraId }) {
         info: "ICN e Blueprint pulados — usando blueprint sintético de 2 cenas",
       });
       blueprint = construirBlueprintSinteticoTeste({ contexto });
+      blueprintId = "sintetico-teste";
       analiseICN = { icn: blueprint.escala.icn, faixa: "Modo de teste", risco_compressao: null };
     } else {
       const assinaturaICN = calcularAssinaturaBloco({
@@ -1162,6 +1170,7 @@ async function executarNarrativaCinematica({ obraId }) {
 
       if (blueprintReaproveitado) {
         blueprint = blueprintReaproveitado.saida;
+        blueprintId = blueprintReaproveitado.etapaId;
         tokensTotais.input += blueprintReaproveitado.tokensInput;
         tokensTotais.output += blueprintReaproveitado.tokensOutput;
         await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
@@ -1189,6 +1198,7 @@ async function executarNarrativaCinematica({ obraId }) {
           },
         });
         blueprint = blueprintExecucao.saida;
+        blueprintId = blueprintExecucao.etapaId;
         await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
         engineStep("Narrative Blueprint", "✓", {
           cenas_totais: blueprint.cenas.length,
@@ -1220,7 +1230,6 @@ async function executarNarrativaCinematica({ obraId }) {
       total_cenas: blueprint.cenas.length,
     });
 
-    const blueprintHash = calcularHashBlueprint(blueprint);
     const textosBlocos = [];
     let continuidadeAnterior = null;
 
@@ -1253,7 +1262,7 @@ async function executarNarrativaCinematica({ obraId }) {
         const assinaturaBloco = calcularAssinaturaBloco({
           obraId,
           versaoBEU: ENGINE_CONFIG.versaoBEU,
-          blueprintHash,
+          blueprintHash: blueprintId,
           versaoMotor: VERSAO_MOTOR_NARRATIVA_CINEMATICA,
           numeroBloco: bloco.bloco,
         });
