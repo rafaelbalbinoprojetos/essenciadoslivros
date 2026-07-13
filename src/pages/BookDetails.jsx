@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { FileText, Film, ListMusic, Pause, Pencil, Play } from "lucide-react";
+import { BookOpen, FileText, Film, ListMusic, Pause, Pencil, Play } from "lucide-react";
 import { getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 import { resolveAudioSource, resolveNarrativeSource, resolvePdfSource } from "../utils/media.js";
@@ -136,6 +136,7 @@ export default function BookDetailsPage() {
   const hasPdf = Boolean(book?.pdf_url);
   const hasCinematicPdf = Boolean(book?.pdf_cinematica_url);
   const hasEncyclopedicPdf = Boolean(book?.pdf_enciclopedico_url);
+  const hasGuiaEditorialPdf = Boolean(book?.pdf_guia_editorial_url);
   const playlistTrack = useMemo(() => {
     if (!book || !audioSource) return null;
     return {
@@ -179,6 +180,15 @@ export default function BookDetailsPage() {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   }, [book?.pdf_enciclopedico_url]);
+
+  const handleOpenGuiaEditorialPdf = useCallback(async () => {
+    const raw = book?.pdf_guia_editorial_url;
+    if (!raw) return;
+    const url = await resolvePdfSource(raw);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }, [book?.pdf_guia_editorial_url]);
 
   // Este livro é a faixa atual do player global?
   const isCurrentTrack = Boolean(playlistTrack?.id && currentTrack?.id === playlistTrack.id);
@@ -319,6 +329,15 @@ export default function BookDetailsPage() {
                 <FileText className="h-4 w-4" /> Abrir Documento Enciclopédico
               </button>
             )}
+            {experience === "editorial" && hasGuiaEditorialPdf && (
+              <button
+                type="button"
+                onClick={handleOpenGuiaEditorialPdf}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.4)] px-4 py-2 text-sm font-semibold text-[color:rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.08)]"
+              >
+                <BookOpen className="h-4 w-4" /> Abrir Guia Editorial
+              </button>
+            )}
             {experience === "podcast" && hasAudio && (
               <button type="button" onClick={handlePlaybackToggle} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white">
                 {displayIsPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />} {displayIsPlaying ? "Pausar podcast" : "Ouvir podcast"}
@@ -360,6 +379,7 @@ export default function BookDetailsPage() {
             {narrativeTracks.length > 0 && <span>{narrativeTracks.length} cenas</span>}
             {hasCinematicPdf && <span>PDF da narrativa disponível</span>}
             {hasEncyclopedicPdf && <span>Documento enciclopédico disponível</span>}
+            {hasGuiaEditorialPdf && <span>Guia Editorial disponível</span>}
           </div>
         </aside>
 

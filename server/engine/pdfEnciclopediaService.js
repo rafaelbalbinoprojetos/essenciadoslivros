@@ -168,10 +168,10 @@ function desenharFundo(doc) {
   doc.restore();
 }
 
-function desenharCabecalhoCorrente(doc, tituloObra) {
+function desenharCabecalhoCorrente(doc, tituloObra, rotuloCabecalho = "DOCUMENTO ENCICLOPÉDICO") {
   doc.save();
   doc.font("corpo").fontSize(8).fillColor(COR_ACCENT);
-  doc.text("ESSÊNCIA DOS LIVROS · DOCUMENTO ENCICLOPÉDICO", MARGIN_SIDE, 36, {
+  doc.text(`ESSÊNCIA DOS LIVROS · ${rotuloCabecalho}`, MARGIN_SIDE, 36, {
     width: doc.page.width - MARGIN_SIDE * 2,
     align: "center",
     characterSpacing: 1.2,
@@ -206,7 +206,14 @@ function desenharRodape(doc, numero) {
   doc.restore();
 }
 
-function desenharFolhaDeRosto(doc, { tituloObra, autor, ano, tipoObra }) {
+function desenharFolhaDeRosto(doc, {
+  tituloObra,
+  autor,
+  ano,
+  tipoObra,
+  subtituloCapa = "Documento Enciclopédico",
+  descricaoCapa = "A referência mais completa desta obra — ficha técnica, bastidores, personagens, universo, recepção e a análise editorial sobre por que ela permanece relevante.",
+}) {
   const largura = doc.page.width - MARGIN_SIDE * 2;
 
   doc.y = Math.round(doc.page.height * 0.3);
@@ -220,12 +227,12 @@ function desenharFolhaDeRosto(doc, { tituloObra, autor, ano, tipoObra }) {
   doc.moveDown(0.6);
 
   doc.font("corpoItalico").fontSize(10.5).fillColor(COR_ACCENT);
-  doc.text("Documento Enciclopédico", { width: largura, align: "center" });
+  doc.text(subtituloCapa, { width: largura, align: "center" });
   doc.moveDown(1.8);
 
   doc.font("corpo").fontSize(9.5).fillColor(COR_TINTA);
   doc.text(
-    "A referência mais completa desta obra — ficha técnica, bastidores, personagens, universo, recepção e a análise editorial sobre por que ela permanece relevante.",
+    descricaoCapa,
     { width: largura * 0.85, align: "center", indent: 0 },
   );
 
@@ -412,16 +419,22 @@ function renderizarCapitulo(doc, capitulo) {
 // MONTAGEM DO DOCUMENTO
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function criarDocumentoEnciclopedico({ tituloObra, autor, ano, tipoObra, capitulos }) {
+export async function criarDocumentoEnciclopedico({ tituloObra, autor, ano, tipoObra, capitulos, marca = {} }) {
+  const {
+    rotuloCabecalho = "DOCUMENTO ENCICLOPÉDICO",
+    subtituloCapa = "Documento Enciclopédico",
+    descricaoCapa = "A referência mais completa desta obra — ficha técnica, bastidores, personagens, universo, recepção e a análise editorial sobre por que ela permanece relevante.",
+  } = marca;
+
   const doc = new PDFDocument({
     size: [PAGE_WIDTH, PAGE_HEIGHT],
     margins: { top: MARGIN_TOP, bottom: MARGIN_BOTTOM, left: MARGIN_SIDE, right: MARGIN_SIDE },
     bufferPages: true,
     autoFirstPage: true,
     info: {
-      Title: `${tituloObra || "Obra"} — Documento Enciclopédico`,
+      Title: `${tituloObra || "Obra"} — ${subtituloCapa}`,
       Author: "Essência dos Livros",
-      Subject: "Documento Enciclopédico",
+      Subject: subtituloCapa,
       Creator: "Essence Engine",
     },
   });
@@ -436,11 +449,11 @@ export async function criarDocumentoEnciclopedico({ tituloObra, autor, ano, tipo
   registrarFontes(doc);
 
   desenharFundo(doc);
-  desenharFolhaDeRosto(doc, { tituloObra, autor, ano, tipoObra });
+  desenharFolhaDeRosto(doc, { tituloObra, autor, ano, tipoObra, subtituloCapa, descricaoCapa });
 
   doc.on("pageAdded", () => {
     desenharFundo(doc);
-    desenharCabecalhoCorrente(doc, tituloObra);
+    desenharCabecalhoCorrente(doc, tituloObra, rotuloCabecalho);
   });
 
   doc.addPage();

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS, descreverFaseNarrativa } from "../constants/engineEtapas.js";
+import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS, descreverFaseNarrativa, etapasPipelinePorTipo } from "../constants/engineEtapas.js";
 import { formatarTokens, formatarCustoUsd } from "../utils/engineCusto.js";
 
 const TIPO_OBRA_OPCOES = [
@@ -90,9 +90,16 @@ function criarSelecaoDeEtapas(valor) {
   return Object.fromEntries(ETAPAS_SELECIONAVEIS.map((etapa) => [etapa, valor]));
 }
 
+// Cada obra só é comparada contra a trilha relevante ao seu próprio
+// tipo_obra (narrativa ou técnica) — senão o "total" nunca bateria 100%,
+// já que uma obra nunca roda as duas trilhas ao mesmo tempo.
+function etapasRelevantes(obra) {
+  return etapasPipelinePorTipo(obra.tipo_obra);
+}
+
 function contarEtapasConcluidas(obra) {
   const concluidas = new Set(obra.etapas_concluidas || []);
-  return ETAPAS_PIPELINE.filter((etapa) => concluidas.has(etapa)).length;
+  return etapasRelevantes(obra).filter((etapa) => concluidas.has(etapa)).length;
 }
 
 function valorOrdenavel(obra, coluna) {
@@ -448,7 +455,7 @@ export default function EngineProcessarLote() {
                           </td>
                         );
                       })}
-                      <td className="px-3 py-2 text-center text-zinc-400">{concluidas}/{ETAPAS_PIPELINE.length}</td>
+                      <td className="px-3 py-2 text-center text-zinc-400">{concluidas}/{etapasRelevantes(obra).length}</td>
                       <td className="px-3 py-2 text-right text-zinc-400" title={`${formatarTokens(obra.tokens_input_total)} tokens in / ${formatarTokens(obra.tokens_output_total)} tokens out`}>
                         {formatarCustoUsd(obra.custo_total_usd)}
                       </td>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext.jsx";
 import heritageReferenceFallback from "../image/CAPA_REFERENCIA_HERITAGE.png";
@@ -57,6 +57,10 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   capa_cinematica_prompt: 15,
   capa_cinematica_image: 180,
   pdf_cinematica: 30,
+  guia_editorial_parte1: 150,
+  guia_editorial_parte2: 150,
+  guia_editorial_parte3: 150,
+  guia_editorial_pdf: 40,
   enciclopedia_parte1: 120,
   enciclopedia_parte2: 180,
   enciclopedia_parte3: 180,
@@ -66,7 +70,10 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   atualizar_dados: 15,
 };
 
-const PIPELINE_STEP_DEFS = [
+// Trilha narrativa: obras de ficção/história — Harry Potter, Senhor dos
+// Anéis, etc. Passa pela narrativa cinematográfica e pelas capas Heritage/
+// cinemática.
+const PIPELINE_STEP_DEFS_NARRATIVA = [
   { key: "curador_beu", label: "Curador (dados factuais)", colorClass: "text-amber-500 focus:ring-amber-500" },
   { key: "editor_beu", label: "Editor (interpretação emocional)", colorClass: "text-amber-500 focus:ring-amber-500" },
   { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-sky-500 focus:ring-sky-500" },
@@ -85,6 +92,35 @@ const PIPELINE_STEP_DEFS = [
   { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
 ];
 
+// Trilha conceitual/técnica (tipo_obra = "tecnico"): livros como "O Corpo
+// Fala" ou "A Coragem de Não Agradar". Em vez da narrativa cinematográfica,
+// produz o Guia Editorial Essência — análise conceitual + resumo autoral,
+// em 3 partes + PDF.
+const PIPELINE_STEP_DEFS_TECNICO = [
+  { key: "curador_beu", label: "Curador (dados factuais)", colorClass: "text-amber-500 focus:ring-amber-500" },
+  { key: "editor_beu", label: "Editor (interpretação emocional)", colorClass: "text-amber-500 focus:ring-amber-500" },
+  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-sky-500 focus:ring-sky-500" },
+  { key: "guia_editorial_parte1", label: "Guia Editorial — Parte 1 (Apresentação, Panorama Histórico, Grande Questão, Grandes Princípios)", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "guia_editorial_parte2", label: "Guia Editorial — Parte 2 (Conexões, Além da Obra, Aplicações, Estudos de Caso)", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "guia_editorial_parte3", label: "Guia Editorial — Parte 3 (Laboratório Essência, Comparando Ideias, Leituras Cruzadas, Modelo Mental, Conclusão)", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "guia_editorial_pdf", label: "Guia Editorial — Montar PDF final", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
+];
+
+function obterPipelineStepDefs(tipoObra) {
+  return tipoObra === "tecnico" ? PIPELINE_STEP_DEFS_TECNICO : PIPELINE_STEP_DEFS_NARRATIVA;
+}
+
+const PIPELINE_STEP_DEFS_TODAS = [...PIPELINE_STEP_DEFS_NARRATIVA, ...PIPELINE_STEP_DEFS_TECNICO].filter(
+  (etapa, indice, lista) => lista.findIndex((item) => item.key === etapa.key) === indice,
+);
+
 const ENCICLOPEDIA_STEP_KEYS = [
   "enciclopedia_parte1",
   "enciclopedia_parte2",
@@ -94,9 +130,22 @@ const ENCICLOPEDIA_STEP_KEYS = [
   "enciclopedia_pdf",
 ];
 
+const GUIA_EDITORIAL_STEP_KEYS = [
+  "guia_editorial_parte1",
+  "guia_editorial_parte2",
+  "guia_editorial_parte3",
+  "guia_editorial_pdf",
+];
+
 const ETAPA_LABELS_ENCICLOPEDIA = Object.fromEntries(
-  PIPELINE_STEP_DEFS
+  PIPELINE_STEP_DEFS_TODAS
     .filter((etapa) => ENCICLOPEDIA_STEP_KEYS.includes(etapa.key))
+    .map((etapa) => [etapa.key, etapa.label]),
+);
+
+const ETAPA_LABELS_GUIA_EDITORIAL = Object.fromEntries(
+  PIPELINE_STEP_DEFS_TODAS
+    .filter((etapa) => GUIA_EDITORIAL_STEP_KEYS.includes(etapa.key))
     .map((etapa) => [etapa.key, etapa.label]),
 );
 
@@ -109,12 +158,19 @@ const ENCICLOPEDIA_PROGRESS_LABELS = {
   enciclopedia_pdf: "Montando PDF da enciclopédia",
 };
 
-function criarSelecaoDeEtapas(valor) {
-  return Object.fromEntries(PIPELINE_STEP_DEFS.map((etapa) => [etapa.key, valor]));
+const GUIA_EDITORIAL_PROGRESS_LABELS = {
+  guia_editorial_parte1: "Gerando Guia Editorial — parte 1",
+  guia_editorial_parte2: "Gerando Guia Editorial — parte 2",
+  guia_editorial_parte3: "Gerando Guia Editorial — parte 3",
+  guia_editorial_pdf: "Montando PDF do Guia Editorial",
+};
+
+function criarSelecaoDeEtapas(valor, stepDefs) {
+  return Object.fromEntries(stepDefs.map((etapa) => [etapa.key, valor]));
 }
 
-function PipelineStepSelector({ selectedSteps, onToggle, onSelectAll, onRun, running, disabled }) {
-  const quantidadeSelecionada = PIPELINE_STEP_DEFS.filter((etapa) => selectedSteps[etapa.key]).length;
+function PipelineStepSelector({ stepDefs, selectedSteps, onToggle, onSelectAll, onRun, running, disabled }) {
+  const quantidadeSelecionada = stepDefs.filter((etapa) => selectedSteps[etapa.key]).length;
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-black/30 p-5">
@@ -131,7 +187,7 @@ function PipelineStepSelector({ selectedSteps, onToggle, onSelectAll, onRun, run
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {PIPELINE_STEP_DEFS.map((etapa) => (
+        {stepDefs.map((etapa) => (
           <label
             key={etapa.key}
             className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-200"
@@ -209,6 +265,7 @@ export default function EngineSolicitarObra() {
   const isAdmin = isAdminUser(user);
   const [titulo, setTitulo] = useState("");
   const [tipoObra, setTipoObra] = useState("livro");
+  const pipelineStepDefs = useMemo(() => obterPipelineStepDefs(tipoObra), [tipoObra]);
   const [engineReferences, setEngineReferences] = useState({});
   const [referencesLoading, setReferencesLoading] = useState(true);
   const [referenceUploading, setReferenceUploading] = useState(null);
@@ -237,7 +294,9 @@ export default function EngineSolicitarObra() {
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
   const [executandoEnciclopedia, setExecutandoEnciclopedia] = useState({});
   const [resultadosEnciclopedia, setResultadosEnciclopedia] = useState({});
-  const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
+  const [executandoGuiaEditorial, setExecutandoGuiaEditorial] = useState({});
+  const [resultadosGuiaEditorial, setResultadosGuiaEditorial] = useState({});
+  const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true, obterPipelineStepDefs("livro")));
   const [testesAtivo, setTestesAtivo] = useState(false);
   const [testesLoading, setTestesLoading] = useState(true);
   const [testesSaving, setTestesSaving] = useState(false);
@@ -245,7 +304,11 @@ export default function EngineSolicitarObra() {
   const [executandoPipelineSelecionada, setExecutandoPipelineSelecionada] = useState(false);
   const [stepStartedAt, setStepStartedAt] = useState({});
   const [timerNow, setTimerNow] = useState(() => Date.now());
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados || Object.values(executandoEnciclopedia).some(Boolean);
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados || Object.values(executandoEnciclopedia).some(Boolean) || Object.values(executandoGuiaEditorial).some(Boolean);
+
+  useEffect(() => {
+    setSelectedSteps(criarSelecaoDeEtapas(true, obterPipelineStepDefs(tipoObra)));
+  }, [tipoObra]);
 
   const loadEngineReferences = useCallback(async () => {
     setReferencesLoading(true);
@@ -439,6 +502,7 @@ export default function EngineSolicitarObra() {
     const isCapaImage = tipoEtapa === "capa_cinematica_image";
     const isPdfCinematica = tipoEtapa === "pdf_cinematica";
     const isEnciclopedia = ENCICLOPEDIA_STEP_KEYS.includes(tipoEtapa);
+    const isGuiaEditorial = GUIA_EDITORIAL_STEP_KEYS.includes(tipoEtapa);
 
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
@@ -450,6 +514,7 @@ export default function EngineSolicitarObra() {
     if (isCapaImage) setExecutandoCapaImage(true);
     if (isPdfCinematica) setExecutandoPdfCinematica(true);
     if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: true }));
+    if (isGuiaEditorial) setExecutandoGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: true }));
 
     // narrativa_cinematica pode envolver ICN + Blueprint + vários blocos de
     // prosa — mais do que um único request HTTP aguenta sem estourar o
@@ -517,6 +582,7 @@ export default function EngineSolicitarObra() {
       if (isCapaImage) setResultadoCapaImage(data);
       if (isPdfCinematica) setResultadoPdfCinematica(data);
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: data }));
+      if (isGuiaEditorial) setResultadosGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: data }));
 
       if (!data?.ok) {
         throw new Error(data?.error || `Erro ao executar ${tipoEtapa}.`);
@@ -552,6 +618,7 @@ export default function EngineSolicitarObra() {
       if (isCapaImage) setResultadoCapaImage((atual) => atual || fallback);
       if (isPdfCinematica) setResultadoPdfCinematica((atual) => atual || fallback);
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: atual[tipoEtapa] || fallback }));
+      if (isGuiaEditorial) setResultadosGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: atual[tipoEtapa] || fallback }));
 
       return null;
     } finally {
@@ -568,6 +635,7 @@ export default function EngineSolicitarObra() {
       if (isCapaImage) setExecutandoCapaImage(false);
       if (isPdfCinematica) setExecutandoPdfCinematica(false);
       if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: false }));
+      if (isGuiaEditorial) setExecutandoGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: false }));
     }
   }
 
@@ -576,7 +644,7 @@ export default function EngineSolicitarObra() {
   }
 
   function definirTodasEtapas(valor) {
-    setSelectedSteps(criarSelecaoDeEtapas(valor));
+    setSelectedSteps(criarSelecaoDeEtapas(valor, pipelineStepDefs));
   }
 
   async function executarPipelineSelecionada(obraIdParam = null) {
@@ -587,7 +655,7 @@ export default function EngineSolicitarObra() {
       return;
     }
 
-    const etapasParaRodar = PIPELINE_STEP_DEFS.filter((etapa) => selectedSteps[etapa.key]);
+    const etapasParaRodar = pipelineStepDefs.filter((etapa) => selectedSteps[etapa.key]);
 
     if (etapasParaRodar.length === 0) {
       toast.error("Selecione ao menos uma etapa para executar.");
@@ -673,6 +741,7 @@ export default function EngineSolicitarObra() {
     setExecutandoPdfCinematica(false);
     setAtualizandoDados(false);
     setExecutandoEnciclopedia({});
+    setExecutandoGuiaEditorial({});
     setResultadoCriacao(null);
     setResultadoCurador(null);
     setResultadoEditor(null);
@@ -685,8 +754,9 @@ export default function EngineSolicitarObra() {
     setResultadoPdfCinematica(null);
     setResultadoAtualizacao(null);
     setResultadosEnciclopedia({});
+    setResultadosGuiaEditorial({});
     setDecisaoObraExistente(null);
-    setSelectedSteps(criarSelecaoDeEtapas(true));
+    setSelectedSteps(criarSelecaoDeEtapas(true, obterPipelineStepDefs(tipoObra)));
 
     try {
       console.log("[ENGINE] iniciando solicitar-obra");
@@ -755,10 +825,12 @@ export default function EngineSolicitarObra() {
     || resultadoPdfCinematica
     || resultadoAtualizacao
     || Object.keys(resultadosEnciclopedia).length > 0
+    || Object.keys(resultadosGuiaEditorial).length > 0
     || loading,
   );
   const optionalStepsEnabled = Boolean(resultadoCriacao?.livro?.id);
-  const engineProgressSteps = [
+  const pipelineStepKeys = new Set(pipelineStepDefs.map((etapa) => etapa.key));
+  const engineProgressStepsTodas = [
     {
       key: "criar_obra",
       label: "Criando obra",
@@ -788,6 +860,15 @@ export default function EngineSolicitarObra() {
         manualWhenIdle: optionalStepsEnabled,
       }),
     },
+    ...GUIA_EDITORIAL_STEP_KEYS.map((key) => ({
+      key,
+      label: GUIA_EDITORIAL_PROGRESS_LABELS[key],
+      status: getStepStatus({
+        active: Boolean(executandoGuiaEditorial[key]),
+        result: resultadosGuiaEditorial[key],
+        manualWhenIdle: optionalStepsEnabled,
+      }),
+    })),
     {
       key: "heritage_prompt",
       label: "Gerando prompt Heritage",
@@ -848,6 +929,11 @@ export default function EngineSolicitarObra() {
       status: getStepStatus({ active: atualizandoDados, result: resultadoAtualizacao }),
     },
   ];
+  // Só mostra as etapas relevantes para o tipo de obra selecionado
+  // (narrativa cinematográfica OU Guia Editorial, nunca as duas).
+  const engineProgressSteps = engineProgressStepsTodas.filter(
+    (step) => step.key === "criar_obra" || pipelineStepKeys.has(step.key),
+  );
   const referenceCards = [
     {
       tipo: ENGINE_REFERENCE_TYPES.heritage,
@@ -1190,6 +1276,7 @@ export default function EngineSolicitarObra() {
               && (resultadoCriacao.existente !== true || decisaoObraExistente !== null) && (
               <div className="mt-4 space-y-3">
                 <PipelineStepSelector
+                  stepDefs={pipelineStepDefs}
                   selectedSteps={selectedSteps}
                   onToggle={toggleStepSelecionado}
                   onSelectAll={definirTodasEtapas}
@@ -1452,6 +1539,58 @@ export default function EngineSolicitarObra() {
                   readOnly
                   value={resultado.saida}
                   className="min-h-[420px] w-full rounded-2xl border border-teal-900 bg-black p-5 text-sm leading-7 text-teal-100 outline-none"
+                />
+              ) : (
+                <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                  {JSON.stringify(resultado, null, 2)}
+                </pre>
+              )}
+            </section>
+          );
+        })}
+
+        {GUIA_EDITORIAL_STEP_KEYS.filter((key) => resultadosGuiaEditorial[key]).map((key) => {
+          const resultado = resultadosGuiaEditorial[key];
+          const isPdfFinal = key === "guia_editorial_pdf";
+
+          return (
+            <section key={key} className="mt-6">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+                Resultado — {ETAPA_LABELS_GUIA_EDITORIAL[key] || key}
+              </h2>
+              {isPdfFinal ? (
+                resultado.ok && resultado.pdfUrl ? (
+                  <div className="rounded-2xl border border-purple-900 bg-black p-5">
+                    <a
+                      href={resultado.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10"
+                    >
+                      Abrir Guia Editorial
+                    </a>
+                    <a
+                      href={resultado.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 block truncate text-sm font-semibold text-purple-200 hover:text-purple-100"
+                    >
+                      {resultado.pdfUrl}
+                    </a>
+                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-purple-100">
+                      {JSON.stringify(resultado, null, 2)}
+                    </pre>
+                  </div>
+                ) : (
+                  <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                    {JSON.stringify(resultado, null, 2)}
+                  </pre>
+                )
+              ) : resultado.ok && typeof resultado.saida === "string" ? (
+                <textarea
+                  readOnly
+                  value={resultado.saida}
+                  className="min-h-[420px] w-full rounded-2xl border border-purple-900 bg-black p-5 text-sm leading-7 text-purple-100 outline-none"
                 />
               ) : (
                 <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">

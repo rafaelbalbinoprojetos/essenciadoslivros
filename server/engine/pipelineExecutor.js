@@ -21,6 +21,7 @@ import {
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
+import { gerarPdfGuiaEditorial } from "./pdfGuiaEditorialService.js";
 import {
   calcularAssinaturaBloco,
   calcularBlocosProducaoNarrativa,
@@ -43,6 +44,17 @@ const PARTES_ENCICLOPEDIA_ORDEM = [
   "enciclopedia_parte5",
 ];
 
+// Guia Editorial Essência — trilha de obras conceituais/técnicas
+// (tipo_obra = "tecnico"), alternativa à narrativa cinematográfica.
+// Reaproveita a faixa de "ordem" 4-7 (a mesma da trilha narrativa/heritage/
+// capa/pdf_cinematica) de propósito: as duas trilhas nunca coexistem na
+// mesma obra, então não há conflito real de ordenação.
+const PARTES_GUIA_EDITORIAL_ORDEM = [
+  "guia_editorial_parte1",
+  "guia_editorial_parte2",
+  "guia_editorial_parte3",
+];
+
 const DEFINICOES_ETAPAS = {
   curador_beu: {
     ordem: 1,
@@ -63,6 +75,25 @@ const DEFINICOES_ETAPAS = {
     ordem: 4,
     agenteSlug: "narrador-cinematico",
     executor: executarNarrativaCinematica,
+  },
+  guia_editorial_parte1: {
+    ordem: 4,
+    agenteSlug: "guia-editorial-ia",
+    executor: executarGuiaEditorialParte,
+  },
+  guia_editorial_parte2: {
+    ordem: 5,
+    agenteSlug: "guia-editorial-ia",
+    executor: executarGuiaEditorialParte,
+  },
+  guia_editorial_parte3: {
+    ordem: 6,
+    agenteSlug: "guia-editorial-ia",
+    executor: executarGuiaEditorialParte,
+  },
+  guia_editorial_pdf: {
+    ordem: 7,
+    executor: executarGuiaEditorialPdf,
   },
   heritage_prompt: {
     ordem: 5,
@@ -1963,6 +1994,223 @@ async function executarEnciclopediaPdf({ obraId, tipoEtapa }) {
     });
 
     const resultado = await gerarPdfEnciclopedico({
+      obraId,
+      contexto,
+      beuAtual: beuAtualRegistro.payload,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: await calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, pdf_url: resultado.pdf_url });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      pdfUrl: resultado.pdf_url,
+      storagePath: resultado.storage_path,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarGuiaEditorialParte({ obraId, tipoEtapa }) {
+  let execucao = null;
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+  const indiceParte = PARTES_GUIA_EDITORIAL_ORDEM.indexOf(tipoEtapa);
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const agente = await buscarAgentePorSlug(definicao.agenteSlug);
+
+    engineStep("Context Builder", "→");
+    const contexto = await buildContext(obraId);
+    engineStep("Context Builder", "✓");
+
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const beuAtual = beuAtualRegistro.payload;
+    engineStep("BEU atual carregada", "✓", { payloadId: beuAtualRegistro.id });
+
+    const partesAnterioresTipos = PARTES_GUIA_EDITORIAL_ORDEM.slice(0, indiceParte);
+    const partesAnteriores = [];
+
+    for (const tipoAnterior of partesAnterioresTipos) {
+      const saidaAnterior = await buscarUltimaSaidaEtapa({ obraId, tipoEtapa: tipoAnterior });
+      if (typeof saidaAnterior === "string" && saidaAnterior.trim()) {
+        partesAnteriores.push(saidaAnterior);
+      }
+    }
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      agente_slug: agente.slug,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      partes_anteriores_disponiveis: partesAnteriores.length,
+      persistencia: "ai_pipeline_etapas.saida",
+    };
+
+    const promptMontado = await montarPromptAgente({
+      agente,
+      contexto,
+      tipoEtapa,
+      beuAtual,
+      partesGuiaEditorialAnteriores: partesAnteriores,
+    });
+
+    entrada.prompt_montado = Boolean(promptMontado);
+    entrada.prompt_tamanho_aproximado = promptMontado?.length ?? null;
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+    await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    execucao = await criarExecucaoAgente({
+      agenteId: agente.id,
+      obraId,
+      contexto,
+      entrada,
+      modelo: agente.modelo,
+    });
+
+    const resultado = await executarAgenteOpenAI({
+      agente,
+      contexto,
+      schema: null,
+      promptMontado,
+      tipoEtapa,
+    });
+
+    const custoEstimado = await calcularCustoEstimado({
+      modelo: resultado.modelo,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+    });
+
+    engineStep("Parte do Guia Editorial gerada", "✓", {
+      caracteres: typeof resultado.saida === "string" ? resultado.saida.length : null,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
+
+    await concluirExecucaoAgente({
+      execucaoId: execucao.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      custoEstimado,
+    });
+
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado.saida,
+      tokensInput: resultado.tokens_input,
+      tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
+      custoEstimado,
+    });
+
+    engineStep("Pipeline concluída", "✓", {
+      obraId,
+      tipoEtapa,
+      payloadId: beuAtualRegistro.id,
+    });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tokens: {
+        input: resultado.tokens_input,
+        output: resultado.tokens_output,
+        total: resultado.tokens_total,
+      },
+      modelo: resultado.modelo,
+      custoEstimado,
+      saida: resultado.saida,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+
+    if (execucao?.id) {
+      await falharExecucaoAgente({ execucaoId: execucao.id, erro });
+    }
+
+    if (etapa?.id) {
+      await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    }
+
+    throw error;
+  }
+}
+
+async function executarGuiaEditorialPdf({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      persistencia: "storage.pdfs + livros.pdf_guia_editorial_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarPdfGuiaEditorial({
       obraId,
       contexto,
       beuAtual: beuAtualRegistro.payload,

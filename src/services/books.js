@@ -14,6 +14,7 @@ const BOOK_SELECT_FIELDS = `
   pdf_url,
   pdf_cinematica_url,
   pdf_enciclopedico_url,
+  pdf_guia_editorial_url,
   audio_url,
   tem_experiencia_cinematica,
   titulo_cinematico,
