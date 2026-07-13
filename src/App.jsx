@@ -15,6 +15,7 @@ import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
 import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
 import EngineProcessarLote from "./pages/EngineProcessarLote.jsx";
+import EngineCustosIA from "./pages/EngineCustosIA.jsx";
 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="assistente" element={<ChatbotPage />} />
             <Route path="engine" element={<EngineSolicitarObra />} />
             <Route path="engine/lote" element={<EngineProcessarLote />} />
+            <Route path="engine/custos" element={<EngineCustosIA />} />
             <Route path="configuracoes" element={<SettingsPage />} />
             
 

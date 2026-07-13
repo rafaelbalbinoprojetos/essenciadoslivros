@@ -63,6 +63,13 @@ export const NAV_LINKS = [
     description: "Selecione várias obras e processe a pipeline de uma vez",
   },
   {
+    id: "engine-custos",
+    to: "/engine/custos",
+    label: "Custos de IA",
+    shortLabel: "Custos",
+    description: "Tokens e custo estimado por obra e por etapa",
+  },
+  {
     id: "assistant",
     to: "/assistente",
     label: "Assistente IA",
