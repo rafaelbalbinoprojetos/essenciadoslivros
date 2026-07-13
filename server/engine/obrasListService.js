@@ -51,7 +51,7 @@ export async function listarObrasParaEngine() {
 
   const { data: etapas, error: erroEtapas } = await supabaseAdmin
     .from("ai_pipeline_etapas")
-    .select("obra_id, tipo_etapa")
+    .select("obra_id, tipo_etapa, tokens_input, tokens_output, custo_estimado")
     .eq("status", "concluido")
     .in("tipo_etapa", ETAPAS_RASTREADAS);
 
@@ -60,16 +60,31 @@ export async function listarObrasParaEngine() {
   }
 
   const etapasConcluidasPorObra = new Map();
+  const custosPorObra = new Map();
 
   (etapas || []).forEach((etapa) => {
     if (!etapasConcluidasPorObra.has(etapa.obra_id)) {
       etapasConcluidasPorObra.set(etapa.obra_id, new Set());
     }
     etapasConcluidasPorObra.get(etapa.obra_id).add(etapa.tipo_etapa);
+
+    if (!custosPorObra.has(etapa.obra_id)) {
+      custosPorObra.set(etapa.obra_id, { tokensInput: 0, tokensOutput: 0, custoUsd: 0 });
+    }
+    const custoObra = custosPorObra.get(etapa.obra_id);
+    custoObra.tokensInput += etapa.tokens_input || 0;
+    custoObra.tokensOutput += etapa.tokens_output || 0;
+    custoObra.custoUsd += etapa.custo_estimado || 0;
   });
 
-  return (livros || []).map((livro) => ({
-    ...livro,
-    etapas_concluidas: [...(etapasConcluidasPorObra.get(livro.id) || [])],
-  }));
+  return (livros || []).map((livro) => {
+    const custo = custosPorObra.get(livro.id);
+    return {
+      ...livro,
+      etapas_concluidas: [...(etapasConcluidasPorObra.get(livro.id) || [])],
+      tokens_input_total: custo?.tokensInput ?? 0,
+      tokens_output_total: custo?.tokensOutput ?? 0,
+      custo_total_usd: custo ? Number(custo.custoUsd.toFixed(6)) : 0,
+    };
+  });
 }

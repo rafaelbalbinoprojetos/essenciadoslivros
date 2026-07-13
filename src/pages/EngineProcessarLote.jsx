@@ -74,6 +74,19 @@ const ETAPA_LABELS_CURTOS = {
   enciclopedia_pdf: "Encicl. PDF",
 };
 
+function formatarTokens(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return "—";
+  return numero.toLocaleString("pt-BR");
+}
+
+function formatarCustoUsd(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return "—";
+  if (numero === 0) return "$0,00";
+  return `$${numero.toFixed(numero < 0.01 ? 4 : 2)}`;
+}
+
 async function chamarExecutarEtapa(obraId, tipoEtapa) {
   const response = await fetch("/api/engine/executar-etapa", {
     method: "POST",
@@ -110,6 +123,7 @@ function valorOrdenavel(obra, coluna) {
   if (coluna === "tipo_obra") return (obra.tipo_obra || "").toLowerCase();
   if (coluna === "status") return (obra.status || "").toLowerCase();
   if (coluna === "total") return contarEtapasConcluidas(obra);
+  if (coluna === "custo_total_usd") return Number(obra.custo_total_usd) || 0;
   if (ETAPAS_PIPELINE.includes(coluna)) {
     return new Set(obra.etapas_concluidas || []).has(coluna) ? 1 : 0;
   }
@@ -300,6 +314,9 @@ export default function EngineProcessarLote() {
           etapa,
           ok,
           erro: ok ? null : (resultado?.error || "Erro desconhecido."),
+          tokens: resultado?.tokens || null,
+          modelo: resultado?.modelo || null,
+          custoEstimado: typeof resultado?.custoEstimado === "number" ? resultado.custoEstimado : null,
         });
 
         if (!ok) break;
@@ -402,6 +419,12 @@ export default function EngineProcessarLote() {
                       <IndicadorOrdenacao coluna="total" ordenacao={ordenacao} />
                     </button>
                   </th>
+                  <th className="px-3 py-2 text-right">
+                    <button type="button" onClick={() => alternarOrdenacao("custo_total_usd")} className="ml-auto flex items-center hover:text-zinc-200">
+                      Custo
+                      <IndicadorOrdenacao coluna="custo_total_usd" ordenacao={ordenacao} />
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -442,12 +465,15 @@ export default function EngineProcessarLote() {
                         );
                       })}
                       <td className="px-3 py-2 text-center text-zinc-400">{concluidas}/{ETAPAS_PIPELINE.length}</td>
+                      <td className="px-3 py-2 text-right text-zinc-400" title={`${formatarTokens(obra.tokens_input_total)} tokens in / ${formatarTokens(obra.tokens_output_total)} tokens out`}>
+                        {formatarCustoUsd(obra.custo_total_usd)}
+                      </td>
                     </tr>
                   );
                 })}
                 {!carregando && obrasFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan={5 + ETAPAS_PIPELINE.length} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={6 + ETAPAS_PIPELINE.length} className="px-3 py-6 text-center text-zinc-500">
                       Nenhuma obra encontrada com esses filtros.
                     </td>
                   </tr>
@@ -498,27 +524,52 @@ export default function EngineProcessarLote() {
 
         {resultados.length > 0 && (
           <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
-              Resultado do lote ({resultados.length} obra{resultados.length === 1 ? "" : "s"} processada{resultados.length === 1 ? "" : "s"})
-            </h2>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+                Resultado do lote ({resultados.length} obra{resultados.length === 1 ? "" : "s"} processada{resultados.length === 1 ? "" : "s"})
+              </h2>
+              <p className="text-xs font-semibold text-amber-300">
+                Custo desta execução: {formatarCustoUsd(
+                  resultados.reduce(
+                    (soma, r) => soma + r.etapas.reduce((s, e) => s + (e.custoEstimado || 0), 0),
+                    0,
+                  ),
+                )}
+              </p>
+            </div>
             <div className="space-y-3">
               {resultados.map((resultado) => {
                 const falhou = resultado.etapas.some((etapa) => !etapa.ok);
+                const custoObra = resultado.etapas.reduce((soma, e) => soma + (e.custoEstimado || 0), 0);
                 return (
                   <div
                     key={resultado.obraId}
                     className={`rounded-xl border p-4 ${falhou ? "border-red-900 bg-red-500/5" : "border-emerald-900 bg-emerald-500/5"}`}
                   >
-                    <p className={`font-semibold ${falhou ? "text-red-200" : "text-emerald-200"}`}>
-                      {resultado.titulo}
+                    <p className={`flex items-center justify-between font-semibold ${falhou ? "text-red-200" : "text-emerald-200"}`}>
+                      <span>{resultado.titulo}</span>
+                      {custoObra > 0 && (
+                        <span className="text-xs font-normal text-zinc-400">{formatarCustoUsd(custoObra)}</span>
+                      )}
                     </p>
                     <ul className="mt-2 space-y-1 text-xs text-zinc-300">
-                      {resultado.etapas.map((etapa, indice) => (
-                        <li key={`${resultado.obraId}-${etapa.etapa}-${indice}`}>
-                          {etapa.ok ? "✓" : "✕"} {ETAPA_LABELS[etapa.etapa] || etapa.etapa}
-                          {etapa.erro ? ` — ${etapa.erro}` : ""}
-                        </li>
-                      ))}
+                      {resultado.etapas.map((etapa, indice) => {
+                        const tokens = etapa.tokens;
+                        const temTokens = tokens && (tokens.input || tokens.output);
+                        return (
+                          <li key={`${resultado.obraId}-${etapa.etapa}-${indice}`}>
+                            {etapa.ok ? "✓" : "✕"} {ETAPA_LABELS[etapa.etapa] || etapa.etapa}
+                            {etapa.erro ? ` — ${etapa.erro}` : ""}
+                            {etapa.ok && temTokens && (
+                              <span className="text-zinc-500">
+                                {" "}· {formatarTokens(tokens.input)} in / {formatarTokens(tokens.output)} out tokens
+                                {etapa.modelo ? ` · ${etapa.modelo}` : ""}
+                                {typeof etapa.custoEstimado === "number" ? ` · ${formatarCustoUsd(etapa.custoEstimado)}` : ""}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 );

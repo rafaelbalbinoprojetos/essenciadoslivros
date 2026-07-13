@@ -125,10 +125,43 @@ function normalizarErro(error) {
   return error.message || JSON.stringify(error);
 }
 
-function calcularCustoEstimado() {
-  // Mantido nulo por enquanto. Quando a tabela de preços/modelos estiver definida,
-  // este ponto centraliza o cálculo sem alterar o fluxo da pipeline.
-  return null;
+// Cache em memória (processo do servidor) dos preços por modelo, para não
+// bater no Supabase a cada etapa. Modelos sem linha em ai_precos_modelo
+// (ex.: modelos de imagem, ainda não precificados) resolvem para null e o
+// custo da etapa fica null — mesmo comportamento de antes desta tabela existir.
+const cachePrecosModelo = new Map();
+
+async function buscarPrecoModelo(modelo) {
+  if (!modelo) return null;
+  if (cachePrecosModelo.has(modelo)) return cachePrecosModelo.get(modelo);
+
+  const { data, error } = await supabaseAdmin
+    .from("ai_precos_modelo")
+    .select("preco_input_1m, preco_output_1m")
+    .eq("modelo", modelo)
+    .eq("ativo", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`Erro ao buscar preço do modelo ${modelo}:`, error.message);
+    return null;
+  }
+
+  cachePrecosModelo.set(modelo, data || null);
+  return data || null;
+}
+
+async function calcularCustoEstimado({ modelo, tokensInput, tokensOutput } = {}) {
+  const preco = await buscarPrecoModelo(modelo);
+
+  if (!preco || (preco.preco_input_1m == null && preco.preco_output_1m == null)) {
+    return null;
+  }
+
+  const custoInput = ((tokensInput || 0) / 1_000_000) * (preco.preco_input_1m || 0);
+  const custoOutput = ((tokensOutput || 0) / 1_000_000) * (preco.preco_output_1m || 0);
+
+  return Number((custoInput + custoOutput).toFixed(6));
 }
 
 function criarRunId({ obraId, tipoEtapa }) {
@@ -170,6 +203,7 @@ async function concluirEtapaPipeline({
   saida,
   tokensInput = null,
   tokensOutput = null,
+  modelo = null,
   custoEstimado = null,
 }) {
   const { data, error } = await supabaseAdmin
@@ -180,6 +214,7 @@ async function concluirEtapaPipeline({
       saida,
       tokens_input: tokensInput,
       tokens_output: tokensOutput,
+      modelo,
       custo_estimado: custoEstimado,
       completed_at: new Date().toISOString(),
     })
@@ -310,7 +345,7 @@ async function executarCuradorBEU({ obraId }) {
       tipoEtapa,
     });
 
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: resultado.modelo,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
@@ -355,6 +390,7 @@ async function executarCuradorBEU({ obraId }) {
       saida: resultado.saida,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
       custoEstimado,
     });
 
@@ -374,6 +410,8 @@ async function executarCuradorBEU({ obraId }) {
         output: resultado.tokens_output,
         total: resultado.tokens_total,
       },
+      modelo: resultado.modelo,
+      custoEstimado,
       saida: resultado.saida,
     };
   } catch (error) {
@@ -467,7 +505,7 @@ async function executarEditorBEU({ obraId }) {
       saidaEditor: resultado.saida,
     });
 
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: resultado.modelo,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
@@ -498,6 +536,7 @@ async function executarEditorBEU({ obraId }) {
       saida: resultado.saida,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
       custoEstimado,
     });
 
@@ -517,6 +556,8 @@ async function executarEditorBEU({ obraId }) {
         output: resultado.tokens_output,
         total: resultado.tokens_total,
       },
+      modelo: resultado.modelo,
+      custoEstimado,
       saida: resultado.saida,
     };
   } catch (error) {
@@ -611,7 +652,7 @@ async function executarDiretorCriativo({ obraId }) {
       modulosPermitidos: ["sensorial", "visual", "sonoro"],
     });
 
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: resultado.modelo,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
@@ -642,6 +683,7 @@ async function executarDiretorCriativo({ obraId }) {
       saida: resultado.saida,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
       custoEstimado,
     });
 
@@ -661,6 +703,8 @@ async function executarDiretorCriativo({ obraId }) {
         output: resultado.tokens_output,
         total: resultado.tokens_total,
       },
+      modelo: resultado.modelo,
+      custoEstimado,
       saida: resultado.saida,
     };
   } catch (error) {
@@ -696,13 +740,20 @@ async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, 
   try {
     const resultado = await executor();
 
+    const custoEstimado = await calcularCustoEstimado({
+      modelo: resultado.modelo ?? null,
+      tokensInput: resultado.tokensInput ?? null,
+      tokensOutput: resultado.tokensOutput ?? null,
+    });
+
     await concluirEtapaPipeline({
       etapaId: etapa.id,
       payloadId,
       saida: resultado.saida,
       tokensInput: resultado.tokensInput ?? null,
       tokensOutput: resultado.tokensOutput ?? null,
-      custoEstimado: calcularCustoEstimado(),
+      modelo: resultado.modelo ?? null,
+      custoEstimado,
     });
 
     return resultado;
@@ -982,7 +1033,12 @@ async function executarNarrativaCinematica({ obraId }) {
         entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU },
         executor: async () => {
           const analise = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual });
-          return { saida: analise, tokensInput: analise.tokens_input, tokensOutput: analise.tokens_output };
+          return {
+            saida: analise,
+            tokensInput: analise.tokens_input,
+            tokensOutput: analise.tokens_output,
+            modelo: ENGINE_CONFIG.modeloDefault,
+          };
         },
       });
       analiseICN = icnExecucao.saida;
@@ -1029,6 +1085,7 @@ async function executarNarrativaCinematica({ obraId }) {
               saida: resultado.blueprint,
               tokensInput: resultado.tokens_input,
               tokensOutput: resultado.tokens_output,
+              modelo: ENGINE_CONFIG.modeloDefault,
             };
           },
         });
@@ -1137,6 +1194,7 @@ async function executarNarrativaCinematica({ obraId }) {
                 saida: { texto: resultadoBloco.texto, continuidade: resultadoBloco.continuidade },
                 tokensInput: resultadoBloco.tokens_input,
                 tokensOutput: resultadoBloco.tokens_output,
+                modelo: agente.modelo,
               };
             },
           });
@@ -1224,7 +1282,7 @@ async function executarNarrativaCinematica({ obraId }) {
       modelo: agente.modelo,
     });
 
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: agente.modelo,
       tokensInput: tokensTotais.input,
       tokensOutput: tokensTotais.output,
@@ -1245,6 +1303,7 @@ async function executarNarrativaCinematica({ obraId }) {
       saida: consolidado.textoFinal,
       tokensInput: tokensTotais.input,
       tokensOutput: tokensTotais.output,
+      modelo: agente.modelo,
       custoEstimado,
     });
 
@@ -1260,6 +1319,8 @@ async function executarNarrativaCinematica({ obraId }) {
         output: tokensTotais.output,
         total: tokensTotais.input + tokensTotais.output,
       },
+      modelo: agente.modelo,
+      custoEstimado,
       saida: consolidado.textoFinal,
       testes,
       icn: analiseICN?.icn ?? null,
@@ -1348,7 +1409,7 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
       promptMontado,
       tipoEtapa,
     });
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: resultado.modelo,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
@@ -1369,6 +1430,7 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
       saida: resultado.saida,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
       custoEstimado,
     });
 
@@ -1384,6 +1446,8 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
         output: resultado.tokens_output,
         total: resultado.tokens_total,
       },
+      modelo: resultado.modelo,
+      custoEstimado,
       saida: resultado.saida,
     };
   } catch (error) {
@@ -1450,7 +1514,7 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       etapaId: etapa.id,
       payloadId: beuAtualRegistro.id,
       saida: resultado,
-      custoEstimado: calcularCustoEstimado(),
+      custoEstimado: await calcularCustoEstimado(),
     });
 
     if (resultado.bloqueado_por_moderacao) {
@@ -1542,7 +1606,7 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       etapaId: etapa.id,
       payloadId: beuAtualRegistro.id,
       saida: resultado,
-      custoEstimado: calcularCustoEstimado(),
+      custoEstimado: await calcularCustoEstimado(),
     });
 
     if (resultado.bloqueado_por_moderacao) {
@@ -1624,7 +1688,7 @@ async function executarPdfCinematica({ obraId, tipoEtapa }) {
       etapaId: etapa.id,
       payloadId: beuAtualRegistro.id,
       saida: resultado,
-      custoEstimado: calcularCustoEstimado(),
+      custoEstimado: await calcularCustoEstimado(),
     });
 
     engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, pdf_url: resultado.pdf_url });
@@ -1730,7 +1794,7 @@ async function executarEnciclopediaParte({ obraId, tipoEtapa }) {
       tipoEtapa,
     });
 
-    const custoEstimado = calcularCustoEstimado({
+    const custoEstimado = await calcularCustoEstimado({
       modelo: resultado.modelo,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
@@ -1757,6 +1821,7 @@ async function executarEnciclopediaParte({ obraId, tipoEtapa }) {
       saida: resultado.saida,
       tokensInput: resultado.tokens_input,
       tokensOutput: resultado.tokens_output,
+      modelo: resultado.modelo,
       custoEstimado,
     });
 
@@ -1776,6 +1841,8 @@ async function executarEnciclopediaParte({ obraId, tipoEtapa }) {
         output: resultado.tokens_output,
         total: resultado.tokens_total,
       },
+      modelo: resultado.modelo,
+      custoEstimado,
       saida: resultado.saida,
     };
   } catch (error) {
@@ -1838,7 +1905,7 @@ async function executarEnciclopediaPdf({ obraId, tipoEtapa }) {
       etapaId: etapa.id,
       payloadId: beuAtualRegistro.id,
       saida: resultado,
-      custoEstimado: calcularCustoEstimado(),
+      custoEstimado: await calcularCustoEstimado(),
     });
 
     engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, pdf_url: resultado.pdf_url });
