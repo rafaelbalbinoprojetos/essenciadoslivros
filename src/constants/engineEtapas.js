@@ -59,3 +59,17 @@ export const ETAPA_LABELS_CURTOS = {
 export function labelEtapa(tipoEtapa) {
   return ETAPA_LABELS[tipoEtapa] || tipoEtapa;
 }
+
+// narrativa_cinematica é gerada em várias chamadas HTTP sequenciais (ICN,
+// Blueprint, um bloco de prosa por vez) para nunca estourar o timeout do
+// serverless function. Esta função descreve, para o usuário, em qual fase
+// dessa sequência a geração está agora.
+export function descreverFaseNarrativa(progresso) {
+  if (!progresso) return null;
+  if (progresso.fase === "icn") return "analisando complexidade (ICN)...";
+  if (progresso.fase === "blueprint") return "planejando cenas (Blueprint)...";
+  if (progresso.fase === "bloco" && progresso.progresso) {
+    return `gerando bloco ${progresso.progresso.blocoAtual}/${progresso.progresso.totalBlocos}...`;
+  }
+  return "em andamento...";
+}

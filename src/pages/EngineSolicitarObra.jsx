@@ -9,6 +9,7 @@ import {
   updateEngineReferenceUsage,
 } from "../services/engineReferences.js";
 import { isAdminUser } from "../utils/admin.js";
+import { descreverFaseNarrativa } from "../constants/engineEtapas.js";
 
 const STATUS_CONFIG = {
   loading: {
@@ -227,6 +228,7 @@ export default function EngineSolicitarObra() {
   const [resultadoEditor, setResultadoEditor] = useState(null);
   const [resultadoDiretor, setResultadoDiretor] = useState(null);
   const [resultadoNarrativa, setResultadoNarrativa] = useState(null);
+  const [narrativaProgresso, setNarrativaProgresso] = useState(null);
   const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
   const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
@@ -449,22 +451,61 @@ export default function EngineSolicitarObra() {
     if (isPdfCinematica) setExecutandoPdfCinematica(true);
     if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: true }));
 
+    // narrativa_cinematica pode envolver ICN + Blueprint + vários blocos de
+    // prosa — mais do que um único request HTTP aguenta sem estourar o
+    // timeout do serverless function (504). O backend agora faz no máximo
+    // UMA chamada de IA por invocação e devolve `finalizado: false` enquanto
+    // ainda há trabalho; aqui a gente chama de novo até `finalizado: true`,
+    // reaproveitando o que já foi salvo a cada volta.
+    const MAX_TENTATIVAS_NARRATIVA = 80;
+
     try {
       console.log("[ENGINE] iniciando executar-etapa", { obraId, tipoEtapa });
 
-      const response = await fetch("/api/engine/executar-etapa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          obraId,
-          tipoEtapa,
-        }),
-      });
+      let data;
+      let tentativas = 0;
 
-      const data = await response.json();
-      console.log("[ENGINE] resposta executar-etapa", { tipoEtapa, data });
+      do {
+        tentativas += 1;
+
+        const response = await fetch("/api/engine/executar-etapa", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            obraId,
+            tipoEtapa,
+          }),
+        });
+
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error(
+            response.status === 504
+              ? "O servidor demorou demais para responder (tempo esgotado). O progresso já feito foi salvo — clique novamente para continuar de onde parou."
+              : `Erro inesperado do servidor (status ${response.status}) ao executar ${tipoEtapa}.`,
+          );
+        }
+
+        console.log("[ENGINE] resposta executar-etapa", { tipoEtapa, data, tentativas });
+
+        if (isNarrativa && data?.ok && data?.finalizado === false) {
+          setNarrativaProgresso(data);
+        }
+      } while (
+        isNarrativa
+        && data?.ok
+        && data?.finalizado === false
+        && tentativas < MAX_TENTATIVAS_NARRATIVA
+      );
+
+      if (isNarrativa && data?.ok && data?.finalizado === false) {
+        throw new Error(
+          `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas. O progresso já feito foi salvo — clique novamente para continuar de onde parou.`,
+        );
+      }
 
       if (isCurador) setResultadoCurador(data);
       if (isEditor) setResultadoEditor(data);
@@ -477,8 +518,8 @@ export default function EngineSolicitarObra() {
       if (isPdfCinematica) setResultadoPdfCinematica(data);
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: data }));
 
-      if (!response.ok || data?.ok === false) {
-        throw new Error(data.error || `Erro ao executar ${tipoEtapa}.`);
+      if (!data?.ok) {
+        throw new Error(data?.error || `Erro ao executar ${tipoEtapa}.`);
       }
 
       if (data?.bloqueadoPorModeracao) {
@@ -517,7 +558,10 @@ export default function EngineSolicitarObra() {
       if (isCurador) setExecutandoCurador(false);
       if (isEditor) setExecutandoEditor(false);
       if (isDiretor) setExecutandoDiretor(false);
-      if (isNarrativa) setExecutandoNarrativa(false);
+      if (isNarrativa) {
+        setExecutandoNarrativa(false);
+        setNarrativaProgresso(null);
+      }
       if (isHeritagePrompt) setExecutandoHeritagePrompt(false);
       if (isHeritageImage) setExecutandoHeritageImage(false);
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
@@ -912,7 +956,7 @@ export default function EngineSolicitarObra() {
                   : executandoDiretor
                     ? "Executando diretor criativo..."
                     : executandoNarrativa
-                      ? "Gerando narrativa cinematográfica..."
+                      ? `Gerando narrativa cinematográfica${narrativaProgresso ? ` (${descreverFaseNarrativa(narrativaProgresso)})` : "..."}`
                       : executandoHeritagePrompt
                         ? "Gerando prompt Heritage..."
                         : executandoHeritageImage
@@ -1075,7 +1119,11 @@ export default function EngineSolicitarObra() {
             <div className="flex items-center justify-between">
               <span>Gerando narrativa cinematográfica</span>
               <span className={executandoNarrativa ? "text-amber-300" : resultadoNarrativa ? "text-emerald-300" : "text-zinc-500"}>
-                {executandoNarrativa ? "em andamento" : resultadoNarrativa ? "concluído" : "manual"}
+                {executandoNarrativa
+                  ? descreverFaseNarrativa(narrativaProgresso) || "em andamento"
+                  : resultadoNarrativa
+                    ? "concluído"
+                    : "manual"}
               </span>
             </div>
             <div className="flex items-center justify-between">

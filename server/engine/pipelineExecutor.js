@@ -765,11 +765,13 @@ async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, 
 
 // Idempotência: procura uma sub-etapa já concluída com a mesma assinatura
 // (mesma obra + versão de BEU + blueprint + motor + nº do bloco) para
-// reaproveitar em vez de gastar tokens de novo numa nova tentativa.
+// reaproveitar em vez de gastar tokens de novo numa nova tentativa. Devolve
+// também os tokens já gastos, para o chamador poder somar o custo total
+// mesmo quando o bloco foi gerado numa invocação HTTP anterior.
 async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinatura }) {
   const { data, error } = await supabaseAdmin
     .from("ai_pipeline_etapas")
-    .select("entrada, saida")
+    .select("entrada, saida, tokens_input, tokens_output")
     .eq("obra_id", obraId)
     .eq("tipo_etapa", tipoEtapa)
     .eq("status", "concluido")
@@ -785,7 +787,11 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
     return null;
   }
 
-  return data.saida ?? null;
+  return {
+    saida: data.saida ?? null,
+    tokensInput: data.tokens_input || 0,
+    tokensOutput: data.tokens_output || 0,
+  };
 }
 
 // Narrative Scale Engine: mede a complexidade real da obra (ICN). Chamada de
@@ -1016,6 +1022,7 @@ async function executarNarrativaCinematica({ obraId }) {
 
     let analiseICN;
     let blueprint;
+    const tokensTotais = { input: 0, output: 0 };
 
     if (testes) {
       engineStep("Modo de testes ativo", "!", {
@@ -1024,30 +1031,64 @@ async function executarNarrativaCinematica({ obraId }) {
       blueprint = construirBlueprintSinteticoTeste({ contexto });
       analiseICN = { icn: blueprint.escala.icn, faixa: "Modo de teste", risco_compressao: null };
     } else {
-      engineStep("Narrative Scale Engine (ICN)", "→");
-      const icnExecucao = await executarSubEtapaNarrativa({
+      const assinaturaICN = calcularAssinaturaBloco({
         obraId,
-        payloadId,
+        versaoBEU: ENGINE_CONFIG.versaoBEU,
+        blueprintHash: "sem-blueprint",
+        versaoMotor: VERSAO_MOTOR_NARRATIVA_CINEMATICA,
+        numeroBloco: "icn",
+      });
+
+      engineStep("Narrative Scale Engine (ICN)", "→");
+      const icnReaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+        obraId,
         tipoEtapa: "narrativa_cinematica_icn",
-        ordem: definicao.ordem,
-        entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU },
-        executor: async () => {
-          const analise = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual });
-          return {
-            saida: analise,
-            tokensInput: analise.tokens_input,
-            tokensOutput: analise.tokens_output,
-            modelo: ENGINE_CONFIG.modeloDefault,
-          };
-        },
+        assinatura: assinaturaICN,
       });
-      analiseICN = icnExecucao.saida;
-      await saveEngineJsonLog({ runId, name: "icn", data: analiseICN });
-      engineStep("Narrative Scale Engine (ICN)", "✓", {
-        icn: analiseICN.icn,
-        faixa: analiseICN.faixa,
-        risco_compressao: analiseICN.risco_compressao,
-      });
+
+      if (icnReaproveitado) {
+        analiseICN = icnReaproveitado.saida;
+        tokensTotais.input += icnReaproveitado.tokensInput;
+        tokensTotais.output += icnReaproveitado.tokensOutput;
+        engineStep("Narrative Scale Engine (ICN)", "↺", { info: "reaproveitado de uma tentativa anterior" });
+      } else {
+        const icnExecucao = await executarSubEtapaNarrativa({
+          obraId,
+          payloadId,
+          tipoEtapa: "narrativa_cinematica_icn",
+          ordem: definicao.ordem,
+          entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU, assinatura: assinaturaICN },
+          executor: async () => {
+            const analise = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual });
+            return {
+              saida: analise,
+              tokensInput: analise.tokens_input,
+              tokensOutput: analise.tokens_output,
+              modelo: ENGINE_CONFIG.modeloDefault,
+            };
+          },
+        });
+        analiseICN = icnExecucao.saida;
+        await saveEngineJsonLog({ runId, name: "icn", data: analiseICN });
+        engineStep("Narrative Scale Engine (ICN)", "✓", {
+          icn: analiseICN.icn,
+          faixa: analiseICN.faixa,
+          risco_compressao: analiseICN.risco_compressao,
+        });
+
+        // Uma chamada de IA por invocação HTTP: devolve o controle agora para
+        // nunca estourar o timeout do serverless function em obras longas. O
+        // ICN já está salvo — a próxima chamada a esta etapa vai reaproveitá-lo
+        // e seguir direto para o Blueprint.
+        return {
+          ok: true,
+          etapa: tipoEtapa,
+          obraId,
+          finalizado: false,
+          fase: "icn",
+          icn: analiseICN.icn,
+        };
+      }
 
       const assinaturaBlueprint = calcularAssinaturaBloco({
         obraId,
@@ -1065,7 +1106,10 @@ async function executarNarrativaCinematica({ obraId }) {
       });
 
       if (blueprintReaproveitado) {
-        blueprint = blueprintReaproveitado;
+        blueprint = blueprintReaproveitado.saida;
+        tokensTotais.input += blueprintReaproveitado.tokensInput;
+        tokensTotais.output += blueprintReaproveitado.tokensOutput;
+        await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
         engineStep("Narrative Blueprint", "↺", { info: "reaproveitado de uma tentativa anterior" });
       } else {
         const blueprintExecucao = await executarSubEtapaNarrativa({
@@ -1090,13 +1134,24 @@ async function executarNarrativaCinematica({ obraId }) {
           },
         });
         blueprint = blueprintExecucao.saida;
-      }
+        await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
+        engineStep("Narrative Blueprint", "✓", {
+          cenas_totais: blueprint.cenas.length,
+          escopo: blueprint.identificacao?.escopo_analisado,
+        });
 
-      await saveEngineJsonLog({ runId, name: "blueprint", data: blueprint });
-      engineStep("Narrative Blueprint", "✓", {
-        cenas_totais: blueprint.cenas.length,
-        escopo: blueprint.identificacao?.escopo_analisado,
-      });
+        // Uma chamada de IA por invocação: devolve o controle agora. O
+        // Blueprint já está salvo — a próxima chamada reaproveita e segue
+        // direto para os blocos de prosa.
+        return {
+          ok: true,
+          etapa: tipoEtapa,
+          obraId,
+          finalizado: false,
+          fase: "blueprint",
+          cenas: blueprint.cenas.length,
+        };
+      }
     }
 
     const blocosPlanejados = calcularBlocosProducaoNarrativa({
@@ -1113,7 +1168,6 @@ async function executarNarrativaCinematica({ obraId }) {
     const blueprintHash = calcularHashBlueprint(blueprint);
     const textosBlocos = [];
     let continuidadeAnterior = null;
-    const tokensTotais = { input: 0, output: 0 };
 
     for (const bloco of blocosPlanejados) {
       const incluirConvite = bloco.bloco === 1;
@@ -1159,8 +1213,10 @@ async function executarNarrativaCinematica({ obraId }) {
           engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "↺", {
             info: "reaproveitado de uma tentativa anterior",
           });
-          textoBloco = reaproveitado.texto;
-          continuidadeBloco = reaproveitado.continuidade;
+          textoBloco = reaproveitado.saida.texto;
+          continuidadeBloco = reaproveitado.saida.continuidade;
+          tokensTotais.input += reaproveitado.tokensInput;
+          tokensTotais.output += reaproveitado.tokensOutput;
         } else {
           engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "→", {
             cenas: `${bloco.cenaInicial}-${bloco.cenaFinal}`,
@@ -1199,11 +1255,22 @@ async function executarNarrativaCinematica({ obraId }) {
             },
           });
 
-          textoBloco = execucaoBloco.saida.texto;
-          continuidadeBloco = execucaoBloco.saida.continuidade;
-          tokensTotais.input += execucaoBloco.tokensInput || 0;
-          tokensTotais.output += execucaoBloco.tokensOutput || 0;
-          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "✓", { caracteres: textoBloco.length });
+          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "✓", {
+            caracteres: execucaoBloco.saida.texto.length,
+          });
+
+          // Uma chamada de IA por invocação: devolve o controle agora em vez
+          // de continuar para o próximo bloco. Este bloco já está salvo — a
+          // próxima chamada a esta etapa reaproveita e gera o seguinte, até
+          // não sobrar nenhum (aí consolida e finaliza).
+          return {
+            ok: true,
+            etapa: tipoEtapa,
+            obraId,
+            finalizado: false,
+            fase: "bloco",
+            progresso: { blocoAtual: bloco.bloco, totalBlocos: blocosPlanejados.length },
+          };
         }
       }
 
@@ -1314,6 +1381,7 @@ async function executarNarrativaCinematica({ obraId }) {
       etapa: tipoEtapa,
       obraId,
       payloadId,
+      finalizado: true,
       tokens: {
         input: tokensTotais.input,
         output: tokensTotais.output,

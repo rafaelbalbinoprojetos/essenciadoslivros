@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS } from "../constants/engineEtapas.js";
+import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS, descreverFaseNarrativa } from "../constants/engineEtapas.js";
 import { formatarTokens, formatarCustoUsd } from "../utils/engineCusto.js";
 
 const TIPO_OBRA_OPCOES = [
@@ -21,14 +21,57 @@ const STATUS_OPCOES = [
   { value: "ativo", label: "Ativo" },
 ];
 
-async function chamarExecutarEtapa(obraId, tipoEtapa) {
+async function chamarExecutarEtapaHttp(obraId, tipoEtapa) {
   const response = await fetch("/api/engine/executar-etapa", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ obraId, tipoEtapa }),
   });
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    return {
+      ok: false,
+      etapa: tipoEtapa,
+      error: response.status === 504
+        ? "O servidor demorou demais para responder (tempo esgotado)."
+        : `Erro inesperado do servidor (status ${response.status}).`,
+    };
+  }
+}
+
+const MAX_TENTATIVAS_NARRATIVA = 80;
+
+// narrativa_cinematica pode envolver ICN + Blueprint + vários blocos de
+// prosa — mais do que um único request HTTP aguenta sem estourar o timeout
+// do serverless function (504). O backend faz no máximo UMA chamada de IA
+// por invocação e devolve `finalizado: false` enquanto ainda há trabalho;
+// aqui a gente chama de novo até `finalizado: true`.
+async function chamarExecutarEtapa(obraId, tipoEtapa, onProgresso) {
+  let resultado = await chamarExecutarEtapaHttp(obraId, tipoEtapa);
+  let tentativas = 1;
+
+  while (
+    tipoEtapa === "narrativa_cinematica"
+    && resultado?.ok
+    && resultado?.finalizado === false
+    && tentativas < MAX_TENTATIVAS_NARRATIVA
+  ) {
+    onProgresso?.(resultado);
+    resultado = await chamarExecutarEtapaHttp(obraId, tipoEtapa);
+    tentativas += 1;
+  }
+
+  if (tipoEtapa === "narrativa_cinematica" && resultado?.ok && resultado?.finalizado === false) {
+    return {
+      ok: false,
+      etapa: tipoEtapa,
+      error: `A narrativa cinematográfica não terminou depois de ${MAX_TENTATIVAS_NARRATIVA} chamadas. Rode a etapa de novo para continuar de onde parou.`,
+    };
+  }
+
+  return resultado;
 }
 
 async function chamarAtualizarDados(obraId) {
@@ -241,7 +284,14 @@ export default function EngineProcessarLote() {
 
         const resultado = etapa === "atualizar_dados"
           ? await chamarAtualizarDados(obra.id)
-          : await chamarExecutarEtapa(obra.id, etapa);
+          : await chamarExecutarEtapa(obra.id, etapa, (progressoParcial) => {
+            setProgresso({
+              atual: indice + 1,
+              total: alvo.length,
+              obraTitulo: obra.titulo,
+              etapaAtual: `${ETAPA_LABELS[etapa] || etapa} — ${descreverFaseNarrativa(progressoParcial)}`,
+            });
+          });
 
         const ok = Boolean(resultado?.ok);
         etapasResultado.push({
