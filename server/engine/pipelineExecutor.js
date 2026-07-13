@@ -1071,11 +1071,22 @@ async function executarNarrativaCinematica({ obraId }) {
       });
 
       engineStep("Narrative Scale Engine (ICN)", "→");
-      const icnReaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+      const icnReaproveitadoBruto = await buscarSubEtapaConcluidaComAssinatura({
         obraId,
         tipoEtapa: "narrativa_cinematica_icn",
         assinatura: assinaturaICN,
       });
+
+      // Revalida o que foi reaproveitado do banco antes de confiar nele — um
+      // registro salvo como "concluido" em uma versão anterior do motor pode
+      // estar corrompido/incompleto e não deve travar a geração para sempre.
+      const icnReaproveitado = icnReaproveitadoBruto && Number.isFinite(Number(icnReaproveitadoBruto.saida?.icn))
+        ? icnReaproveitadoBruto
+        : null;
+
+      if (icnReaproveitadoBruto && !icnReaproveitado) {
+        engineStep("Narrative Scale Engine (ICN)", "!", { info: "registro reaproveitável estava inválido — regenerando" });
+      }
 
       if (icnReaproveitado) {
         analiseICN = icnReaproveitado.saida;
@@ -1130,11 +1141,24 @@ async function executarNarrativaCinematica({ obraId }) {
       });
 
       engineStep("Narrative Blueprint", "→");
-      const blueprintReaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+      const blueprintReaproveitadoBruto = await buscarSubEtapaConcluidaComAssinatura({
         obraId,
         tipoEtapa: "narrativa_cinematica_blueprint",
         assinatura: assinaturaBlueprint,
       });
+
+      // Mesma revalidação do ICN acima: um Blueprint salvo como "concluido"
+      // em uma tentativa anterior pode estar corrompido (ex.: 'cenas' vazio)
+      // — sem isso, calcularBlocosProducaoNarrativa quebra e a obra nunca
+      // mais sai do lugar até alguém apagar a linha manualmente no banco.
+      const blueprintReaproveitado = blueprintReaproveitadoBruto
+        && validarNarrativeBlueprint(blueprintReaproveitadoBruto.saida).valido
+        ? blueprintReaproveitadoBruto
+        : null;
+
+      if (blueprintReaproveitadoBruto && !blueprintReaproveitado) {
+        engineStep("Narrative Blueprint", "!", { info: "registro reaproveitável estava inválido — regenerando" });
+      }
 
       if (blueprintReaproveitado) {
         blueprint = blueprintReaproveitado.saida;
@@ -1234,11 +1258,22 @@ async function executarNarrativaCinematica({ obraId }) {
           numeroBloco: bloco.bloco,
         });
 
-        const reaproveitado = await buscarSubEtapaConcluidaComAssinatura({
+        const reaproveitadoBruto = await buscarSubEtapaConcluidaComAssinatura({
           obraId,
           tipoEtapa: tipoEtapaBloco,
           assinatura: assinaturaBloco,
         });
+
+        // Mesma revalidação do ICN/Blueprint: descarta um bloco salvo como
+        // "concluido" sem texto utilizável em vez de propagar string vazia
+        // silenciosamente para o resto da narrativa.
+        const reaproveitado = reaproveitadoBruto && typeof reaproveitadoBruto.saida?.texto === "string" && reaproveitadoBruto.saida.texto.trim()
+          ? reaproveitadoBruto
+          : null;
+
+        if (reaproveitadoBruto && !reaproveitado) {
+          engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "!", { info: "registro reaproveitável estava inválido — regenerando" });
+        }
 
         if (reaproveitado) {
           engineStep(`Bloco ${bloco.bloco}/${blocosPlanejados.length}`, "↺", {
