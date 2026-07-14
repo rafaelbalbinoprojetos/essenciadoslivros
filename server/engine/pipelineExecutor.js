@@ -760,6 +760,51 @@ async function executarDiretorCriativo({ obraId }) {
 // assinatura de idempotência de propósito, forçando regeneração.
 const VERSAO_MOTOR_NARRATIVA_CINEMATICA = "narrativa-v4-blueprint-v1";
 
+// Sinaliza que já existe uma execução em andamento desta sub-etapa (outra
+// invocação HTTP ainda não terminou de escrever o "concluido"). Não é um
+// erro real — o chamador deve devolver finalizado:false e deixar o front-end
+// tentar de novo, em vez de disparar uma segunda chamada de IA em paralelo.
+class EtapaEmAndamentoError extends Error {
+  constructor(fase) {
+    super(`Sub-etapa "${fase}" já está em andamento em outra invocação.`);
+    this.name = "EtapaEmAndamentoError";
+    this.fase = fase;
+  }
+}
+
+// Uma sub-etapa "processando" mais nova que isso é considerada travada
+// (invocação anterior morreu sem concluir nem falhar) e pode ser retomada;
+// abaixo disso, assume-se que a outra invocação ainda está rodando a chamada
+// de IA. Fica com folga do maxDuration de 300s do endpoint (vercel.json).
+const LIMITE_PROCESSANDO_EM_ANDAMENTO_MS = 4 * 60 * 1000;
+
+// Idempotência contra sobreposição: sem isso, duas invocações HTTP que caem
+// na janela entre "nenhum concluido ainda" e "concluido salvo" (dois cliques,
+// duas abas, retry do próprio navegador) passam ambas no check de
+// buscarSubEtapaConcluidaComAssinatura, ambas chamam a IA de novo e ambas
+// gravam um registro "concluido" com a mesma assinatura — daí o loop que
+// nunca reaproveita nada, mesmo com dezenas de registros corretos no banco.
+async function buscarProcessandoEmAndamento({ obraId, tipoEtapa }) {
+  const { data, error } = await supabaseAdmin
+    .from("ai_pipeline_etapas")
+    .select("id, started_at")
+    .eq("obra_id", obraId)
+    .eq("tipo_etapa", tipoEtapa)
+    .eq("status", "processando")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Erro ao verificar sub-etapa em andamento ${tipoEtapa}: ${error.message}`);
+  }
+
+  if (!data?.started_at) return null;
+
+  const decorridoMs = Date.now() - new Date(data.started_at).getTime();
+  return decorridoMs < LIMITE_PROCESSANDO_EM_ANDAMENTO_MS ? data : null;
+}
+
 // Agrupa registrarInicioEtapa + concluirEtapaPipeline/falharEtapaPipeline
 // para as sub-etapas internas da narrativa cinematográfica (ICN, blueprint,
 // cada bloco, consolidação). Cada uma vira uma linha própria e auditável em
@@ -767,6 +812,10 @@ const VERSAO_MOTOR_NARRATIVA_CINEMATICA = "narrativa-v4-blueprint-v1";
 // por isso fica invisível para ETAPAS_RASTREADAS/PIPELINE_STEP_DEFS do
 // frontend, que só conhecem a etapa pública final.
 async function executarSubEtapaNarrativa({ obraId, payloadId, tipoEtapa, ordem, entrada, executor }) {
+  if (await buscarProcessandoEmAndamento({ obraId, tipoEtapa })) {
+    throw new EtapaEmAndamentoError(tipoEtapa);
+  }
+
   const etapa = await registrarInicioEtapa({ obraId, payloadId, tipoEtapa, entrada, ordem });
 
   try {
@@ -827,16 +876,28 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
   };
 }
 
-// Teto de ICN por tipo de obra: obras pequenas (single, álbum, podcast...)
-// não deveriam receber um ICN alto só porque a IA "acha" a obra densa — isso
-// fazia o Blueprint planejar 30-40 cenas para uma obra de poucos minutos,
-// estourando o limite de 80 chamadas HTTP da narrativa cinematográfica.
+// Teto de ICN por tipo de obra: o prompt do Narrative Scale Engine instrui a
+// IA a julgar pela obra e não pelo rótulo do tipo de mídia — o que faz
+// qualquer obra de franquia/IP conhecida (mesmo um livro ou filme avulso)
+// pontuar alto em "memória cultural"/"arcos narrativos" e virar "obra épica"
+// sem nenhum motivo real. Sem teto, isso fazia o Blueprint planejar 24-70+
+// cenas e vários blocos de produção até para obras pequenas, estourando o
+// limite de chamadas HTTP da narrativa cinematográfica (front-end desiste
+// depois de 80 tentativas). livro/filme/jogo ficam presos perto do padrão
+// histórico (12-18 cenas); só anime/série — as únicas obras genuinamente
+// grandes deste catálogo — têm um teto mais alto, ainda assim limitado para
+// não estourar o orçamento de chamadas.
 const TETO_ICN_POR_TIPO = {
   musica: 2,
   album: 3,
   single: 1,
   podcast: 3,
   curta: 2,
+  livro: 4,
+  filme: 4,
+  jogo: 4,
+  anime: 7,
+  serie: 7,
 };
 
 function aplicarTetoIcnPorTipo(analiseICN, tipoObra) {
@@ -1634,6 +1695,20 @@ async function executarNarrativaCinematica({ obraId }) {
       cenas: blueprint?.cenas?.length ?? null,
     };
   } catch (error) {
+    if (error instanceof EtapaEmAndamentoError) {
+      engineStep("Narrativa Cinematográfica", "…", {
+        info: `sub-etapa "${error.fase}" já está em andamento em outra invocação — aguardando`,
+      });
+
+      return {
+        ok: true,
+        etapa: tipoEtapa,
+        obraId,
+        finalizado: false,
+        fase: error.fase,
+      };
+    }
+
     const erro = normalizarErro(error);
     engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
 
