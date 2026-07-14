@@ -864,35 +864,34 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
     throw new Error(`Erro ao buscar sub-etapa ${tipoEtapa}: ${error.message}`);
   }
 
-  // Log temporário de diagnóstico: a comparação de assinatura estava sempre
-  // falhando (obra regenerando arcos/ICN/blueprint do zero a cada chamada
-  // HTTP mesmo com o registro "concluido" já salvo e com a assinatura batendo
-  // no banco) e isso não é reproduzível lendo o código — precisa ver em
-  // runtime o que esta função está realmente comparando. Remover depois que
-  // a causa for confirmada.
-  engineStep(`Debug reaproveitamento (${tipoEtapa})`, "?", {
-    encontrouRegistro: Boolean(data),
-    etapaIdEncontrada: data?.id ?? null,
-    assinaturaEsperada: assinatura,
-    assinaturaEncontrada: data?.entrada?.assinatura ?? null,
-    tipoDaAssinaturaEncontrada: typeof data?.entrada?.assinatura,
-    tipoDoEntrada: typeof data?.entrada,
-    bateu: data?.entrada?.assinatura === assinatura,
-    tipoDoSaida: typeof data?.saida,
-    saidaBruto: data?.saida,
-    demandaDivisaoNoSaida: data?.saida?.demanda_divisao,
-  });
-
   if (!data || data.entrada?.assinatura !== assinatura) {
     return null;
   }
 
   return {
     etapaId: data.id,
-    saida: data.saida ?? null,
+    saida: normalizarSaidaSalva(data.saida),
     tokensInput: data.tokens_input || 0,
     tokensOutput: data.tokens_output || 0,
   };
+}
+
+// A coluna "saida" volta como string (JSON serializado) em vez de objeto já
+// interpretado — diferente de "entrada", que volta como objeto normalmente.
+// Sem isso, toda validação de reaproveitamento (ex.: `saida?.demanda_divisao
+// !== undefined`) falhava sempre, porque acessa uma propriedade de uma
+// string em vez de um objeto — nada nunca era reaproveitado, em nenhuma
+// sub-etapa (arcos, ICN, blueprint, blocos), mesmo com o registro certinho
+// no banco. Texto puro (ex.: prosa final da narrativa) não é JSON válido e
+// cai no catch, permanecendo como string — comportamento correto pra esse caso.
+function normalizarSaidaSalva(saida) {
+  if (typeof saida !== "string") return saida ?? null;
+
+  try {
+    return JSON.parse(saida);
+  } catch {
+    return saida;
+  }
 }
 
 // Teto de ICN por tipo de obra: o prompt do Narrative Scale Engine instrui a
