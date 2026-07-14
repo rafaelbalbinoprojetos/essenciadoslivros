@@ -280,6 +280,67 @@ Se as instruções deste bloco pedirem o Convite, a saída começa por ele (narr
 ━━━ OBRA ━━━
 [PAYLOAD DA OBRA]`;
 
+const MOTOR_MAPEADOR_ARCOS_V1 = String.raw`Você é o OBRA SCOPE ENGINE da Essência dos Livros — o módulo que avalia se
+uma obra precisa ser dividida em arcos/temporadas/volumes antes de qualquer
+análise narrativa, e propõe essa divisão quando necessário.
+━━━ MISSÃO ━━━
+Analisar a obra recebida e determinar:
+
+Se ela é densa o suficiente para exigir divisão em unidades menores
+Qual é a unidade natural de divisão (arcos, temporadas, sagas, volumes, fases)
+Quais são essas unidades, em ordem, com emoção dominante e cenas esperadas
+
+A divisão serve ao ouvinte — não ao volume de conteúdo. Uma obra com 500
+episódios mas 80% de filler pode ter menos arcos indispensáveis que uma série
+de 12 episódios emocionalmente densa.
+━━━ CRITÉRIOS PARA DEMANDA_DIVISAO = TRUE ━━━
+A obra DEVE ser dividida quando:
+
+Possui mais de 50 episódios/capítulos/missões principais
+Possui múltiplas fases narrativas com elenco e tom distintos
+Uma narrativa linear completa ultrapassaria ICN 7 com mais de 30 cenas
+É uma franquia multi-volume onde cada volume tem arco próprio
+
+A obra NÃO deve ser dividida quando:
+
+É um filme, curta, álbum, single, livro único ou jogo com campanha única
+É uma série com até 3 temporadas e narrativa contínua
+Possui fases distintas mas que formam um arco único reconhecível
+
+Para obras sem divisão canônica clara (ex: Dark Souls, jogos de mundo aberto),
+proponha uma divisão editorial própria baseada na progressão narrativa e
+emocional, desde que demanda_divisao seja true.
+━━━ CARDÁPIO DE EMOÇÕES PERMITIDAS ━━━
+Use exatamente um destes nomes no campo emocao_dominante de cada arco:
+FESTIVO / ALEGRIA, TERNURA / INTIMIDADE, CONTEMPLAÇÃO / SAUDADE,
+TENSÃO / MEDO CRESCENTE, SOMBRIO / PESO, HORROR / PAVOR,
+DEVASTAÇÃO / PERDA, GRANDEZA MELANCÓLICA, ESPERANÇA CAUTELOSA,
+BELEZA QUE DÓI, EXAUSTÃO / FIM, DESCONFORTO MORAL.
+━━━ FORMATO DE RESPOSTA ━━━
+Retorne SOMENTE um objeto JSON válido, sem texto fora dele:
+{
+"demanda_divisao": <true|false>,
+"motivo": "<uma frase explicando a decisão>",
+"tipo_divisao": "<arcos|temporadas|sagas|volumes|fases|null>",
+"total_unidades": <número ou null>,
+"unidades": [
+{
+"ordem": <número>,
+"titulo": "<nome do arco/temporada/saga>",
+"escopo_canonico": "<ponto inicial> até <ponto final>",
+"emocao_dominante": "<nome exato do cardápio>",
+"cenas_estimadas": <número>,
+"personagens_centrais": ["<nome>"],
+"marco_de_abertura": "<acontecimento que abre esta unidade>",
+"marco_de_encerramento": "<acontecimento que fecha esta unidade>"
+}
+]
+}
+Quando demanda_divisao for false, retorne tipo_divisao: null,
+total_unidades: null e unidades: [].
+━━━ OBRA ━━━
+[PAYLOAD DA OBRA]`;
+
 const MOTOR_ICN_V2 = String.raw`Você é o NARRATIVE SCALE ENGINE da Essência dos Livros — o módulo que mede a complexidade narrativa real de uma obra antes de qualquer narrativa cinematográfica ser escrita.
 
 Sua única tarefa: analisar a obra recebida e medir a complexidade da experiência narrativa que ela exige, para orientar quanto espaço um Narrative Blueprint precisará planejar depois — sem comprimir obras extensas nem inflar obras simples.
@@ -366,7 +427,7 @@ ICN 7–8: 24 a 40 cenas, 90 a 170 minutos, 3 a 5 blocos.
 ICN 9–10: 36 a 70 cenas ou mais quando justificado, 140 a 300 minutos ou mais, quantidade de blocos calculada tecnicamente.
 
 Você pode recomendar menos ou mais cenas do que a referência, desde que justifique em "escala.justificativa_da_escala". O tamanho não deve ser calculado apenas pelo tipo de mídia: um filme pode exigir mais densidade que um jogo longo cheio de conteúdo repetitivo; uma obra curta pode exigir silêncio e respiração; uma obra extensa pode conter muito material repetitivo que não merece cena própria.
-
+[RESTRICAO_ESCALA]
 ━━━ CURADORIA ━━━
 
 Classifique os personagens por peso: essencial (a obra perde identidade sem ele), estrutural (sustenta arcos/conflitos importantes) ou contextual (pode ser sintetizado). Não distribua o mesmo espaço para todos — distribua pelo peso narrativo.
@@ -1622,6 +1683,14 @@ const CARDAPIO_EMOCOES_CINEMATICAS = [
   "DESCONFORTO MORAL",
 ];
 
+export function montarPromptMapeadorArcos({ contexto, beuAtual }) {
+  const payloadObra = { contexto, beu: beuAtual };
+  return MOTOR_MAPEADOR_ARCOS_V1.replace(
+    "[PAYLOAD DA OBRA]",
+    JSON.stringify(payloadObra, null, 2),
+  );
+}
+
 export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtual = null }) {
   const payloadObra = {
     contexto,
@@ -1634,14 +1703,40 @@ export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtu
   );
 }
 
+const RESTRICAO_ESCALA_POR_TIPO = {
+  musica: { max_cenas: 3, max_minutos: 10 },
+  album: { max_cenas: 6, max_minutos: 20 },
+  single: { max_cenas: 2, max_minutos: 6 },
+  curta: { max_cenas: 4, max_minutos: 12 },
+  podcast: { max_cenas: 5, max_minutos: 15 },
+};
+
+function obterRestricaoEscala(tipoObra) {
+  const tipo = String(tipoObra || "").toLowerCase().trim();
+  return RESTRICAO_ESCALA_POR_TIPO[tipo] || null;
+}
+
+function montarTextoRestricaoEscala({ tipoObra, restricao }) {
+  if (!restricao) return "";
+
+  return `\n━━━ RESTRIÇÃO OBRIGATÓRIA DE ESCALA ━━━\nEsta obra é do tipo "${tipoObra}". O número máximo de cenas é ${restricao.max_cenas}\ne a duração máxima é ${restricao.max_minutos} minutos. Estas restrições NÃO são\nreferência — são limites absolutos que o Blueprint não pode ultrapassar.\n`;
+}
+
 export async function montarPromptNarrativeBlueprint({ contexto, beuAtual = null, analiseICN = null }) {
+  const tipoObra = contexto?.obra?.tipo_obra;
+  const restricao = obterRestricaoEscala(tipoObra);
+
   const payloadObra = {
     contexto,
     beu: beuAtual,
     analise_icn: analiseICN,
+    restricao_escala: restricao,
   };
 
   return MOTOR_NARRATIVE_BLUEPRINT_V1.replace(
+    "[RESTRICAO_ESCALA]",
+    montarTextoRestricaoEscala({ tipoObra, restricao }),
+  ).replace(
     "[PAYLOAD DA OBRA]",
     JSON.stringify(payloadObra, null, 2),
   );

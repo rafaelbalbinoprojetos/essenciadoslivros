@@ -12,6 +12,7 @@ export const ENGINE_CONFIG = {
   saveLogs: parseBoolean(process.env.ENGINE_SAVE_LOGS, false),
   narrativaTeste: parseBoolean(process.env.ENGINE_NARRATIVA_TESTE, false),
   modeloDefault: process.env.ENGINE_MODELO_DEFAULT || "gpt-4.1-mini",
+  modeloAnthropicDefault: process.env.ENGINE_MODELO_ANTHROPIC_DEFAULT || "claude-sonnet-4-6",
   versaoBEU: process.env.ENGINE_VERSAO_BEU || "1.0",
   logsDir: process.env.ENGINE_LOGS_DIR || "logs",
   ambienteVercel: parseBoolean(process.env.VERCEL, false),

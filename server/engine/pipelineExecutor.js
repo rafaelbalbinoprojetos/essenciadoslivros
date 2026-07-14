@@ -18,6 +18,7 @@ import {
   gerarImagemCinematicaComReferencia,
   gerarImagemHeritageComReferencia,
 } from "./imageGenerationService.js";
+import { executarAgenteAnthropic } from "./anthropicService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
@@ -29,6 +30,7 @@ import {
   gerarResumoContinuidadeBloco,
   montarPromptAgente,
   montarPromptIndiceComplexidadeNarrativa,
+  montarPromptMapeadorArcos,
   montarPromptNarrativaCinematicaBloco,
   montarPromptNarrativeBlueprint,
   validarNarrativeBlueprint,
@@ -825,6 +827,68 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
   };
 }
 
+// Teto de ICN por tipo de obra: obras pequenas (single, álbum, podcast...)
+// não deveriam receber um ICN alto só porque a IA "acha" a obra densa — isso
+// fazia o Blueprint planejar 30-40 cenas para uma obra de poucos minutos,
+// estourando o limite de 80 chamadas HTTP da narrativa cinematográfica.
+const TETO_ICN_POR_TIPO = {
+  musica: 2,
+  album: 3,
+  single: 1,
+  podcast: 3,
+  curta: 2,
+};
+
+function aplicarTetoIcnPorTipo(analiseICN, tipoObra) {
+  const tipo = String(tipoObra || "").toLowerCase().trim();
+  const teto = TETO_ICN_POR_TIPO[tipo];
+  if (!teto || analiseICN.icn <= teto) return analiseICN;
+
+  return {
+    ...analiseICN,
+    icn: teto,
+    faixa: `Teto aplicado por tipo de obra (${tipoObra})`,
+    justificativa: `ICN original ${analiseICN.icn} reduzido para ${teto} — limite máximo para obras do tipo "${tipoObra}".`,
+  };
+}
+
+// Obra Scope Engine: avalia se a obra precisa ser dividida em arcos/
+// temporadas/volumes antes de qualquer análise narrativa. Roda antes do ICN.
+// Não bloqueia a geração quando demanda_divisao é true — a seleção de qual
+// arco gerar fica a cargo do frontend (implementação futura); por enquanto o
+// mapeamento só fica disponível no banco para uso futuro.
+async function calcularMapeamentoArcos({ contexto, beuAtual }) {
+  const agenteArcos = {
+    slug: "obra-scope-engine",
+    nome: "Obra Scope Engine (Mapeador de Arcos)",
+    modelo: ENGINE_CONFIG.modeloDefault,
+    temperatura: 0.2,
+    formato_saida: "json",
+    prompt_sistema:
+      "Você é um analista de escopo narrativo. Responda somente com o objeto JSON solicitado, sem nenhum texto fora dele.",
+  };
+
+  const promptMontado = montarPromptMapeadorArcos({ contexto, beuAtual });
+
+  const resultado = await executarAgente({
+    agente: agenteArcos,
+    contexto,
+    promptMontado,
+  });
+
+  const saida = resultado.saida ?? {};
+
+  return {
+    demanda_divisao: Boolean(saida.demanda_divisao),
+    motivo: typeof saida.motivo === "string" ? saida.motivo : null,
+    tipo_divisao: typeof saida.tipo_divisao === "string" ? saida.tipo_divisao : null,
+    total_unidades: Number.isFinite(Number(saida.total_unidades)) ? Number(saida.total_unidades) : null,
+    unidades: Array.isArray(saida.unidades) ? saida.unidades : [],
+    tokens_input: resultado.tokens_input,
+    tokens_output: resultado.tokens_output,
+  };
+}
+
 // Narrative Scale Engine: mede a complexidade real da obra (ICN). Chamada de
 // IA independente e barata, dedicada só a essa análise. Ao contrário da v1,
 // não engole erros silenciosamente — se a IA não devolver um ICN válido,
@@ -843,7 +907,7 @@ async function calcularIndiceComplexidadeNarrativa({ contexto, beuAtual }) {
 
   const promptMontado = await montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtual });
 
-  const resultado = await executarAgenteOpenAI({
+  const resultado = await executarAgente({
     agente: agenteICN,
     contexto,
     promptMontado,
@@ -891,7 +955,7 @@ async function executarNarrativeBlueprint({ contexto, beuAtual, analiseICN }) {
 
   const promptMontado = await montarPromptNarrativeBlueprint({ contexto, beuAtual, analiseICN });
 
-  const resultado = await executarAgenteOpenAI({
+  const resultado = await executarAgente({
     agente: agenteBlueprint,
     contexto,
     promptMontado,
@@ -1000,7 +1064,7 @@ async function executarBlocoNarrativaCinematica({
     incluirEncerramento,
   });
 
-  const resultado = await executarAgenteOpenAI({
+  const resultado = await executarAgente({
     agente,
     contexto,
     schema: null,
@@ -1019,6 +1083,19 @@ async function executarBlocoNarrativaCinematica({
     tokens_input: resultado.tokens_input,
     tokens_output: resultado.tokens_output,
   };
+}
+
+// Roteador de provider: le o campo "provider" do agente (coluna em
+// ai_agentes, default "openai") e decide qual service de IA chamar. Permite
+// migrar agente por agente para Anthropic sem alterar o resto do pipeline.
+async function executarAgente({ agente, contexto, promptMontado, schema = null }) {
+  const provider = agente.provider || "openai";
+
+  if (provider === "anthropic") {
+    return executarAgenteAnthropic({ agente, contexto, promptMontado, schema });
+  }
+
+  return executarAgenteOpenAI({ agente, contexto, promptMontado, schema });
 }
 
 async function executarNarrativaCinematica({ obraId }) {
@@ -1118,7 +1195,7 @@ async function executarNarrativaCinematica({ obraId }) {
             };
           },
         });
-        analiseICN = icnExecucao.saida;
+        analiseICN = aplicarTetoIcnPorTipo(icnExecucao.saida, contexto?.obra?.tipo_obra);
         await saveEngineJsonLog({ runId, name: "icn", data: analiseICN });
         engineStep("Narrative Scale Engine (ICN)", "✓", {
           icn: analiseICN.icn,
