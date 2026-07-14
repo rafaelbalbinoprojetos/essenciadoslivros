@@ -633,7 +633,7 @@ export default function BookDetailsPage() {
           <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[rgb(var(--surface-card))] p-6 shadow-2xl">
             <h2 className="text-lg font-semibold text-[rgb(var(--text-primary))]">Excluir esta obra?</h2>
             <p className="mt-2 text-sm text-[rgb(var(--text-secondary))]">
-              {`"${book?.titulo}"`} será removida permanentemente, junto com narrativas, avaliações e progresso de jornadas associados. Essa ação não pode ser desfeita.
+              {`"${book?.titulo}"`} será removida permanentemente, junto com narrativas, avaliações, progresso de jornadas e os arquivos associados (capa, PDFs, áudio). Essa ação não pode ser desfeita.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button

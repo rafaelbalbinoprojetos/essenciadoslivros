@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase.js";
+import { BUCKETS, removeFromBucket } from "../lib/storage.js";
 
 const BOOKS_TABLE = "livros";
 const AUTHORS_TABLE = "autores";
@@ -152,13 +153,92 @@ export async function updateBook(id, payload) {
   return data;
 }
 
+// capa_url/capa_cinematica_url guardam a URL pública completa; pdf_cinematica_url,
+// pdf_enciclopedico_url e pdf_guia_editorial_url guardam uma URL ASSINADA (com
+// token, que pode já ter expirado); pdf_url e audio_url guardam o caminho cru
+// dentro do bucket. Esta função normaliza os três formatos pro caminho relativo
+// que o Storage precisa pra apagar o arquivo — e descarta URLs de outro host
+// (ex.: capa hospedada no Google Drive), que não são nossas pra apagar.
+function extrairCaminhoDoStorage(valor, bucket) {
+  const texto = typeof valor === "string" ? valor.trim() : "";
+  if (!texto) return null;
+
+  if (!/^https?:\/\//i.test(texto)) {
+    return texto;
+  }
+
+  try {
+    const url = new URL(texto);
+    const marcador = "/storage/v1/object/";
+    const indice = url.pathname.indexOf(marcador);
+    if (indice === -1) return null;
+
+    const resto = url.pathname.slice(indice + marcador.length); // "public/capas/..." ou "sign/pdfs/..."
+    const [, bucketNaUrl, ...partesCaminho] = resto.split("/");
+    if (bucketNaUrl !== bucket || partesCaminho.length === 0) return null;
+
+    return decodeURIComponent(partesCaminho.join("/"));
+  } catch {
+    return null;
+  }
+}
+
+async function coletarCaminhosDeAudioDaNarrativa(livroId) {
+  const { data, error } = await supabase
+    .from("narrativas")
+    .select("faixas:narrativa_faixas(audio_path)")
+    .eq("livro_id", livroId);
+
+  if (error) {
+    console.error("[books] erro ao buscar faixas de narrativa para limpeza de storage:", error);
+    return [];
+  }
+
+  return (data ?? [])
+    .flatMap((narrativa) => narrativa.faixas ?? [])
+    .map((faixa) => faixa.audio_path)
+    .filter(Boolean);
+}
+
 // Registros relacionados (narrativas, avaliações, engajamento, progresso de
-// jornadas) têm "on delete cascade" pra livros — apagam junto. Arquivos no
-// Storage (capa, pdf, áudio) não são removidos automaticamente por isto.
+// jornadas) têm "on delete cascade" pra livros — apagam junto no banco. Os
+// arquivos no Storage (capa, PDFs, áudio, cenas narradas) não são apagados
+// pela cascata, então são removidos aqui manualmente, na melhor tentativa:
+// se algum arquivo já não existir ou faltar permissão, isso não impede a
+// obra de ser excluída do catálogo.
 export async function deleteBook(id) {
   if (!id) throw new Error("Informe o identificador do livro.");
+
+  const livro = await getBookById(id).catch(() => null);
+  const caminhosNarrativa = await coletarCaminhosDeAudioDaNarrativa(id);
+
   const { error } = await supabase.from(BOOKS_TABLE).delete().eq("id", id);
   if (error) throw error;
+
+  const remocoes = [];
+  const agendarRemocao = (bucket, valor) => {
+    const caminho = extrairCaminhoDoStorage(valor, bucket);
+    if (caminho) remocoes.push(removeFromBucket(bucket, [caminho]));
+  };
+
+  agendarRemocao(BUCKETS.capas, livro?.capa_url);
+  agendarRemocao(BUCKETS.capas, livro?.capa_cinematica_url);
+  agendarRemocao(BUCKETS.pdfs, livro?.pdf_url);
+  agendarRemocao(BUCKETS.pdfs, livro?.pdf_cinematica_url);
+  agendarRemocao(BUCKETS.pdfs, livro?.pdf_enciclopedico_url);
+  agendarRemocao(BUCKETS.pdfs, livro?.pdf_guia_editorial_url);
+  agendarRemocao(BUCKETS.audios, livro?.audio_url);
+
+  if (caminhosNarrativa.length > 0) {
+    remocoes.push(removeFromBucket(BUCKETS.narrativas, caminhosNarrativa));
+  }
+
+  const resultados = await Promise.allSettled(remocoes);
+  resultados.forEach((resultado) => {
+    if (resultado.status === "rejected") {
+      console.error("[books] falha ao remover arquivo do storage após excluir obra:", resultado.reason);
+    }
+  });
 }
 
 export async function createAuthor(payload) {
