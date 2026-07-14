@@ -807,7 +807,7 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
     .eq("obra_id", obraId)
     .eq("tipo_etapa", tipoEtapa)
     .eq("status", "concluido")
-    .order("completed_at", { ascending: false })
+    .order("completed_at", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
 
