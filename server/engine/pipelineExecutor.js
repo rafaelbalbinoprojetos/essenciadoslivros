@@ -878,6 +878,9 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
     tipoDaAssinaturaEncontrada: typeof data?.entrada?.assinatura,
     tipoDoEntrada: typeof data?.entrada,
     bateu: data?.entrada?.assinatura === assinatura,
+    tipoDoSaida: typeof data?.saida,
+    saidaBruto: data?.saida,
+    demandaDivisaoNoSaida: data?.saida?.demanda_divisao,
   });
 
   if (!data || data.entrada?.assinatura !== assinatura) {
