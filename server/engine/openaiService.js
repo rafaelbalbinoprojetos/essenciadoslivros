@@ -19,10 +19,15 @@ function getOpenAIClient() {
     // inteiro da serverless function (300s, ver vercel.json) antes de
     // falhar — em vez de falhar mais cedo e deixar a lógica de retomada de
     // sub-etapas (narrativa cinematográfica) tentar de novo na próxima
-    // invocação HTTP. Pior caso (timeout × (1 + maxRetries) = 240s) fica
-    // abaixo dos 300s, sobrando tempo pra function registrar o erro.
-    timeout: 120_000,
-    maxRetries: 1,
+    // invocação HTTP. O Narrative Blueprint pede uma saída JSON bem maior que
+    // ICN/Arcos (personagens classificados, arcos, cada cena com unidade
+    // dramática completa) e pode legitimamente passar de 120s numa obra mais
+    // densa — por isso um timeout curto com retry (que só repete o mesmo
+    // request lento) errava cedo demais. Uma única tentativa mais longa (sem
+    // retry) ainda fica com folga abaixo dos 300s pra function registrar o
+    // erro se realmente travar.
+    timeout: 270_000,
+    maxRetries: 0,
   });
 
   return openaiClient;
