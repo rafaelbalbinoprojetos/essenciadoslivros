@@ -1165,7 +1165,8 @@ async function executarNarrativaCinematica({ obraId }) {
       // Mesma revalidação do ICN/Blueprint abaixo: um registro salvo como
       // "concluido" em uma versão anterior do motor pode estar corrompido e
       // não deve travar a geração para sempre.
-      const arcosReaproveitado = arcosReaproveitadoBruto && typeof arcosReaproveitadoBruto.saida?.demanda_divisao === "boolean"
+      const arcosReaproveitado = arcosReaproveitadoBruto && 
+        arcosReaproveitadoBruto.saida?.demanda_divisao !== undefined
         ? arcosReaproveitadoBruto
         : null;
 
