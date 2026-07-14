@@ -1703,12 +1703,23 @@ export async function montarPromptIndiceComplexidadeNarrativa({ contexto, beuAtu
   );
 }
 
+// livro/filme/jogo ficam no teto histórico (~12-18 cenas, igual ao padrão de
+// antes do Narrative Scale Engine); anime/serie têm um teto mais alto por
+// serem as únicas obras deste catálogo genuinamente longas, mas ainda assim
+// limitado — sem isso o Blueprint trata a "referência de escala" do ICN como
+// sugestão e pode ignorá-la (ex.: um jogo longo "cheio de conteúdo
+// repetitivo" vira desculpa para planejar dezenas de cenas em vários arcos).
 const RESTRICAO_ESCALA_POR_TIPO = {
   musica: { max_cenas: 3, max_minutos: 10 },
   album: { max_cenas: 6, max_minutos: 20 },
   single: { max_cenas: 2, max_minutos: 6 },
   curta: { max_cenas: 4, max_minutos: 12 },
   podcast: { max_cenas: 5, max_minutos: 15 },
+  livro: { max_cenas: 18, max_minutos: 65 },
+  filme: { max_cenas: 18, max_minutos: 65 },
+  jogo: { max_cenas: 18, max_minutos: 65 },
+  anime: { max_cenas: 40, max_minutos: 170 },
+  serie: { max_cenas: 40, max_minutos: 170 },
 };
 
 function obterRestricaoEscala(tipoObra) {

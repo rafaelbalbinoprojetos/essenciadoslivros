@@ -1361,6 +1361,7 @@ async function executarNarrativaCinematica({ obraId }) {
           finalizado: false,
           fase: "icn",
           icn: analiseICN.icn,
+          icn_faixa: analiseICN.faixa,
         };
       }
 
@@ -1438,7 +1439,14 @@ async function executarNarrativaCinematica({ obraId }) {
           obraId,
           finalizado: false,
           fase: "blueprint",
+          icn: analiseICN.icn,
+          icn_faixa: analiseICN.faixa,
           cenas: blueprint.cenas.length,
+          blocos: calcularBlocosProducaoNarrativa({
+            cenas: blueprint.cenas,
+            maxCenasPorBloco: 8,
+            maxCaracteresPorBloco: 26000,
+          }).length,
         };
       }
     }
@@ -1568,6 +1576,10 @@ async function executarNarrativaCinematica({ obraId }) {
             obraId,
             finalizado: false,
             fase: "bloco",
+            icn: analiseICN.icn,
+            icn_faixa: analiseICN.faixa,
+            cenas: blueprint.cenas.length,
+            blocos: blocosPlanejados.length,
             progresso: { blocoAtual: bloco.bloco, totalBlocos: blocosPlanejados.length },
           };
         }
@@ -1691,6 +1703,7 @@ async function executarNarrativaCinematica({ obraId }) {
       saida: consolidado.textoFinal,
       testes,
       icn: analiseICN?.icn ?? null,
+      icn_faixa: analiseICN?.faixa ?? null,
       blocos: blocosPlanejados.length,
       cenas: blueprint?.cenas?.length ?? null,
     };

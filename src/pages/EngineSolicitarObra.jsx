@@ -286,6 +286,7 @@ export default function EngineSolicitarObra() {
   const [resultadoDiretor, setResultadoDiretor] = useState(null);
   const [resultadoNarrativa, setResultadoNarrativa] = useState(null);
   const [narrativaProgresso, setNarrativaProgresso] = useState(null);
+  const [narrativaPreview, setNarrativaPreview] = useState(null);
   const [resultadoHeritagePrompt, setResultadoHeritagePrompt] = useState(null);
   const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
@@ -507,7 +508,10 @@ export default function EngineSolicitarObra() {
     if (isCurador) setExecutandoCurador(true);
     if (isEditor) setExecutandoEditor(true);
     if (isDiretor) setExecutandoDiretor(true);
-    if (isNarrativa) setExecutandoNarrativa(true);
+    if (isNarrativa) {
+      setExecutandoNarrativa(true);
+      setNarrativaPreview(null);
+    }
     if (isHeritagePrompt) setExecutandoHeritagePrompt(true);
     if (isHeritageImage) setExecutandoHeritageImage(true);
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
@@ -558,6 +562,15 @@ export default function EngineSolicitarObra() {
 
         if (isNarrativa && data?.ok && data?.finalizado === false) {
           setNarrativaProgresso(data);
+        }
+
+        if (isNarrativa && data?.ok && (data?.icn !== undefined || data?.cenas !== undefined || data?.blocos !== undefined)) {
+          setNarrativaPreview((atual) => ({
+            icn: data.icn ?? atual?.icn ?? null,
+            icn_faixa: data.icn_faixa ?? atual?.icn_faixa ?? null,
+            cenas: data.cenas ?? atual?.cenas ?? null,
+            blocos: data.blocos ?? atual?.blocos ?? null,
+          }));
         }
       } while (
         isNarrativa
@@ -1059,6 +1072,21 @@ export default function EngineSolicitarObra() {
                                   : "Solicitar obra"}
           </button>
         </form>
+
+        {(executandoNarrativa || resultadoNarrativa) && narrativaPreview && (narrativaPreview.icn || narrativaPreview.cenas) && (
+          <div className="mt-4 rounded-xl border border-purple-900 bg-purple-950/20 px-4 py-3 text-sm text-purple-100">
+            <p className="font-semibold text-purple-200">Narrativa cinematográfica — previsão de escala</p>
+            <p className="mt-1 text-purple-100/80">
+              {narrativaPreview.icn
+                ? `ICN ${narrativaPreview.icn}${narrativaPreview.icn_faixa ? ` — ${narrativaPreview.icn_faixa}` : ""}`
+                : "Calculando complexidade (ICN)..."}
+              {narrativaPreview.cenas ? ` · ${narrativaPreview.cenas} cenas previstas` : ""}
+              {narrativaPreview.blocos
+                ? ` em ${narrativaPreview.blocos} bloco${narrativaPreview.blocos > 1 ? "s" : ""} de produção`
+                : ""}
+            </p>
+          </div>
+        )}
 
         <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
