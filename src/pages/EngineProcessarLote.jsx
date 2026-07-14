@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS, descreverFaseNarrativa, etapasPipelinePorTipo } from "../constants/engineEtapas.js";
 import { formatarTokens, formatarCustoUsd } from "../utils/engineCusto.js";
+import { updateBook } from "../services/books.js";
 
 const TIPO_OBRA_OPCOES = [
   { value: "todos", label: "Todos os tipos" },
@@ -166,6 +167,7 @@ export default function EngineProcessarLote() {
   const [selecionadas, setSelecionadas] = useState({});
   const [selectedSteps, setSelectedSteps] = useState(() => criarSelecaoDeEtapas(true));
   const [processandoLote, setProcessandoLote] = useState(false);
+  const [ativandoLote, setAtivandoLote] = useState(false);
   const [progresso, setProgresso] = useState(null);
   const [resultados, setResultados] = useState([]);
   const [ordenacao, setOrdenacao] = useState({ coluna: null, direcao: "asc" });
@@ -257,6 +259,44 @@ export default function EngineProcessarLote() {
       });
       return proximo;
     });
+  }
+
+  // Obras criadas pelo Engine nascem como "rascunho" e ficam invisíveis nas
+  // páginas públicas (Biblioteca, Mural, busca etc., que só listam status
+  // "ativo") até alguém trocar o status manualmente — antes disso só dava
+  // pra fazer isso uma obra de cada vez em Cadastro de Títulos.
+  async function ativarSelecionadasEmLote() {
+    const alvo = obrasFiltradas.filter((obra) => selecionadas[obra.id] && obra.status !== "ativo");
+
+    if (alvo.length === 0) {
+      toast.error("Selecione ao menos uma obra que ainda não esteja ativa.");
+      return;
+    }
+
+    setAtivandoLote(true);
+    let sucesso = 0;
+    let falhas = 0;
+
+    for (const obra of alvo) {
+      try {
+        await updateBook(obra.id, { status: "ativo" });
+        sucesso += 1;
+      } catch (error) {
+        console.error("[ENGINE LOTE] erro ao ativar obra", obra.id, error);
+        falhas += 1;
+      }
+    }
+
+    setAtivandoLote(false);
+
+    if (sucesso > 0) {
+      toast.success(`${sucesso} obra${sucesso === 1 ? "" : "s"} ativada${sucesso === 1 ? "" : "s"} — já aparece(m) nas páginas públicas.`);
+    }
+    if (falhas > 0) {
+      toast.error(`${falhas} obra${falhas === 1 ? "" : "s"} não p${falhas === 1 ? "ôde" : "uderam"} ser ativada${falhas === 1 ? "" : "s"}.`);
+    }
+
+    await carregarObras();
   }
 
   async function processarLote(modo) {
@@ -362,12 +402,20 @@ export default function EngineProcessarLote() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
               <button type="button" onClick={() => selecionarVisiveis(true)} className="font-semibold text-emerald-300 hover:underline">
                 Marcar todas ({obrasFiltradas.length})
               </button>
               <button type="button" onClick={() => selecionarVisiveis(false)} className="font-semibold text-zinc-400 hover:underline">
                 Desmarcar todas
+              </button>
+              <button
+                type="button"
+                onClick={ativarSelecionadasEmLote}
+                disabled={ativandoLote || quantidadeSelecionada === 0}
+                className="rounded-lg border border-emerald-500/60 px-3 py-1.5 font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-40"
+              >
+                {ativandoLote ? "Ativando..." : `Marcar selecionadas como ativas (${quantidadeSelecionada})`}
               </button>
             </div>
             <p className="text-xs text-zinc-500">

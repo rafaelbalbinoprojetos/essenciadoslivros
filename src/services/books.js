@@ -152,6 +152,15 @@ export async function updateBook(id, payload) {
   return data;
 }
 
+// Registros relacionados (narrativas, avaliações, engajamento, progresso de
+// jornadas) têm "on delete cascade" pra livros — apagam junto. Arquivos no
+// Storage (capa, pdf, áudio) não são removidos automaticamente por isto.
+export async function deleteBook(id) {
+  if (!id) throw new Error("Informe o identificador do livro.");
+  const { error } = await supabase.from(BOOKS_TABLE).delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function createAuthor(payload) {
   const { data, error } = await supabase.from(AUTHORS_TABLE).insert(payload).select().single();
   if (error) throw error;

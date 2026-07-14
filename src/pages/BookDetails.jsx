@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { BookOpen, FileText, Film, ListMusic, Pause, Pencil, Play } from "lucide-react";
-import { getBookById } from "../services/books.js";
+import toast from "react-hot-toast";
+import { BookOpen, FileText, Film, ListMusic, Pause, Pencil, Play, Trash2 } from "lucide-react";
+import { deleteBook, getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
 import { resolveAudioSource, resolveNarrativeSource, resolvePdfSource } from "../utils/media.js";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
@@ -55,6 +56,8 @@ export default function BookDetailsPage() {
   const [narrative, setNarrative] = useState(null);
   const [narrativeStarting, setNarrativeStarting] = useState(false);
   const [narrativeError, setNarrativeError] = useState("");
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [experience, setExperience] = useState(() => (
     typeof window !== "undefined" && window.location.hash === "#narrativa" ? "cinematic" : "editorial"
   ));
@@ -258,6 +261,21 @@ export default function BookDetailsPage() {
     }
   }, [authorName, book?.id, coverSrc, currentTrack?.id, narrative, narrativeStarting, narrativeTracks, startPlaylist, togglePlay]);
 
+  const handleExcluirObra = useCallback(async () => {
+    if (!book?.id) return;
+    setExcluindo(true);
+    try {
+      await deleteBook(book.id);
+      toast.success("Obra excluída com sucesso.");
+      navigate("/biblioteca");
+    } catch (deleteError) {
+      console.error("[BookDetails] erro ao excluir obra:", deleteError);
+      toast.error(deleteError?.message ?? "Não foi possível excluir a obra.");
+      setExcluindo(false);
+      setConfirmandoExclusao(false);
+    }
+  }, [book?.id, navigate]);
+
   const handleSeek = (event) => {
     const value = Number(event.target.value);
     if (!Number.isFinite(value) || !isCurrentTrack) return;
@@ -364,6 +382,15 @@ export default function BookDetailsPage() {
               >
                 <Pencil className="h-4 w-4" /> Editar obra
               </Link>
+            )}
+            {admin && (
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(true)}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-500/10"
+              >
+                <Trash2 className="h-4 w-4" /> Excluir obra
+              </button>
             )}
             <button
               type="button"
@@ -600,6 +627,35 @@ export default function BookDetailsPage() {
 
       {renderHero()}
       {book && <BookReviews bookId={book.id} />}
+
+      {confirmandoExclusao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[rgb(var(--surface-card))] p-6 shadow-2xl">
+            <h2 className="text-lg font-semibold text-[rgb(var(--text-primary))]">Excluir esta obra?</h2>
+            <p className="mt-2 text-sm text-[rgb(var(--text-secondary))]">
+              {`"${book?.titulo}"`} será removida permanentemente, junto com narrativas, avaliações e progresso de jornadas associados. Essa ação não pode ser desfeita.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(false)}
+                disabled={excluindo}
+                className="rounded-xl border border-[rgba(255,255,255,0.2)] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10 disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExcluirObra}
+                disabled={excluindo}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-60"
+              >
+                {excluindo ? "Excluindo..." : "Sim, excluir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
