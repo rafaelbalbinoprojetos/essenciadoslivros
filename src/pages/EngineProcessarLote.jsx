@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ETAPAS_PIPELINE, ETAPA_LABELS, ETAPA_LABELS_CURTOS, descreverFaseNarrativa, etapasPipelinePorTipo } from "../constants/engineEtapas.js";
 import { formatarTokens, formatarCustoUsd } from "../utils/engineCusto.js";
@@ -434,7 +435,17 @@ export default function EngineProcessarLote() {
                           className="h-4 w-4 rounded border-zinc-700 bg-black text-amber-500 focus:ring-amber-500"
                         />
                       </td>
-                      <td className="px-3 py-2 font-medium text-zinc-100">{obra.titulo}</td>
+                      <td className="px-3 py-2 font-medium text-zinc-100">
+                        <Link
+                          to={`/biblioteca/${obra.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:text-amber-300 hover:underline"
+                          title={`Abrir "${obra.titulo}" (${obra.id})`}
+                        >
+                          {obra.titulo}
+                        </Link>
+                      </td>
                       <td className="px-3 py-2 text-zinc-400">{obra.tipo_obra}</td>
                       <td className="px-3 py-2">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

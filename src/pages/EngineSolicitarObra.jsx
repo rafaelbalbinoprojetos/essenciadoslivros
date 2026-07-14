@@ -564,7 +564,7 @@ export default function EngineSolicitarObra() {
           setNarrativaProgresso(data);
         }
 
-        if (isNarrativa && data?.ok && (data?.icn !== undefined || data?.cenas !== undefined || data?.blocos !== undefined)) {
+        if (isNarrativa && (data?.icn !== undefined || data?.cenas !== undefined || data?.blocos !== undefined)) {
           setNarrativaPreview((atual) => ({
             icn: data.icn ?? atual?.icn ?? null,
             icn_faixa: data.icn_faixa ?? atual?.icn_faixa ?? null,

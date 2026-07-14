@@ -1180,6 +1180,13 @@ async function executarAgente({ agente, contexto, promptMontado, schema = null }
 async function executarNarrativaCinematica({ obraId }) {
   let execucao = null;
   let etapa = null;
+  // Hoisted pra fora do try: precisam ficar visíveis no catch, pra devolver
+  // a previsão de escala (ICN/cenas/blocos) já calculada mesmo quando a
+  // etapa falha depois do Blueprint (ex.: erro na escrita de um bloco) — sem
+  // isso, o front-end nunca mostra ICN/cenas quando a execução termina em erro.
+  let analiseICN = null;
+  let blueprint = null;
+  let blocosPlanejados = null;
   const tipoEtapa = "narrativa_cinematica";
   const definicao = DEFINICOES_ETAPAS[tipoEtapa];
   const runId = criarRunId({ obraId, tipoEtapa });
@@ -1207,8 +1214,6 @@ async function executarNarrativaCinematica({ obraId }) {
     await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
     await saveEngineJsonLog({ runId, name: "beu_atual", data: beuAtual });
 
-    let analiseICN;
-    let blueprint;
     // Identifica QUAL blueprint foi usado (id estável da linha em
     // ai_pipeline_etapas) em vez de um hash do conteúdo do blueprint — um
     // hash de JSON.stringify não é confiável entre chamadas HTTP porque o
@@ -1469,7 +1474,7 @@ async function executarNarrativaCinematica({ obraId }) {
       }
     }
 
-    const blocosPlanejados = calcularBlocosProducaoNarrativa({
+    blocosPlanejados = calcularBlocosProducaoNarrativa({
       cenas: blueprint.cenas,
       maxCenasPorBloco: 8,
       maxCaracteresPorBloco: 26000,
@@ -1750,6 +1755,17 @@ async function executarNarrativaCinematica({ obraId }) {
     if (etapa?.id) {
       await falharEtapaPipeline({ etapaId: etapa.id, erro });
     }
+
+    // Anexa a previsão de escala já calculada (ICN/cenas/blocos) ao erro, pra
+    // o front-end continuar mostrando essa informação mesmo quando a etapa
+    // falha depois do Blueprint (ex.: erro na escrita de um bloco) — sem
+    // isso, a resposta de erro não carrega nada além da mensagem.
+    error.diagnostico = {
+      icn: analiseICN?.icn ?? null,
+      icn_faixa: analiseICN?.faixa ?? null,
+      cenas: blueprint?.cenas?.length ?? null,
+      blocos: blocosPlanejados?.length ?? null,
+    };
 
     throw error;
   }
