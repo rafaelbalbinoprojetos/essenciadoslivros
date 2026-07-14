@@ -42,6 +42,13 @@ export const NAV_LINKS = [
     description: "Deixe o acervo escolher você",
   },
   {
+    id: "colorir",
+    to: "/colorir",
+    label: "Essência em Cores",
+    shortLabel: "Colorir",
+    description: "Colora ilustrações do acervo com balde, pincel e borracha",
+  },
+  {
     id: "catalog",
     to: "/biblioteca/novo",
     label: "Cadastro de Títulos",
@@ -94,6 +101,7 @@ export const MOBILE_NAV_ALLOWED_PATHS = [
   "/biblioteca/novo",
   "/engine",
   "/assistente",
+  "/colorir",
 ];
 
 export const DEFAULT_MOBILE_NAV_PATHS = [

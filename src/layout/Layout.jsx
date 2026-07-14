@@ -18,6 +18,7 @@ import {
   Cpu,
   ListChecks,
   DollarSign,
+  Palette,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu.jsx";
 import ThemeMenu from "../components/ThemeMenu.jsx";
@@ -44,6 +45,7 @@ const ICON_MAP = {
   library: BookOpen,
   mural: LayoutGrid,
   "unexpected-encounter": Dices,
+  colorir: Palette,
   catalog: BookOpen,
   engine: Cpu,
   "engine-lote": ListChecks,

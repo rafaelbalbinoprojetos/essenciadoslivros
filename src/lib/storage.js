@@ -7,6 +7,7 @@ export const BUCKETS = {
   pdfs: "pdfs", // privado
   narrativas: "narrativas", // privado, múltiplas cenas por obra
   engineReferencias: "engine-referencias",
+  imagensColorir: "imagems_colorir", // público — imagens do Essência em Cores
 };
 
 // Normaliza o nome do arquivo para um caminho seguro de Storage.

@@ -16,6 +16,7 @@ import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
 import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
 import EngineProcessarLote from "./pages/EngineProcessarLote.jsx";
 import EngineCustosIA from "./pages/EngineCustosIA.jsx";
+import EssenciaEmCoresPage from "./pages/EssenciaEmCores.jsx";
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
             <Route path="engine" element={<EngineSolicitarObra />} />
             <Route path="engine/lote" element={<EngineProcessarLote />} />
             <Route path="engine/custos" element={<EngineCustosIA />} />
+            <Route path="colorir" element={<EssenciaEmCoresPage />} />
             <Route path="configuracoes" element={<SettingsPage />} />
             
 
