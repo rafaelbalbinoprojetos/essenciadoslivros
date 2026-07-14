@@ -15,6 +15,14 @@ function getOpenAIClient() {
 
   openaiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
+    // Sem isto, uma resposta lenta/travada da OpenAI consome o maxDuration
+    // inteiro da serverless function (300s, ver vercel.json) antes de
+    // falhar — em vez de falhar mais cedo e deixar a lógica de retomada de
+    // sub-etapas (narrativa cinematográfica) tentar de novo na próxima
+    // invocação HTTP. Pior caso (timeout × (1 + maxRetries) = 240s) fica
+    // abaixo dos 300s, sobrando tempo pra function registrar o erro.
+    timeout: 120_000,
+    maxRetries: 1,
   });
 
   return openaiClient;
