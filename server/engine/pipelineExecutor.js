@@ -864,6 +864,22 @@ async function buscarSubEtapaConcluidaComAssinatura({ obraId, tipoEtapa, assinat
     throw new Error(`Erro ao buscar sub-etapa ${tipoEtapa}: ${error.message}`);
   }
 
+  // Log temporário de diagnóstico: a comparação de assinatura estava sempre
+  // falhando (obra regenerando arcos/ICN/blueprint do zero a cada chamada
+  // HTTP mesmo com o registro "concluido" já salvo e com a assinatura batendo
+  // no banco) e isso não é reproduzível lendo o código — precisa ver em
+  // runtime o que esta função está realmente comparando. Remover depois que
+  // a causa for confirmada.
+  engineStep(`Debug reaproveitamento (${tipoEtapa})`, "?", {
+    encontrouRegistro: Boolean(data),
+    etapaIdEncontrada: data?.id ?? null,
+    assinaturaEsperada: assinatura,
+    assinaturaEncontrada: data?.entrada?.assinatura ?? null,
+    tipoDaAssinaturaEncontrada: typeof data?.entrada?.assinatura,
+    tipoDoEntrada: typeof data?.entrada,
+    bateu: data?.entrada?.assinatura === assinatura,
+  });
+
   if (!data || data.entrada?.assinatura !== assinatura) {
     return null;
   }
