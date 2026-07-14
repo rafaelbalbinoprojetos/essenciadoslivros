@@ -5,9 +5,13 @@ const TONS_NEUTROS = ["#FFFFFF", "#E5E5E5", "#C4C4C4", "#9B9B9B", "#6B6B6B", "#3
 const LIMITE_HISTORICO = 30;
 const LIMITE_CORES_RECENTES = 8;
 const TOLERANCIA_PADRAO = 30;
+const OPACIDADE_PADRAO = 100;
 const LIMIAR_CONTORNO = 60;
 const LARGURA_MAXIMA = 900;
 const ALTURA_MAXIMA = 700;
+const ZOOM_MINIMO = 0.5;
+const ZOOM_MAXIMO = 3;
+const ZOOM_PASSO = 0.1;
 
 function hexParaRgb(hex) {
   const limpo = String(hex || "#ffffff").replace("#", "");
@@ -20,7 +24,7 @@ function ehContornoEscuro(r, g, b) {
   return r < LIMIAR_CONTORNO && g < LIMIAR_CONTORNO && b < LIMIAR_CONTORNO;
 }
 
-function preencherBalde(imageData, largura, altura, inicioX, inicioY, corHex, tolerancia) {
+function preencherBalde(imageData, largura, altura, inicioX, inicioY, corHex, tolerancia, opacidade = 100) {
   const data = imageData.data;
   const idxInicial = (inicioY * largura + inicioX) * 4;
   const r0 = data[idxInicial];
@@ -31,7 +35,7 @@ function preencherBalde(imageData, largura, altura, inicioX, inicioY, corHex, to
   if (ehContornoEscuro(r0, g0, b0)) return false;
 
   const [fr, fg, fb] = hexParaRgb(corHex);
-  const fa = 255;
+  const fa = Math.round((Math.min(Math.max(opacidade, 0), 100) / 100) * 255);
 
   if (Math.abs(r0 - fr) <= 2 && Math.abs(g0 - fg) <= 2 && Math.abs(b0 - fb) <= 2 && Math.abs(a0 - fa) <= 2) {
     return false;
@@ -92,11 +96,14 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
   const [ferramenta, setFerramenta] = useState("balde");
   const [tamanhoPincel, setTamanhoPincel] = useState(18);
   const [tolerancia, setTolerancia] = useState(TOLERANCIA_PADRAO);
+  const [opacidade, setOpacidade] = useState(OPACIDADE_PADRAO);
   const [cor, setCor] = useState(palette[0] || "#c9a84c");
   const [coresRecentes, setCoresRecentes] = useState([]);
   const [podeDesfazer, setPodeDesfazer] = useState(false);
   const [podeRefazer, setPodeRefazer] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [dimensaoCanvas, setDimensaoCanvas] = useState({ width: 0, height: 0 });
 
   const registrarCorRecente = useCallback((novaCor) => {
     setCoresRecentes((atual) => {
@@ -179,7 +186,25 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     setPodeDesfazer(false);
     setPodeRefazer(false);
     setCarregando(false);
+    setDimensaoCanvas({ width: largura, height: altura });
+    setZoom(1);
   }, []);
+
+  const aplicarZoom = useCallback((delta) => {
+    setZoom((atual) => Math.min(ZOOM_MAXIMO, Math.max(ZOOM_MINIMO, Number((atual + delta).toFixed(2)))));
+  }, []);
+
+  const aumentarZoom = useCallback(() => aplicarZoom(ZOOM_PASSO), [aplicarZoom]);
+  const diminuirZoom = useCallback(() => aplicarZoom(-ZOOM_PASSO), [aplicarZoom]);
+  const resetarZoom = useCallback(() => setZoom(1), []);
+
+  // Ctrl/Cmd + scroll ajusta o zoom; scroll sozinho continua rolando a área
+  // (útil pra navegar pela imagem quando ela está maior que o contêiner).
+  const aoRolarNoCanvas = useCallback((event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    aplicarZoom(event.deltaY < 0 ? ZOOM_PASSO : -ZOOM_PASSO);
+  }, [aplicarZoom]);
 
   const carregarImagem = useCallback((src, origemExterna) => {
     setCarregando(true);
@@ -232,7 +257,7 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     };
   }, []);
 
-  const desenharTraco = useCallback((de, para, corAtual) => {
+  const desenharTraco = useCallback((de, para, corAtual, aplicarOpacidade) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
@@ -240,6 +265,7 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     ctx.lineJoin = "round";
     ctx.lineWidth = tamanhoPincel;
     ctx.strokeStyle = corAtual;
+    ctx.globalAlpha = aplicarOpacidade ? opacidade / 100 : 1;
 
     ctx.beginPath();
     ctx.moveTo(de.x, de.y);
@@ -252,7 +278,9 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
       ctx.fillStyle = corAtual;
       ctx.fill();
     }
-  }, [tamanhoPincel]);
+
+    ctx.globalAlpha = 1;
+  }, [tamanhoPincel, opacidade]);
 
   const aoClicarNoCanvas = useCallback((event) => {
     const canvas = canvasRef.current;
@@ -264,7 +292,7 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
       const ctx = canvas.getContext("2d");
       salvarHistorico();
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const mudou = preencherBalde(imageData, canvas.width, canvas.height, posicao.x, posicao.y, cor, tolerancia);
+      const mudou = preencherBalde(imageData, canvas.width, canvas.height, posicao.x, posicao.y, cor, tolerancia, opacidade);
       if (mudou) {
         ctx.putImageData(imageData, 0, 0);
       } else {
@@ -277,8 +305,8 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     salvarHistorico();
     desenhandoRef.current = true;
     ultimoPontoRef.current = posicao;
-    desenharTraco(posicao, posicao, ferramenta === "borracha" ? "#ffffff" : cor);
-  }, [ferramenta, cor, tolerancia, imagemAtual, obterPosicaoNoCanvas, salvarHistorico, desenharTraco]);
+    desenharTraco(posicao, posicao, ferramenta === "borracha" ? "#ffffff" : cor, ferramenta !== "borracha");
+  }, [ferramenta, cor, tolerancia, opacidade, imagemAtual, obterPosicaoNoCanvas, salvarHistorico, desenharTraco]);
 
   const aoMoverNoCanvas = useCallback((event) => {
     if (!desenhandoRef.current || ferramenta === "balde") return;
@@ -287,7 +315,7 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     const posicao = obterPosicaoNoCanvas(event);
     const anterior = ultimoPontoRef.current || posicao;
 
-    desenharTraco(anterior, posicao, ferramenta === "borracha" ? "#ffffff" : cor);
+    desenharTraco(anterior, posicao, ferramenta === "borracha" ? "#ffffff" : cor, ferramenta !== "borracha");
     ultimoPontoRef.current = posicao;
   }, [ferramenta, cor, obterPosicaoNoCanvas, desenharTraco]);
 
@@ -308,6 +336,29 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
       window.removeEventListener("touchend", finalizar);
     };
   }, []);
+
+  // Ctrl+Z / Cmd+Z desfaz; Ctrl+Shift+Z, Cmd+Shift+Z ou Ctrl+Y refaz.
+  useEffect(() => {
+    const aoTeclar = (event) => {
+      const modificador = event.ctrlKey || event.metaKey;
+      if (!modificador) return;
+
+      const tecla = event.key.toLowerCase();
+      if (tecla === "z" && event.shiftKey) {
+        event.preventDefault();
+        refazer();
+      } else if (tecla === "z") {
+        event.preventDefault();
+        desfazer();
+      } else if (tecla === "y") {
+        event.preventDefault();
+        refazer();
+      }
+    };
+
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, [desfazer, refazer]);
 
   const limparParaOriginal = useCallback(() => {
     const canvas = canvasRef.current;
@@ -339,7 +390,7 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
     balde: "Balde: clique numa área fechada pra preencher com a cor selecionada. Contornos escuros seguram a tinta.",
     pincel: "Pincel: clique e arraste pra pintar livremente. Ajuste o tamanho no controle deslizante.",
     borracha: "Borracha: clique e arraste pra apagar de volta ao branco.",
-  }[ferramenta];
+  }[ferramenta] + " · Ctrl/Cmd + scroll ou os botões de zoom aproximam a imagem.";
 
   const cursorDoCanvas = ferramenta === "balde" ? "pointer" : "crosshair";
 
@@ -431,6 +482,57 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
             </div>
           )}
 
+          {ferramenta !== "borracha" && (
+            <div className="min-w-[140px] flex-1 lg:flex-none">
+              <label className="mb-1 block text-xs uppercase tracking-widest text-[#e8e2d0]/50">
+                Opacidade: {opacidade}%
+              </label>
+              <input
+                type="range"
+                min={5}
+                max={100}
+                value={opacidade}
+                onChange={(event) => setOpacidade(Number(event.target.value))}
+                className="w-full accent-[#c9a84c]"
+              />
+            </div>
+          )}
+
+          <div className="min-w-[140px] flex-1 lg:flex-none">
+            <label className="mb-1 flex items-center gap-1 text-xs uppercase tracking-widest text-[#e8e2d0]/50">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Zoom: {Math.round(zoom * 100)}%
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={diminuirZoom}
+                disabled={zoom <= ZOOM_MINIMO}
+                className="flex-1 rounded-lg border border-[#c9a84c]/20 py-1 text-sm text-[#e8e2d0]/80 transition hover:border-[#c9a84c]/40 disabled:opacity-30"
+              >
+                −
+              </button>
+              <button
+                type="button"
+                onClick={resetarZoom}
+                className="flex-1 rounded-lg border border-[#c9a84c]/20 py-1 text-xs text-[#e8e2d0]/80 transition hover:border-[#c9a84c]/40"
+              >
+                100%
+              </button>
+              <button
+                type="button"
+                onClick={aumentarZoom}
+                disabled={zoom >= ZOOM_MAXIMO}
+                className="flex-1 rounded-lg border border-[#c9a84c]/20 py-1 text-sm text-[#e8e2d0]/80 transition hover:border-[#c9a84c]/40 disabled:opacity-30"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
           <div className="flex gap-2 lg:flex-col">
             <button
               type="button"
@@ -467,7 +569,10 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
           </div>
         </aside>
 
-        <main className="flex flex-1 items-center justify-center rounded-2xl border border-[#c9a84c]/15 bg-black/20 p-6">
+        <main
+          onWheel={aoRolarNoCanvas}
+          className="relative flex flex-1 items-center justify-center overflow-auto rounded-2xl border border-[#c9a84c]/15 bg-black/20 p-6"
+        >
           {!imagemAtual && !carregando && (
             <div className="text-center text-[#e8e2d0]/50">
               <p className="text-lg">Escolha uma obra na galeria ou envie uma imagem pra começar</p>
@@ -482,8 +587,14 @@ export default function ColoridorEssencia({ images = [], palette = [], onSave = 
             onTouchStart={aoClicarNoCanvas}
             onTouchMove={aoMoverNoCanvas}
             onTouchEnd={aoSoltarNoCanvas}
-            style={{ cursor: cursorDoCanvas, display: imagemAtual || carregando ? "block" : "none" }}
-            className="max-h-full max-w-full rounded-xl border-2 border-[#c9a84c]/40 bg-white shadow-[0_0_40px_rgba(201,168,76,0.15)]"
+            style={{
+              cursor: cursorDoCanvas,
+              display: imagemAtual || carregando ? "block" : "none",
+              width: dimensaoCanvas.width ? dimensaoCanvas.width * zoom : undefined,
+              height: dimensaoCanvas.height ? dimensaoCanvas.height * zoom : undefined,
+              flexShrink: 0,
+            }}
+            className="rounded-xl border-2 border-[#c9a84c]/40 bg-white shadow-[0_0_40px_rgba(201,168,76,0.15)]"
           />
         </main>
 
