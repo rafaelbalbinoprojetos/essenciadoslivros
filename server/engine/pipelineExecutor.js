@@ -1147,6 +1147,91 @@ async function executarNarrativaCinematica({ obraId }) {
       blueprintId = "sintetico-teste";
       analiseICN = { icn: blueprint.escala.icn, faixa: "Modo de teste", risco_compressao: null };
     } else {
+      const assinaturaArcos = calcularAssinaturaBloco({
+        obraId,
+        versaoBEU: ENGINE_CONFIG.versaoBEU,
+        blueprintHash: "sem-blueprint",
+        versaoMotor: VERSAO_MOTOR_NARRATIVA_CINEMATICA,
+        numeroBloco: "arcos",
+      });
+
+      engineStep("Mapeador de Arcos (Obra Scope Engine)", "→");
+      const arcosReaproveitadoBruto = await buscarSubEtapaConcluidaComAssinatura({
+        obraId,
+        tipoEtapa: "narrativa_cinematica_arcos",
+        assinatura: assinaturaArcos,
+      });
+
+      // Mesma revalidação do ICN/Blueprint abaixo: um registro salvo como
+      // "concluido" em uma versão anterior do motor pode estar corrompido e
+      // não deve travar a geração para sempre.
+      const arcosReaproveitado = arcosReaproveitadoBruto && typeof arcosReaproveitadoBruto.saida?.demanda_divisao === "boolean"
+        ? arcosReaproveitadoBruto
+        : null;
+
+      if (arcosReaproveitadoBruto && !arcosReaproveitado) {
+        engineStep("Mapeador de Arcos (Obra Scope Engine)", "!", { info: "registro reaproveitável estava inválido — regenerando" });
+      }
+
+      let analiseArcos;
+
+      if (arcosReaproveitado) {
+        analiseArcos = arcosReaproveitado.saida;
+        tokensTotais.input += arcosReaproveitado.tokensInput;
+        tokensTotais.output += arcosReaproveitado.tokensOutput;
+        engineStep("Mapeador de Arcos (Obra Scope Engine)", "↺", { info: "reaproveitado de uma tentativa anterior" });
+      } else {
+        const arcosExecucao = await executarSubEtapaNarrativa({
+          obraId,
+          payloadId,
+          tipoEtapa: "narrativa_cinematica_arcos",
+          ordem: definicao.ordem,
+          entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU, assinatura: assinaturaArcos },
+          executor: async () => {
+            const analise = await calcularMapeamentoArcos({ contexto, beuAtual });
+            return {
+              saida: analise,
+              tokensInput: analise.tokens_input,
+              tokensOutput: analise.tokens_output,
+              modelo: ENGINE_CONFIG.modeloDefault,
+            };
+          },
+        });
+        analiseArcos = arcosExecucao.saida;
+        await saveEngineJsonLog({ runId, name: "arcos", data: analiseArcos });
+        engineStep("Mapeador de Arcos (Obra Scope Engine)", "✓", {
+          demanda_divisao: analiseArcos.demanda_divisao,
+          tipo_divisao: analiseArcos.tipo_divisao,
+          total_unidades: analiseArcos.total_unidades,
+        });
+
+        // Não bloqueia a geração: a seleção de qual arco gerar é
+        // responsabilidade do frontend (implementação futura). Por enquanto
+        // a obra inteira continua sendo gerada normalmente, com o
+        // mapeamento de arcos disponível no banco para uso futuro.
+        if (analiseArcos.demanda_divisao) {
+          engineStep("Mapeador de Arcos (Obra Scope Engine)", "!", {
+            info: "obra demanda divisão em arcos — gerando a obra inteira normalmente por enquanto",
+            motivo: analiseArcos.motivo,
+          });
+        }
+
+        // Uma chamada de IA por invocação HTTP: devolve o controle agora,
+        // mesmo padrão do ICN/Blueprint/blocos abaixo.
+        return {
+          ok: true,
+          etapa: tipoEtapa,
+          obraId,
+          finalizado: false,
+          fase: "arcos",
+        };
+      }
+
+      // Disponibiliza o mapeamento de arcos para o ICN e o Blueprint como
+      // contexto adicional, sem alterar o `contexto` usado pelos blocos de
+      // prosa nem pelo restante da função.
+      const contextoComArcos = { ...contexto, mapeamento_arcos: analiseArcos };
+
       const assinaturaICN = calcularAssinaturaBloco({
         obraId,
         versaoBEU: ENGINE_CONFIG.versaoBEU,
@@ -1186,7 +1271,7 @@ async function executarNarrativaCinematica({ obraId }) {
           ordem: definicao.ordem,
           entrada: { obra_id: obraId, versao_beu: ENGINE_CONFIG.versaoBEU, assinatura: assinaturaICN },
           executor: async () => {
-            const analise = await calcularIndiceComplexidadeNarrativa({ contexto, beuAtual });
+            const analise = await calcularIndiceComplexidadeNarrativa({ contexto: contextoComArcos, beuAtual });
             return {
               saida: analise,
               tokensInput: analise.tokens_input,
@@ -1265,7 +1350,7 @@ async function executarNarrativaCinematica({ obraId }) {
             assinatura: assinaturaBlueprint,
           },
           executor: async () => {
-            const resultado = await executarNarrativeBlueprint({ contexto, beuAtual, analiseICN });
+            const resultado = await executarNarrativeBlueprint({ contexto: contextoComArcos, beuAtual, analiseICN });
             return {
               saida: resultado.blueprint,
               tokensInput: resultado.tokens_input,
