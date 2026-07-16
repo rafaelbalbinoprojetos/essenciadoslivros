@@ -8,6 +8,7 @@ import SettingsPage from "./pages/Settings.jsx";
 import LoginPage from "./pages/auth/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import BookCreatePage from "./pages/BookCreate.jsx";
+import BookImportLotePage from "./pages/BookImportLote.jsx";
 import JourneysPage from "./pages/Journeys.jsx";
 import JourneyDetailPage from "./pages/JourneyDetail.jsx";
 import MuralPage from "./pages/Mural.jsx";
@@ -36,6 +37,7 @@ function App() {
             <Route path="biblioteca" element={<LibraryPage />} />
             <Route path="biblioteca/:bookId" element={<BookDetailsPage />} />
             <Route path="biblioteca/novo" element={<BookCreatePage />} />
+            <Route path="biblioteca/lote" element={<BookImportLotePage />} />
             <Route path="biblioteca/:bookId/editar" element={<BookCreatePage />} />
             <Route path="assistente" element={<ChatbotPage />} />
             <Route path="engine" element={<EngineSolicitarObra />} />

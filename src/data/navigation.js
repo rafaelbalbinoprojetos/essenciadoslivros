@@ -56,6 +56,13 @@ export const NAV_LINKS = [
     description: "Inclua rapidamente novos livros, autores e coleções",
   },
   {
+    id: "catalog-lote",
+    to: "/biblioteca/lote",
+    label: "Cadastro em Lote (PDF)",
+    shortLabel: "Em lote",
+    description: "Suba vários PDFs e deixe a IA preencher título, autor e gênero",
+  },
+  {
     id: "engine",
     to: "/engine",
     label: "Solicitar obra",

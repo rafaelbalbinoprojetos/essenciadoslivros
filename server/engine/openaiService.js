@@ -6,7 +6,7 @@ import { engineStep } from "./engineLogger.js";
 
 let openaiClient = null;
 
-function getOpenAIClient() {
+export function getOpenAIClient() {
   if (openaiClient) return openaiClient;
 
   if (!process.env.OPENAI_API_KEY) {
