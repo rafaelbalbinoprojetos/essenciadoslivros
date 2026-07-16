@@ -145,35 +145,55 @@ PROGRESSÃO DENTRO DO BLOCO — mesmo com as cenas já selecionadas, module a in
 ━━━ INSTRUÇÕES DESTE BLOCO ━━━
 [INSTRUCOES_DO_BLOCO]
 
-━━━ CARDÁPIO DE EMOÇÕES E ESTILOS SUNO ━━━
+━━━ IDENTIDADE SONORA DA OBRA ━━━
 
-As tags de cada entrada abaixo devem ser reproduzidas exatamente como estão, sempre separadas por vírgula, SEM colchetes em cada tag individual — o bloco vai direto para o campo de estilo do Suno.
+Antes de escrever qualquer cena, mapeie internamente a identidade musical e cultural desta obra específica. Todos os colchetes de sonoplastia da narrativa inteira (Convite, cenas e encerramento) usam exclusivamente essa paleta — nunca instrumentos genéricos ou fora dela.
 
-FESTIVO / ALEGRIA: Warm Joyful Ambient Score, Playful Light Atmosphere, Festive and Gentle, No Ticking Rhythms, No Drums, No Constant Pulse
+Responda internamente:
+— Qual é o universo emocional desta obra? (épico, íntimo, sombrio, lírico...)
+— Que instrumentos pertencem a este mundo? (orquestra sinfônica, música folclórica medieval, flauta celta, koto japonês, alaúde, berimbau, piano solo, cordas de câmara...)
+— Existe uma trilha sonora canônica associada? (Howard Shore para Tolkien, Nobuo Uematsu para Final Fantasy, Hans Zimmer para determinadas obras...) — não copie, use como DNA sonoro.
+— Que texturas ambientais pertencem a este universo? (vento em montanhas, fogo de lareira medieval, água corrente élfica, batalha distante, biblioteca em silêncio, floresta à noite...)
+— Que instrumentos NUNCA pertenceriam a este mundo? (exclua-os)
 
-TERNURA / INTIMIDADE: Warm Intimate Ambient Score, Soft Harmonic Glow, Gentle Breathing Textures, Tender and Fragile, No Ticking Rhythms, No Drums, No Constant Pulse
+PALETA POR TIPO DE OBRA (referência — adapte à obra específica, não copie literalmente):
+FANTASIA ÉPICA OCIDENTAL (Tolkien, GOT, Witcher): orquestra sinfônica, choir feminino, harp, horn, cordas longas, percussão épica distante, flauta celta; ambiente: vento, pedra, fogo.
+FANTASIA ORIENTAL / ANIME (Demon Slayer, Naruto, Samurai): shakuhachi, koto, taiko, biwa, cordas japonesas; ambiente: bambu, chuva, vento de cerejeira.
+FICÇÃO CIENTÍFICA / CYBERPUNK: sintetizadores analógicos, texturas eletrônicas, pulso baixo; ambiente: servidor room hum, chuva neon, passos em concreto.
+TERROR / SUSPENSE: cordas dissonantes, piano preparado, silêncio como evento; ambiente: casa vazia, madeira rangendo, vento exterior.
+BIOGRAFIA / OBRA HISTÓRICA: instrumento solo do período/cultura da obra, câmara intimista; ambiente: escrivaninha, chuva, livros, passos em corredor.
+OBRA BRASILEIRA / LATINOAMERICANA: violão, percussão orgânica, flauta andina ou nordestina; ambiente: chuva em pedra, praça, brisa, distância urbana.
+GAMES DE AVENTURA / AÇÃO: orquestra híbrida, percussão cinematográfica, synth pad; ambiente: vento em ruínas, passos em terra, fogo crepitando.
+Se a obra não se encaixar perfeitamente em nenhuma categoria, combine elementos das mais próximas ou construa uma paleta própria coerente com a cultura e o tom da obra.
 
-CONTEMPLAÇÃO / SAUDADE: Melancholic Warm Ambient Score, Nostalgic Soft Atmosphere, Aching Beauty, Slow Fading Warmth, No Ticking Rhythms, No Drums, No Constant Pulse
+━━━ CARDÁPIO DE EMOÇÕES ━━━
 
-TENSÃO / MEDO CRESCENTE: Tense Restless Underscore, Shifting Dark Textures, Pressure Building Without Release, Unsettled Dissonant Layers, No Ticking Rhythms, No Drums, No Constant Pulse
+Cada cena usa exatamente uma destas doze emoções dominantes como NOME DO CARDÁPIO: FESTIVO / ALEGRIA, TERNURA / INTIMIDADE, CONTEMPLAÇÃO / SAUDADE, TENSÃO / MEDO CRESCENTE, SOMBRIO / PESO, HORROR / PAVOR, DEVASTAÇÃO / PERDA, GRANDEZA MELANCÓLICA, ESPERANÇA CAUTELOSA, BELEZA QUE DÓI, EXAUSTÃO / FIM, DESCONFORTO MORAL. Se nenhuma encaixar perfeitamente, use a mais próxima. Nunca invente emoções fora do cardápio.
 
-SOMBRIO / PESO: Dark Low Ambient Score, Heavy Somber Atmosphere, Deep Rumbling Undertone, No High Pitched Sounds, No Ticking Rhythms, No Drums, No Constant Pulse
+━━━ ESTILO SUNO — CONSTRUÍDO A PARTIR DA PALETA DA OBRA ━━━
 
-HORROR / PAVOR: Near Total Silence Score, Cold Sparse Tension, Dread as Absence Not Sound, Hollow Air, No Ticking Rhythms, No Drums, No Constant Pulse
+O bloco ESTILO SUNO de cada cena NUNCA usa tags genéricas fixas — ele é construído combinando os instrumentos da paleta exclusiva desta obra (definida em IDENTIDADE SONORA DA OBRA) com a emoção dominante da cena. Formato: tags separadas por vírgula, SEM colchetes em cada tag individual, sem mencionar idioma.
 
-DEVASTAÇÃO / PERDA: Exhausted Minimal Score, Sound Thinning to Nothing, Grief Without Resolution, Vast Empty Ache, No Ticking Rhythms, No Drums, No Constant Pulse
+Cada bloco deve conter:
+1. Os instrumentos específicos da paleta da obra que expressam esta emoção (ex.: "Solo Horn and Female Choir Score" em vez de "Ambient Score" genérico; "Shakuhachi and Koto Score" para uma obra japonesa; "Solo Violão Score" para uma obra brasileira).
+2. A textura emocional do momento (ex.: Ancient Weight, Aching Beauty, Hollow Dread, Festive and Gentle).
+3. Restrições de ritmo/produção coerentes: use "No Ticking Rhythms, No Drums, No Constant Pulse" como padrão — substitua apenas quando a paleta da obra pedir percussão característica (ex.: Taiko Pulse em tensão de uma obra samurai).
 
-GRANDEZA MELANCÓLICA: Vast Somber Ambient Score, Ancient Weight, Monumental but Gentle, Slow Inevitable Swell Then Retreat, No Ticking Rhythms, No Drums, No Constant Pulse
+Guia de intensidade por emoção — adapte os instrumentos da paleta a cada faixa, mantendo o espírito abaixo, nunca o texto literal:
+FESTIVO / ALEGRIA → registro quente, leve, lúdico
+TERNURA / INTIMIDADE → registro quente, íntimo, frágil
+CONTEMPLAÇÃO / SAUDADE → registro melancólico, nostálgico, aquecido
+TENSÃO / MEDO CRESCENTE → registro tenso, inquieto, dissonante
+SOMBRIO / PESO → registro grave, pesado, sombrio
+HORROR / PAVOR → quase silêncio, frio, esparso
+DEVASTAÇÃO / PERDA → mínimo, esvaziando-se até quase nada
+GRANDEZA MELANCÓLICA → vasto, solene, gentil
+ESPERANÇA CAUTELOSA → frágil, ascendente, tênue
+BELEZA QUE DÓI → dourado, etéreo, doloroso
+EXAUSTÃO / FIM → quase nenhuma música, uma única fonte sonora esvanecendo
+DESCONFORTO MORAL → inquieto, ambíguo, quente e conflitante
 
-ESPERANÇA CAUTELOSA: Fragile Rising Warmth, Tentative Light Atmosphere, Small Brave Glow, Hope as Whisper Not Shout, No Ticking Rhythms, No Drums, No Constant Pulse
-
-BELEZA QUE DÓI: Golden Light Ambient Score, Ethereal Gentle Warmth, Beauty That Aches, Last Safe Place Atmosphere, No Ticking Rhythms, No Drums, No Constant Pulse
-
-EXAUSTÃO / FIM: Almost No Music, Single Fragile Sound Source, Vast Interior Silence, One Note Fading Forever, No Ticking Rhythms, No Drums, No Constant Pulse
-
-DESCONFORTO MORAL: Uneasy Warm Underscore, Conflicting Soft Layers, Gradual Reluctant Warmth, Moral Ambiguity as Sound, No Ticking Rhythms, No Drums, No Constant Pulse
-
-Se nenhuma encaixar perfeitamente, use a mais próxima. Nunca invente estilos fora do cardápio.
+Nunca use instrumento fora da paleta desta obra. Nunca repita o mesmo bloco de tags em duas cenas — cada bloco reflete o momento específico dentro da paleta.
 
 ━━━ FORMATO DE SAÍDA — CADA CENA ━━━
 
@@ -194,12 +214,13 @@ O Convite só deve ser escrito se as INSTRUÇÕES DESTE BLOCO pedirem explicitam
 Quando o Convite for pedido: ele é conteúdo à parte, escrito antes de qualquer cena numerada. Ele nunca é a Cena 01 e nunca leva o cabeçalho [CENA XX — EMOÇÃO: ...].
 
 Estrutura obrigatória:
-1. Narração seca (2–3 linhas, sem música)
-2. Aforismo mítico (2–4 linhas, reticências como respiro)
-3. [music drops away completely] [silence]
-4. [lower voice] Se possível... utilize fones de ouvido...
-5. O lugar fala: convida, avisa ou constata
-6. [music drops away completely] [long silence]
+1. [introdução musical de 8 a 15 segundos, somente com os instrumentos da paleta desta obra, entrando do silêncio — descreva a progressão específica: qual instrumento abre, qual entra depois, como a música se desenvolve antes de qualquer palavra]
+2. [música recua para plano de fundo] Narração seca (2–3 linhas)
+3. Aforismo mítico (2–4 linhas, reticências como respiro)
+4. [instrumentos da paleta somem completamente] [silence]
+5. [lower voice] Se possível... utilize fones de ouvido...
+6. O lugar fala: convida, avisa ou constata
+7. [instrumentos da paleta somem completamente] [long silence]
 
 O aforismo, o mundo que fala e a apresentação vêm no payload da obra.
 
@@ -223,13 +244,26 @@ Ponto final é atropelado pela IA de voz. Use:
 [silence] / [long silence] → silêncios reais
 Nunca ponto final antes de frase importante.
 
-━━━ COMANDOS NA NARRATIVA ━━━
+━━━ SONOPLASTIA CENA A CENA ━━━
 
-FUNCIONAM: [silence], [long silence], [music drops away completely], [lower voice], [intimate narration], [whisper], [emotion rises], [soft warm background enters] (uma vez por cena, após as primeiras linhas secas).
+Cada colchete de som é inserido diretamente no fluxo da narrativa — nunca em bloco separado, nunca antes ou depois do texto — e usa somente a paleta definida em IDENTIDADE SONORA DA OBRA.
 
-NÃO FUNCIONAM: [new texture enters], [instrumental interlude], [environment:], qualquer comando com mais de 6–8 palavras.
+Toda indicação deve conter três elementos: o instrumento ou textura (da paleta), a qualidade emocional daquele som naquele momento, e o comportamento (entrando, recuando, sustentado, fading, dropping).
 
-Ciclo por cena: narração seca → música entra → narração com fundo → [music drops away completely] → frase de peso no silêncio → música volta → repetir. Mínimo 3 silêncios por cena. Frase mais importante sempre APÓS um silêncio.
+NÃO FUNCIONAM — genéricos demais: [soft warm background enters], [music], [ambient sound], [new texture enters], [instrumental interlude], [environment:]. [silence] e [long silence] simples só valem em momentos de devastação ou revelação — sem adornos.
+
+FUNCIONAM — específicos e pertencentes à paleta da obra, por exemplo:
+[solo horn — distant, barely there, like a memory of something vast]
+[shakuhachi held note — long decay into silence]
+[violão único — nota sustentada com vibrato lento, recuando]
+
+Regras de posicionamento: o colchete PREPARA o que vem a seguir, ou ENCERRA o que passou — nunca interrompe um momento emocional no meio; nunca aparece duas vezes seguidas sem texto entre eles; frequência de 1 indicação a cada 4–6 linhas de texto.
+
+Swells emocionais — no pico de intensidade da cena, o som cresce brevemente e recua, nunca triunfante, sempre contido: [strings rising — slow, aching, not triumphant — then retreating].
+
+Encerramento de cena — toda cena termina com som ou silêncio resolvido, nunca numa textura suspensa sem intenção: [music fading to single instrument — then nothing] ou [silence stretching — 4 seconds before next scene].
+
+Ciclo por cena: narração seca → som da paleta entra → narração com fundo → som recua/cai → frase de peso no silêncio → som volta → repetir. Mínimo 3 silêncios por cena. Frase mais importante sempre APÓS um silêncio.
 
 ━━━ REGRAS DE ESCRITA ━━━
 
@@ -265,15 +299,19 @@ A emoção conduz a memória. A memória conduz a interpretação. A cronologia 
 
 Somente quando as instruções deste bloco indicarem que ele é o bloco final da narrativa: a última cena deve concluir com clímax emocional, descompressão e retorno ao primeiro símbolo da obra inteira (não apenas do bloco). Nos demais blocos, encerre a última cena em uma transição emocional natural — consequência, ruptura, revelação ou promessa narrativa — nunca uma conclusão definitiva.
 
+━━━ ENCERRAMENTO SONORO FINAL ━━━
+
+Somente quando este for o bloco final da narrativa: após a última cena, o encerramento sonoro é o espelho da abertura do Convite — a paleta da obra retorna, mas transformada pelo peso de tudo que foi narrado. Estrutura: [instrumentos da paleta retornando — mais lentos, mais graves] → [swell gradual — não celebração, reconhecimento] → [recuo para instrumento solo da paleta] → [silêncio final de no mínimo 6 segundos, indicar a duração] → [fade absoluto]. Deve soar como a música do Convite, porém envelhecida pela narrativa.
+
 ━━━ TRANSFORMAÇÃO E DIREITOS AUTORAIS ━━━
 
 Esta narrativa é uma obra editorial transformativa, não uma transcrição. Nunca reproduza diálogos extensos da obra original, nunca copie cenas palavra por palavra, nunca funcione como transcrição, nunca narre episódio por episódio ou missão por missão. Use paráfrase. Priorize memória, emoção, interpretação e consequência humana. Essa proteção não justifica eliminar acontecimentos indispensáveis: preserve o que aconteceu em forma transformativa, sem copiar a expressão original.
 
 ━━━ VERIFICAÇÃO ANTES DE ENTREGAR ━━━
 
-Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas conforme as instruções deste bloco? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma? ✓ a cena tem unidade dramática real (situação, personagem, desejo ou conflito, escolha ou consequência) e não existe só por um símbolo bonito?
+Por cena: ✓ parece lembrança, não resumo? ✓ 2500–4000 chars? ✓ uma emoção dominante? ✓ estilo correto? ✓ começa seco? ✓ mín. 3 silêncios? ✓ frase de peso após silêncio? ✓ abertura diferente da anterior? ✓ 3+ sentidos? ✓ só ... e — nas pausas? ✓ nenhum comando inválido? ✓ emoções adjacentes fundidas conforme as instruções deste bloco? ✓ tem detalhe sobrevivente concreto? ✓ existe pelo menos um momento de pura contemplação sem interpretação? ✓ símbolo central e intenção dramática citam elemento concreto e reconhecível da obra, nunca um conceito abstrato isolado? ✓ cabeçalho da cena está em um único bloco de colchetes ([CENA XX — EMOÇÃO: ...])? ✓ ESTILO SUNO sem colchetes individuais nas tags e sem menção de idioma? ✓ a cena tem unidade dramática real (situação, personagem, desejo ou conflito, escolha ou consequência) e não existe só por um símbolo bonito? ✓ todos os colchetes de sonoplastia da cena usam apenas instrumentos/texturas da paleta desta obra, com instrumento + qualidade emocional + comportamento (nunca genéricos como "soft warm background enters")?
 
-Global deste bloco: ✓ as cenas escritas correspondem exatamente à lista das instruções deste bloco — mesma numeração, mesma ordem, nenhuma cena extra ou faltando? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ (se as instruções pediram Convite) ele aparece integralmente antes da Cena 01 e não entra na contagem de cenas? ✓ (se este for o bloco final) a última cena retorna ao primeiro símbolo da obra?
+Global deste bloco: ✓ as cenas escritas correspondem exatamente à lista das instruções deste bloco — mesma numeração, mesma ordem, nenhuma cena extra ou faltando? ✓ nenhuma cena existe só por importância na trama? ✓ símbolos retornam transformados, não repetidos? ✓ há frases simples entre frases belas? ✓ o narrador hesita ou esquece em algum momento? ✓ o ouvinte recebeu espaço para sentir sem explicação? ✓ todo elemento importante teve âncora emocional na primeira aparição? ✓ quem não conhece a obra consegue acompanhar a emoção? ✓ (se as instruções pediram Convite) ele aparece integralmente antes da Cena 01, abre com introdução musical de 8–15s da paleta da obra antes de qualquer palavra, e não entra na contagem de cenas? ✓ (se este for o bloco final) a última cena retorna ao primeiro símbolo da obra e o Encerramento Sonoro Final espelha a abertura do Convite, envelhecido pela narrativa?
 
 Se as instruções deste bloco pedirem o Convite, a saída começa por ele (narração seca, aforismo, silêncios e a apresentação "ESSÊNCIA DOS LIVROS APRESENTA..."), seguido obrigatoriamente pela primeira cena deste bloco. Se as instruções não pedirem o Convite, comece diretamente nessa primeira cena — sem introdução, sem resumo do que já aconteceu, sem "continuando de onde paramos". Escreva apenas as cenas especificadas nas instruções deste bloco. Nada depois da última cena especificada.
 

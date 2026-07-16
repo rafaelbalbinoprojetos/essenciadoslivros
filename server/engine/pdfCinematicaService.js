@@ -154,23 +154,6 @@ function desenharFundo(doc) {
   doc.restore();
 }
 
-function desenharRodape(doc, numero) {
-  doc.save();
-  // Escrever abaixo de maxY() dispararia a paginação automática do PDFKit
-  // (ele acha que o conteúdo não coube e cria uma página em branco). Como
-  // isso é só o rodapé, zeramos a margem inferior por um instante.
-  const margemInferiorOriginal = doc.page.margins.bottom;
-  doc.page.margins.bottom = 0;
-  doc.font("corpoItalico").fontSize(8).fillColor(COR_ACCENT);
-  doc.text(`— ${numero} —`, MARGIN_SIDE, doc.page.height - 46, {
-    width: doc.page.width - MARGIN_SIDE * 2,
-    align: "center",
-    lineBreak: false,
-  });
-  doc.page.margins.bottom = margemInferiorOriginal;
-  doc.restore();
-}
-
 function desenharLinhaComTags(doc, linha, opts) {
   const partes = linha.split(/(\[[^\]]+\])/g).filter((parte) => parte !== "");
   if (partes.length === 0) return;
@@ -362,13 +345,6 @@ export async function criarDocumentoPdf({
   }
 
   cenas.forEach((cena) => renderizarCena(doc, cena));
-
-  // Numeração final — pula a capa (página 0 do intervalo)
-  const intervalo = doc.bufferedPageRange();
-  for (let i = intervalo.start + 1; i < intervalo.start + intervalo.count; i += 1) {
-    doc.switchToPage(i);
-    desenharRodape(doc, i - intervalo.start);
-  }
 
   doc.end();
   return finalizado;
