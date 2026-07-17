@@ -219,20 +219,23 @@ body {
 
 /* Aura da Obra — atmosfera do CinematicPlayer (borda, respiro, shimmer). */
 .energy-border {
+  /* inset:0 (não negativo!) — o player é tela cheia (fixed inset-0), então
+     "para fora da caixa" é fora da viewport e o navegador corta tudo ali.
+     A espessura do anel vem do padding (mask de content-box vs border-box). */
   position: absolute;
-  inset: -2px;
+  inset: 0;
   z-index: 1;
   pointer-events: none;
   border-radius: inherit;
-  padding: 2px;
+  padding: 4px;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    transparent 80deg,
-    rgba(var(--color-accent-primary), 0.08) 120deg,
+    rgba(var(--color-accent-primary), 0.1) 60deg,
     rgba(var(--color-accent-primary), 1) 170deg,
-    rgba(var(--color-accent-primary), 0.35) 210deg,
-    transparent 270deg
+    rgba(var(--color-accent-primary), 0.5) 230deg,
+    transparent 300deg,
+    transparent 360deg
   );
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -241,7 +244,7 @@ body {
   /* transform (rotação) e opacity (respiro) ficam em keyframes separados —
      o audio-energy só entra no blur, pra não disputar propriedade com eles. */
   animation: rotate-energy 6s linear infinite, energy-breathe 3.5s ease-in-out infinite;
-  filter: blur(calc(3px + var(--audio-energy, 0) * 6px));
+  filter: blur(calc(2px + var(--audio-energy, 0) * 6px));
 }
 
 @keyframes rotate-energy {
@@ -278,9 +281,9 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(var(--color-accent-primary), 0.04),
-    rgba(var(--color-accent-primary), 0.3),
-    rgba(var(--color-accent-primary), 0.08),
+    rgba(var(--color-accent-primary), 0.06),
+    rgba(var(--color-accent-primary), 0.45),
+    rgba(var(--color-accent-primary), 0.12),
     transparent
   );
   filter: blur(12px);
@@ -315,7 +318,7 @@ body {
   height: 100%;
   pointer-events: none;
   mix-blend-mode: screen;
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 .player-play-glow {

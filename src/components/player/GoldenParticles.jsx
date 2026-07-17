@@ -21,13 +21,13 @@ export default function GoldenParticles() {
     if (!context) return undefined;
 
     const accentRgb = readAccentRgb();
-    const count = window.innerWidth < 768 ? 18 : 32;
+    const count = window.innerWidth < 768 ? 22 : 38;
     const particles = Array.from({ length: count }, () => ({
       x: Math.random(),
       y: Math.random(),
-      radius: Math.random() * 1.5 + 0.3,
+      radius: Math.random() * 2.5 + 1.5,
       speed: Math.random() * 0.00035 + 0.00008,
-      opacity: Math.random() * 0.55 + 0.15,
+      opacity: Math.random() * 0.4 + 0.45,
     }));
 
     let animationFrame = 0;
@@ -60,8 +60,8 @@ export default function GoldenParticles() {
         context.beginPath();
         context.arc(particle.x * width, particle.y * height, particle.radius, 0, Math.PI * 2);
         context.fillStyle = `rgba(${accentRgb}, ${particle.opacity})`;
-        context.shadowBlur = 8;
-        context.shadowColor = `rgba(${accentRgb}, 0.8)`;
+        context.shadowBlur = 14;
+        context.shadowColor = `rgba(${accentRgb}, 0.9)`;
         context.fill();
       }
 
