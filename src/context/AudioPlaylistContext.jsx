@@ -35,6 +35,12 @@ function normalizeTracks(tracks = []) {
       source,
       skipIntro: Boolean(track.skipIntro),
       skipProgress: Boolean(track.skipProgress),
+      description: track.description ?? null,
+      quote: track.quote ?? null,
+      narrator: track.narrator ?? null,
+      soundtrack: track.soundtrack ?? null,
+      collection: track.collection ?? null,
+      totalDurationSeconds: track.totalDurationSeconds ?? null,
     });
   });
 
@@ -643,7 +649,14 @@ export function AudioPlaylistProvider({ children }) {
   return (
     <AudioPlaylistContext.Provider value={value}>
       {children}
-      <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" hidden />
+      {/* Sem crossOrigin: as fontes de áudio (Supabase Storage) não mandam
+          Access-Control-Allow-Origin, e com crossOrigin="anonymous" o
+          navegador passa a exigir CORS de verdade e recusa carregar o
+          áudio — silêncio total. Sem o atributo, a reprodução funciona
+          normalmente; só a leitura do AnalyserNode fica "tainted" (sempre
+          zero), então --audio-energy nunca reage ao grave — a borda e o
+          botão continuam com o respiro/brilho base, só sem a reatividade. */}
+      <audio ref={audioRef} preload="metadata" hidden />
     </AudioPlaylistContext.Provider>
   );
 }

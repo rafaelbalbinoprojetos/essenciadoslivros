@@ -16,6 +16,7 @@ export default function ShareButton({ track, className }) {
   return (
     <button type="button" onClick={handleShare} aria-label="Compartilhar" className={className}>
       <Share2 className="h-5 w-5" />
+      <span>Compartilhar</span>
     </button>
   );
 }

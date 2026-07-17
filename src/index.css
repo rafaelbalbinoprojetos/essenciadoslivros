@@ -326,9 +326,39 @@ body {
     rgba(var(--color-accent-primary), calc(0.35 + var(--audio-energy, 0) * 0.5));
 }
 
+/* Anel de energia ao redor do botão de play — ligado a isPlaying (classe
+   aplicada via JS), não a --audio-energy: a leitura real do áudio fica
+   sempre zerada sem CORS na fonte, então isPlaying é o sinal confiável. */
+.play-energy-ring {
+  position: relative;
+}
+
+.play-energy-ring::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  padding: 3px;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(var(--color-accent-primary), 0.15) 90deg,
+    rgba(var(--color-accent-primary), 1) 180deg,
+    rgba(var(--color-accent-primary), 0.4) 260deg,
+    transparent 330deg
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: rotate-energy 2.2s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .energy-border,
-  .cinematic-shimmer::before {
+  .cinematic-shimmer::before,
+  .play-energy-ring::before {
     animation: none;
   }
 }
