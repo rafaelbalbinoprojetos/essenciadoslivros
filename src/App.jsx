@@ -56,7 +56,9 @@ function AppRoutes() {
           </Route>
           {/* Fora do <Layout/>: sem sidebar/topbar por trás, fullscreen real */}
           <Route path="obra/:slug/player" element={<CinematicPlayer />} />
-          <Route path="obra/:slug/player/cena-:cenaId" element={<CinematicPlayer />} />
+          {/* :cenaSegment vem inteiro ("cena-<id>") — React Router não
+              faz match de prefixo fixo + parâmetro no mesmo segmento. */}
+          <Route path="obra/:slug/player/:cenaSegment" element={<CinematicPlayer />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -64,7 +66,9 @@ function AppRoutes() {
       {backgroundLocation && (
         <Routes>
           <Route path="obra/:slug/player" element={<CinematicPlayer />} />
-          <Route path="obra/:slug/player/cena-:cenaId" element={<CinematicPlayer />} />
+          {/* :cenaSegment vem inteiro ("cena-<id>") — React Router não
+              faz match de prefixo fixo + parâmetro no mesmo segmento. */}
+          <Route path="obra/:slug/player/:cenaSegment" element={<CinematicPlayer />} />
         </Routes>
       )}
     </>

@@ -26,7 +26,10 @@ function formatRate(rate) {
 }
 
 export default function CinematicPlayer() {
-  const { slug, cenaId } = useParams();
+  const { slug, cenaSegment } = useParams();
+  // A rota captura o segmento inteiro ("cena-<id>"); o React Router não
+  // resolve prefixo fixo + parâmetro dentro do mesmo segmento de URL.
+  const cenaId = cenaSegment?.startsWith("cena-") ? cenaSegment.slice("cena-".length) : cenaSegment ?? null;
   const location = useLocation();
   const navigate = useNavigate();
   const backgroundLocation = location.state?.backgroundLocation;
