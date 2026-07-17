@@ -210,6 +210,13 @@ body {
   color: rgb(var(--text-primary));
 }
 
+/* 100dvh: usa a altura visível real no mobile (desconta a barra do
+   navegador), diferente de 100vh que conta a altura da viewport inteira. */
+.cinematic-player {
+  height: 100vh;
+  height: 100dvh;
+}
+
 a {
   color: inherit;
   text-decoration: none;

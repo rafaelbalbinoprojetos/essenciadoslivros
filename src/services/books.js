@@ -7,6 +7,7 @@ const GENRES_TABLE = "generos";
 const COLLECTIONS_TABLE = "colecoes";
 const BOOK_SELECT_FIELDS = `
   id,
+  slug,
   titulo,
   subtitulo,
   sinopse,
@@ -138,6 +139,19 @@ export async function getBookById(bookId) {
   const { data, error } = await baseBookQuery().eq("id", bookId).single();
   if (error) throw error;
   return data;
+}
+
+/** Busca um livro pelo slug (com fallback para id, útil para links antigos). */
+export async function getBookBySlug(slugOrId) {
+  if (!slugOrId) throw new Error("Informe o slug ou identificador do livro.");
+  const { data, error } = await baseBookQuery().eq("slug", slugOrId).maybeSingle();
+  if (error) throw error;
+  if (data) return data;
+
+  const byId = await baseBookQuery().eq("id", slugOrId).maybeSingle();
+  if (byId.error) throw byId.error;
+  if (!byId.data) throw new Error("Obra não encontrada.");
+  return byId.data;
 }
 
 export async function createBook(payload) {

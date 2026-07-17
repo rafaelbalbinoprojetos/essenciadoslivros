@@ -4,12 +4,13 @@ import toast from "react-hot-toast";
 import { BookOpen, FileText, Film, ListMusic, Pause, Pencil, Play, Trash2 } from "lucide-react";
 import { deleteBook, getBookById } from "../services/books.js";
 import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
-import { resolveAudioSource, resolveNarrativeSource, resolvePdfSource } from "../utils/media.js";
+import { resolveAudioSource, resolvePdfSource } from "../utils/media.js";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { isAdminUser } from "../utils/admin.js";
 import BookReviews from "../components/BookReviews.jsx";
 import { getNarrativeByBook } from "../services/narratives.js";
+import { buildSimpleAudioTrack, buildNarrativeTracks } from "../utils/playlist.js";
 
 const AUTHOR_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='gradient' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2334315b'/%3E%3Cstop offset='100%25' stop-color='%235f5677'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='200' rx='72' fill='url(%23gradient)'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='rgba(255,255,255,0.8)' font-family='Helvetica,Arial,sans-serif' font-size='72'%3EE%3C/text%3E%3C/svg%3E";
@@ -140,17 +141,10 @@ export default function BookDetailsPage() {
   const hasCinematicPdf = Boolean(book?.pdf_cinematica_url);
   const hasEncyclopedicPdf = Boolean(book?.pdf_enciclopedico_url);
   const hasGuiaEditorialPdf = Boolean(book?.pdf_guia_editorial_url);
-  const playlistTrack = useMemo(() => {
-    if (!book || !audioSource) return null;
-    return {
-      id: book.id ?? "book-current",
-      bookId: book.id ?? null,
-      title: book.titulo ?? "Audiobook Essência",
-      author: authorName,
-      cover: coverSrc,
-      source: audioSource,
-    };
-  }, [audioSource, authorName, book, coverSrc]);
+  const playlistTrack = useMemo(
+    () => buildSimpleAudioTrack(book, coverSrc, audioSource),
+    [audioSource, book, coverSrc],
+  );
 
   const handleQueueInGlobalPlayer = useCallback(() => {
     if (!playlistTrack) return;
@@ -235,19 +229,7 @@ export default function BookDetailsPage() {
     setNarrativeStarting(true);
     setNarrativeError("");
     try {
-      const resolved = await Promise.all(
-        narrativeTracks.map(async (track) => ({
-          id: `narrative-${track.id}`,
-          bookId: book?.id ?? null,
-          title: track.titulo,
-          author: narrative?.titulo ?? authorName,
-          cover: narrative?.capa_url ? ensureCoverSrc(narrative.capa_url) : coverSrc,
-          source: await resolveNarrativeSource(track.audio_path),
-          skipIntro: true,
-          skipProgress: true,
-        })),
-      );
-      const playable = resolved.filter((track) => track.source);
+      const playable = await buildNarrativeTracks(book, narrative, coverSrc);
       if (!playable.length) throw new Error("Nenhuma cena pôde ser carregada.");
 
       const requestedId = selectedPlayerId;
@@ -259,7 +241,7 @@ export default function BookDetailsPage() {
     } finally {
       setNarrativeStarting(false);
     }
-  }, [authorName, book?.id, coverSrc, currentTrack?.id, narrative, narrativeStarting, narrativeTracks, startPlaylist, togglePlay]);
+  }, [book, coverSrc, currentTrack?.id, narrative, narrativeStarting, narrativeTracks, startPlaylist, togglePlay]);
 
   const handleExcluirObra = useCallback(async () => {
     if (!book?.id) return;

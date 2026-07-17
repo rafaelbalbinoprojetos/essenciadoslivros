@@ -1,5 +1,6 @@
-﻿import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+﻿import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Layout from "./layout/Layout.jsx";
+import CinematicPlayer from "./components/player/CinematicPlayer.jsx";
 import DashboardPage from "./pages/Dashboard.jsx";
 import LibraryPage from "./pages/Library.jsx";
 import BookDetailsPage from "./pages/BookDetails.jsx";
@@ -20,10 +21,13 @@ import EngineCustosIA from "./pages/EngineCustosIA.jsx";
 import EssenciaEmCoresPage from "./pages/EssenciaEmCores.jsx";
 
 
-function App() {
+function AppRoutes() {
+  const location = useLocation();
+  const backgroundLocation = location.state?.backgroundLocation;
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <>
+      <Routes location={backgroundLocation || location}>
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<ProtectedRoute />}>
@@ -45,14 +49,32 @@ function App() {
             <Route path="engine/custos" element={<EngineCustosIA />} />
             <Route path="colorir" element={<EssenciaEmCoresPage />} />
             <Route path="configuracoes" element={<SettingsPage />} />
-            
+
 
             {/* Rotas antigas mantidas temporariamente para compatibilidade */}
             <Route path="chatbot" element={<Navigate to="/assistente" replace />} />
           </Route>
+          {/* Fora do <Layout/>: sem sidebar/topbar por trás, fullscreen real */}
+          <Route path="obra/:slug/player" element={<CinematicPlayer />} />
+          <Route path="obra/:slug/player/cena-:cenaId" element={<CinematicPlayer />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {backgroundLocation && (
+        <Routes>
+          <Route path="obra/:slug/player" element={<CinematicPlayer />} />
+          <Route path="obra/:slug/player/cena-:cenaId" element={<CinematicPlayer />} />
+        </Routes>
+      )}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

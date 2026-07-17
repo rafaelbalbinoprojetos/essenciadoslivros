@@ -27,6 +27,8 @@ function normalizeTracks(tracks = []) {
     normalized.push({
       id: uniqueId,
       bookId: track.bookId ?? track.detailsId ?? track.id ?? null,
+      slug: track.slug ?? null,
+      sceneId: track.sceneId ?? null,
       title: track.title ?? "Audiobook Essência",
       author: track.author ?? track.subtitle ?? "Conteúdo Essência",
       cover: track.cover ?? null,

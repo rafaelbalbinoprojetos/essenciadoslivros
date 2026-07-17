@@ -25,7 +25,7 @@ import ThemeMenu from "../components/ThemeMenu.jsx";
 import NotificationPanel from "../components/NotificationPanel.jsx";
 import WelcomeModal from "../components/WelcomeModal.jsx";
 import PremiumPlansModal from "../components/PremiumPlansModal.jsx";
-import PlayerModal from "../components/PlayerModal.jsx";
+import PersistentMiniPlayer from "../components/PersistentMiniPlayer.jsx";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 import { DEFAULT_COVER_PLACEHOLDER } from "../utils/covers.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -85,8 +85,13 @@ export default function Layout() {
   const { user, signOut, updateUserMetadata } = useAuth();
   const { currentTrack, isPlaying: audioPlaying, togglePlay } = useAudioPlaylist();
 
+  const handleOpenPlayer = useCallback(() => {
+    if (!currentTrack?.slug) return;
+    const path = `/obra/${currentTrack.slug}/player${currentTrack.sceneId ? `/cena-${currentTrack.sceneId}` : ""}`;
+    navigate(path, { state: { backgroundLocation: location } });
+  }, [currentTrack?.slug, currentTrack?.sceneId, location, navigate]);
+
   const [menuOpen, setMenuOpen] = useState(false);
-  const [playerOpen, setPlayerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("essencia:sidebar-collapsed") === "1";
@@ -484,7 +489,7 @@ export default function Layout() {
               <div className={`flex items-center gap-3 ${collapsed ? "md:justify-center md:gap-0" : ""}`}>
                 <button
                   type="button"
-                  onClick={() => setPlayerOpen(true)}
+                  onClick={handleOpenPlayer}
                   aria-label="Abrir player"
                   className="flex-none overflow-hidden rounded-xl ring-1 ring-black/5 transition hover:opacity-90"
                 >
@@ -496,7 +501,7 @@ export default function Layout() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPlayerOpen(true)}
+                  onClick={handleOpenPlayer}
                   className={`min-w-0 flex-1 text-left ${collapsed ? "md:hidden" : ""}`}
                 >
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#b38b59]">Tocando agora</p>
@@ -693,7 +698,7 @@ export default function Layout() {
             <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[rgb(var(--surface-base))] px-4 pb-24 pt-6 md:px-8">
               <Outlet />
             </main>
-            <PlayerModal open={playerOpen} onClose={() => setPlayerOpen(false)} />
+            <PersistentMiniPlayer />
 
         </div>
 
