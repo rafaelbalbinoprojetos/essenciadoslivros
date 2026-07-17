@@ -54,7 +54,77 @@ export function AudioPlaylistProvider({ children }) {
   const loadingRef = useRef(false);
   const rateRef = useRef(1);
   const repeatRef = useRef(false);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const sourceNodeRef = useRef(null);
+  const energyRafRef = useRef(0);
+  const energyConsumersRef = useRef(0);
   const { user } = useAuth();
+
+  // Grafo do Web Audio (AudioContext + Analyser + MediaElementSource) usado
+  // pela "Aura da Obra" pra reagir ao grave da narração. Só pode ser criado
+  // UMA vez por elemento <audio> — createMediaElementSource lança
+  // InvalidStateError se chamado de novo, então isso não pode viver dentro
+  // de um componente que monta/desmonta (ex.: o CinematicPlayer).
+  const ensureAudioGraph = useCallback(() => {
+    if (audioContextRef.current) return audioContextRef.current;
+    const node = audioRef.current;
+    if (!node) return null;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      const ctx = new AudioCtx();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      const source = ctx.createMediaElementSource(node);
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+      sourceNodeRef.current = source;
+    } catch (err) {
+      console.error("[AudioPlaylist] Web Audio indisponível:", err);
+    }
+    return audioContextRef.current;
+  }, []);
+
+  // requestAudioEnergy/releaseAudioEnergy: telas (ex.: CinematicPlayer) pedem
+  // pra ligar o loop de análise enquanto estão montadas. O valor calculado
+  // vai direto pra uma CSS custom property (--audio-energy), nunca pra
+  // useState — isso muda a ~60fps e um useState aqui re-renderizaria toda a
+  // árvore que consome useAudioPlaylist() (sidebar, BookDetails, mini-player).
+  const requestAudioEnergy = useCallback(() => {
+    energyConsumersRef.current += 1;
+    const ctx = ensureAudioGraph();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    if (energyRafRef.current) return;
+
+    const analyser = analyserRef.current;
+    if (!analyser) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    const tick = () => {
+      if (energyConsumersRef.current <= 0) {
+        document.documentElement.style.setProperty("--audio-energy", "0");
+        energyRafRef.current = 0;
+        return;
+      }
+      analyser.getByteFrequencyData(data);
+      const bassBins = Math.min(12, data.length);
+      let sum = 0;
+      for (let i = 0; i < bassBins; i += 1) sum += data[i];
+      const bass = bassBins ? sum / bassBins / 255 : 0;
+      document.documentElement.style.setProperty("--audio-energy", bass.toFixed(3));
+      energyRafRef.current = requestAnimationFrame(tick);
+    };
+    energyRafRef.current = requestAnimationFrame(tick);
+  }, [ensureAudioGraph]);
+
+  const releaseAudioEnergy = useCallback(() => {
+    energyConsumersRef.current = Math.max(0, energyConsumersRef.current - 1);
+  }, []);
 
   // Resolve (e cacheia por ~50min) o link assinado da vinheta.
   const getIntroUrl = useCallback(async () => {
@@ -539,6 +609,8 @@ export function AudioPlaylistProvider({ children }) {
       removeTrack,
       moveTrack,
       selectTrack,
+      requestAudioEnergy,
+      releaseAudioEnergy,
     }),
     [
       tracks,
@@ -563,13 +635,15 @@ export function AudioPlaylistProvider({ children }) {
       removeTrack,
       moveTrack,
       selectTrack,
+      requestAudioEnergy,
+      releaseAudioEnergy,
     ],
   );
 
   return (
     <AudioPlaylistContext.Provider value={value}>
       {children}
-      <audio ref={audioRef} preload="metadata" hidden />
+      <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" hidden />
     </AudioPlaylistContext.Provider>
   );
 }

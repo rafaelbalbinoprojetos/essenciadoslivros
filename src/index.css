@@ -217,6 +217,119 @@ body {
   height: 100dvh;
 }
 
+/* Aura da Obra — atmosfera do CinematicPlayer (borda, respiro, shimmer). */
+.energy-border {
+  position: absolute;
+  inset: -2px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 80deg,
+    rgba(var(--color-accent-primary), 0.08) 120deg,
+    rgba(var(--color-accent-primary), 1) 170deg,
+    rgba(var(--color-accent-primary), 0.35) 210deg,
+    transparent 270deg
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  /* transform (rotação) e opacity (respiro) ficam em keyframes separados —
+     o audio-energy só entra no blur, pra não disputar propriedade com eles. */
+  animation: rotate-energy 6s linear infinite, energy-breathe 3.5s ease-in-out infinite;
+  filter: blur(calc(3px + var(--audio-energy, 0) * 6px));
+}
+
+@keyframes rotate-energy {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes energy-breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.cinematic-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cinematic-shimmer::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -70%;
+  width: 35%;
+  height: 160%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-accent-primary), 0.04),
+    rgba(var(--color-accent-primary), 0.3),
+    rgba(var(--color-accent-primary), 0.08),
+    transparent
+  );
+  filter: blur(12px);
+  transform: rotate(12deg);
+  animation: light-sweep 8s ease-in-out infinite;
+}
+
+@keyframes light-sweep {
+  0%,
+  20% {
+    left: -70%;
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  70% {
+    left: 135%;
+    opacity: 0.8;
+  }
+  100% {
+    left: 135%;
+    opacity: 0;
+  }
+}
+
+.golden-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+}
+
+.player-play-glow {
+  box-shadow: 0 0 calc(24px + var(--audio-energy, 0) * 45px)
+    rgba(var(--color-accent-primary), calc(0.35 + var(--audio-energy, 0) * 0.5));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy-border,
+  .cinematic-shimmer::before {
+    animation: none;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;

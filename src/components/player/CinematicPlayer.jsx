@@ -11,6 +11,8 @@ import { ensureCoverSrc, DEFAULT_COVER_PLACEHOLDER } from "../../utils/covers.js
 import { useTrackRating } from "../../hooks/useTrackRating.js";
 import Waveform from "./Waveform.jsx";
 import ShareButton from "./ShareButton.jsx";
+import EnergyBorder from "./EnergyBorder.jsx";
+import GoldenParticles from "./GoldenParticles.jsx";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -53,7 +55,16 @@ export default function CinematicPlayer() {
     repeat,
     toggleRepeat,
     startPlaylist,
+    requestAudioEnergy,
+    releaseAudioEnergy,
   } = useAudioPlaylist();
+
+  // Liga o loop de análise de áudio (Aura da Obra) só enquanto esta tela
+  // está montada — o grafo do Web Audio em si vive no AudioPlaylistContext.
+  useEffect(() => {
+    requestAudioEnergy();
+    return () => releaseAudioEnergy();
+  }, [requestAudioEnergy, releaseAudioEnergy]);
 
   const [liked, setLiked] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
@@ -182,7 +193,12 @@ export default function CinematicPlayer() {
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto flex min-h-full w-full max-w-md flex-col px-6 pb-10 pt-6">
+        {/* Aura da Obra: borda de energia + poeira dourada + reflexo passando */}
+        <EnergyBorder />
+        <GoldenParticles />
+        <div className="cinematic-shimmer" aria-hidden="true" />
+
+        <div className="relative z-[2] mx-auto flex min-h-full w-full max-w-md flex-col px-6 pb-10 pt-6">
           {/* Cabeçalho */}
           <div className="mb-3 flex items-center justify-between">
             <button
@@ -326,7 +342,7 @@ export default function CinematicPlayer() {
               type="button"
               onClick={togglePlay}
               aria-label={isPlaying ? "Pausar" : "Reproduzir"}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--color-accent-primary))] text-white shadow-[0_18px_40px_-16px_rgba(186,123,79,0.7)] transition hover:scale-105 hover:bg-[rgb(var(--color-accent-dark))] active:scale-95"
+              className="player-play-glow flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--color-accent-primary))] text-white transition hover:scale-105 hover:bg-[rgb(var(--color-accent-dark))] active:scale-95"
             >
               {isPlaying ? <Pause className="h-7 w-7" fill="currentColor" /> : <Play className="h-7 w-7 translate-x-[2px]" fill="currentColor" />}
             </button>
