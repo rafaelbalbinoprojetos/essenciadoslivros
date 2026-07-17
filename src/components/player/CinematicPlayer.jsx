@@ -3,7 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import {
-  ChevronDown,
+  ArrowLeft,
+  MoreHorizontal,
   Heart,
   Bookmark,
   Download,
@@ -14,8 +15,10 @@ import {
   Play,
   Pause,
   Repeat,
-  Gauge,
   Star,
+  Mic,
+  Clock,
+  Music,
 } from "lucide-react";
 import { useAudioPlaylist } from "../../context/AudioPlaylistContext.jsx";
 import { getBookBySlug } from "../../services/books.js";
@@ -26,10 +29,20 @@ import { ensureCoverSrc, DEFAULT_COVER_PLACEHOLDER } from "../../utils/covers.js
 import { useTrackRating } from "../../hooks/useTrackRating.js";
 import Waveform from "./Waveform.jsx";
 import ShareButton from "./ShareButton.jsx";
+import MetadataCard from "./MetadataCard.jsx";
 import EnergyBorder from "./EnergyBorder.jsx";
 import GoldenParticles from "./GoldenParticles.jsx";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1 } },
+};
+const fadeUpItem = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
@@ -78,20 +91,11 @@ export default function CinematicPlayer() {
     repeat,
     toggleRepeat,
     startPlaylist,
-    requestAudioEnergy,
-    releaseAudioEnergy,
   } = useAudioPlaylist();
-
-  // Liga o loop de análise de áudio (Aura da Obra) só enquanto esta tela
-  // está montada — o grafo do Web Audio em si vive no AudioPlaylistContext.
-  useEffect(() => {
-    requestAudioEnergy();
-    return () => releaseAudioEnergy();
-  }, [requestAudioEnergy, releaseAudioEnergy]);
 
   const [liked, setLiked] = useState(false);
   const [favorited, setFavorited] = useState(false);
-  const [speedOpen, setSpeedOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [ratingHover, setRatingHover] = useState(0);
   const [hydrating, setHydrating] = useState(false);
   const [hydrateError, setHydrateError] = useState("");
@@ -178,23 +182,25 @@ export default function CinematicPlayer() {
   const safeProgress = Math.min(progress, duration || progress || 0);
   const pct = duration ? (safeProgress / duration) * 100 : 0;
   const isCinematic = tracks.length > 1;
+  // Progresso da JORNADA (cena atual + fração dentro dela), não do áudio.
+  const journeyPct = isCinematic ? Math.min(100, ((currentIndex + pct / 100) / tracks.length) * 100) : pct;
 
   if (hydrating && !currentTrack) {
     return (
-      <div className="cinematic-player fixed inset-0 z-[1000] flex items-center justify-center bg-[#050806] text-white">
-        <p className="text-sm text-white/60">Carregando player...</p>
+      <div className="cinematic-player fixed inset-0 z-[1000] flex items-center justify-center bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]">
+        <p className="text-sm text-[rgb(var(--cinema-text-subtle))]">Carregando player...</p>
       </div>
     );
   }
 
   if (hydrateError && !currentTrack) {
     return (
-      <div className="cinematic-player fixed inset-0 z-[1000] flex flex-col items-center justify-center gap-4 bg-[#050806] p-6 text-center text-white">
-        <p className="text-sm text-white/70">{hydrateError}</p>
+      <div className="cinematic-player fixed inset-0 z-[1000] flex flex-col items-center justify-center gap-4 bg-[rgb(var(--cinema-surface))] p-6 text-center text-[rgb(var(--cinema-text))]">
+        <p className="text-sm text-[rgb(var(--cinema-text-subtle))]">{hydrateError}</p>
         <button
           type="button"
           onClick={() => navigate("/biblioteca")}
-          className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10"
+          className="rounded-full border border-[rgba(var(--color-accent-primary),0.3)] px-4 py-2 text-sm font-semibold hover:bg-[rgba(var(--color-accent-primary),0.1)]"
         >
           Voltar para a biblioteca
         </button>
@@ -207,7 +213,7 @@ export default function CinematicPlayer() {
   return (
     <AnimatePresence>
       <Motion.section
-        className="cinematic-player fixed inset-0 z-[1000] overflow-y-auto text-[rgb(var(--text-primary))]"
+        className="cinematic-player fixed inset-0 z-[1000] overflow-y-auto bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]"
         initial={{ y: "100%", opacity: 0.6 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0.6 }}
@@ -216,177 +222,165 @@ export default function CinematicPlayer() {
         aria-modal="true"
         aria-label="Player de áudio"
       >
-        <div
-          className="absolute inset-0 scale-125"
-          style={{ backgroundImage: `url("${coverSrc}")`, backgroundSize: "cover", backgroundPosition: "center" }}
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-[rgba(var(--surface-card),0.92)] backdrop-blur-2xl" aria-hidden="true" />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-[rgba(var(--color-accent-primary),0.06)] to-[rgba(var(--surface-base),0.55)]"
-          aria-hidden="true"
-        />
-
         {/* Aura da Obra: borda de energia + poeira dourada + reflexo passando */}
         <EnergyBorder />
         <GoldenParticles />
         <div className="cinematic-shimmer" aria-hidden="true" />
 
-        <div className="relative z-[2] mx-auto flex min-h-full w-full max-w-md flex-col px-6 pb-10 pt-6">
-          {/* Cabeçalho */}
-          <div className="mb-3 flex items-center justify-between">
+        {/* Hero: capa cheia, sem margens — layoutId compartilhado com o mini-player */}
+        <div className="relative z-[2] h-[50vh] min-h-[320px] w-full overflow-hidden">
+          <Motion.img
+            layoutId={`artwork-${currentTrack.id}`}
+            src={coverSrc}
+            alt={currentTrack.title}
+            className="h-full w-full object-cover object-center"
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-b from-transparent to-[rgb(var(--cinema-surface))]"
+            aria-hidden="true"
+          />
+
+          {/* Header flutuante, transparente, sobreposto à imagem */}
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 px-4 pt-5">
             <button
               type="button"
               onClick={handleClose}
-              aria-label="Minimizar"
-              className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-[rgba(var(--color-accent-primary),0.2)] bg-[rgba(var(--color-accent-primary),0.08)] text-[rgb(var(--text-secondary))] transition hover:bg-[rgba(var(--color-accent-primary),0.16)]"
+              aria-label="Voltar"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] transition hover:opacity-75"
             >
-              <ChevronDown className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
 
             <div className="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-[rgb(var(--text-subtle))]">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.35em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
                 {isCinematic ? "Memória Cinematográfica" : "Tocando agora"}
               </p>
               {isCinematic && currentTrack.collection && (
-                <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.3em] text-[rgb(var(--color-accent-primary))]">
+                <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.3em] text-[rgb(var(--color-accent-primary))] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
                   Coleção {currentTrack.collection}
                 </p>
               )}
             </div>
 
-            <div className="flex flex-none items-center gap-2">
+            <div className="relative">
               <button
                 type="button"
-                onClick={toggleRepeat}
-                aria-label="Repetir"
-                className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${
-                  repeat
-                    ? "border-[rgb(var(--color-accent-primary))] bg-[rgba(var(--color-accent-primary),0.18)] text-[rgb(var(--color-accent-dark))]"
-                    : "border-[rgba(var(--color-accent-primary),0.2)] bg-[rgba(var(--color-accent-primary),0.08)] text-[rgb(var(--text-secondary))] hover:bg-[rgba(var(--color-accent-primary),0.16)]"
-                }`}
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Mais opções"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] transition hover:opacity-75"
               >
-                <Repeat className="h-4 w-4" />
+                <MoreHorizontal className="h-5 w-5" />
               </button>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setSpeedOpen((v) => !v)}
-                  aria-label="Velocidade de reprodução"
-                  className={`flex h-9 min-w-9 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold transition ${
-                    playbackRate !== 1
-                      ? "border-[rgb(var(--color-accent-primary))] bg-[rgba(var(--color-accent-primary),0.18)] text-[rgb(var(--color-accent-dark))]"
-                      : "border-[rgba(var(--color-accent-primary),0.2)] bg-[rgba(var(--color-accent-primary),0.08)] text-[rgb(var(--text-secondary))] hover:bg-[rgba(var(--color-accent-primary),0.16)]"
-                  }`}
-                >
-                  <Gauge className="h-3.5 w-3.5" /> {formatRate(playbackRate)}×
-                </button>
-                <AnimatePresence>
-                  {speedOpen && (
-                    <Motion.div
-                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                      className="absolute right-0 top-11 z-10 w-32 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent-primary),0.18)] bg-[rgb(var(--surface-card))] p-1 shadow-2xl"
+              <AnimatePresence>
+                {menuOpen && (
+                  <Motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                    className="absolute right-0 top-11 z-10 w-40 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent-primary),0.2)] bg-[rgba(var(--cinema-glass),0.97)] p-1 text-[rgb(var(--cinema-text))] shadow-2xl backdrop-blur-md"
+                  >
+                    <button
+                      type="button"
+                      onClick={toggleRepeat}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition hover:bg-[rgba(var(--color-accent-primary),0.12)]"
                     >
-                      {SPEEDS.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => {
-                            setRate(s);
-                            setSpeedOpen(false);
-                          }}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition ${
-                            s === playbackRate
-                              ? "bg-[rgba(var(--color-accent-primary),0.18)] font-semibold text-[rgb(var(--color-accent-dark))]"
-                              : "text-[rgb(var(--text-secondary))] hover:bg-[rgba(var(--color-accent-primary),0.08)]"
-                          }`}
-                        >
-                          {formatRate(s)}×{s === 1 ? " · normal" : ""}
-                        </button>
-                      ))}
-                    </Motion.div>
-                  )}
-                </AnimatePresence>
+                      <span className="flex items-center gap-2">
+                        <Repeat className="h-4 w-4" /> Repetir
+                      </span>
+                      {repeat && <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-accent-primary))]" />}
+                    </button>
+                    <div className="my-1 h-px bg-[rgba(var(--color-accent-primary),0.15)]" />
+                    <p className="px-3 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[rgb(var(--cinema-text-subtle))]">Velocidade</p>
+                    {SPEEDS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setRate(s)}
+                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition ${
+                          s === playbackRate
+                            ? "bg-[rgba(var(--color-accent-primary),0.18)] font-semibold text-[rgb(var(--color-accent-primary))]"
+                            : "hover:bg-[rgba(var(--color-accent-primary),0.12)]"
+                        }`}
+                      >
+                        {formatRate(s)}×{s === 1 ? " · normal" : ""}
+                      </button>
+                    ))}
+                  </Motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* Conteúdo — entra em cascata, ~100ms entre blocos */}
+        <Motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+          className="relative z-[2] mx-auto -mt-2 flex w-full max-w-md flex-col px-6 pb-10"
+        >
+          {/* Progresso da jornada */}
+          <Motion.div variants={fadeUpItem}>
+            {isCinematic && (
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.25em] text-[rgb(var(--cinema-text-subtle))]">
+                <span>
+                  Cena {currentIndex + 1} de {tracks.length}
+                </span>
+                <span>{Math.round(journeyPct)}%</span>
               </div>
+            )}
+            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[rgba(var(--color-accent-primary),0.15)]">
+              <div
+                className="h-full rounded-full bg-[rgb(var(--color-accent-primary))] transition-[width]"
+                style={{ width: `${journeyPct}%` }}
+              />
             </div>
-          </div>
-
-          {/* Barra de progresso fina */}
-          <div className="mx-auto mt-4 h-1 w-full max-w-[14rem] overflow-hidden rounded-full bg-[rgba(var(--color-accent-primary),0.15)]">
-            <div
-              className="h-full rounded-full bg-[rgb(var(--color-accent-primary))] transition-[width]"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-
-          {/* Capa — layoutId compartilhado com o mini-player */}
-          <div className="relative mx-auto mt-4 w-64">
-            <Motion.img
-              layoutId={`artwork-${currentTrack.id}`}
-              src={coverSrc}
-              alt={currentTrack.title}
-              className="aspect-[3/4] w-full rounded-[16px] object-contain shadow-[0_40px_70px_-25px_rgba(40,25,10,0.55)]"
-            />
-          </div>
-
-          {isCinematic && (
-            <div className="mt-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.25em] text-[rgb(var(--text-subtle))]">
-              <span>
-                Cena {currentIndex + 1} de {tracks.length}
-              </span>
-              <span>{Math.round(pct)}%</span>
-            </div>
-          )}
+          </Motion.div>
 
           {/* Título + subtítulo */}
-          <div className={`text-center ${isCinematic ? "mt-3" : "mt-6"}`}>
-            <h2 className="font-display text-xl font-semibold leading-tight text-[rgb(var(--text-primary))]">
-              {currentTrack.title}
-            </h2>
-            <p className="mt-1 truncate text-sm text-[rgb(var(--text-secondary))]">
+          <Motion.div variants={fadeUpItem} className="mt-4 text-center">
+            <h2 className="font-display text-2xl font-bold leading-tight text-[rgb(var(--cinema-text))]">{currentTrack.title}</h2>
+            <p className="mt-1 truncate text-sm text-[rgb(var(--cinema-text-subtle))]">
               {currentTrack.description || currentTrack.author}
             </p>
-          </div>
+          </Motion.div>
 
           {/* Frase em destaque */}
           {currentTrack.quote && (
-            <div className="mt-4 rounded-2xl border border-[rgba(var(--color-accent-primary),0.18)] bg-[rgba(var(--color-accent-primary),0.06)] px-4 py-3 text-center">
-              <p className="font-display text-sm italic leading-relaxed text-[rgb(var(--text-primary))]">
-                “{currentTrack.quote}”
-              </p>
-            </div>
+            <Motion.div variants={fadeUpItem} className="mt-4 flex justify-center">
+              <div className="max-w-[85%] rounded-2xl border border-[rgba(var(--color-accent-primary),0.14)] bg-[rgba(var(--color-accent-primary),0.04)] px-5 py-4 text-center">
+                <p className="font-display text-lg leading-none text-[rgb(var(--color-accent-primary))]">“</p>
+                <p className="-mt-2 font-display text-sm italic leading-relaxed text-[rgb(var(--cinema-text))]">{currentTrack.quote}</p>
+              </div>
+            </Motion.div>
           )}
 
           {/* Waveform + tempos */}
-          <div className="mt-5">
+          <Motion.div variants={fadeUpItem} className="mt-5">
             <Waveform pct={pct} onSeekFraction={(f) => duration && seek(f * duration)} />
-            <div className="mt-1 flex items-center justify-between text-[11px] font-semibold text-[rgb(var(--text-subtle))]">
+            <div className="mt-1 flex items-center justify-between text-[11px] text-[rgb(var(--cinema-text-subtle))]">
               <span>{formatTime(progress)}</span>
               <span>{formatTime(duration)}</span>
             </div>
-          </div>
+          </Motion.div>
 
           {/* Controles */}
-          <div className="mt-4 flex items-center justify-center gap-5">
+          <Motion.div variants={fadeUpItem} className="mt-4 flex items-center justify-center gap-5">
             <button
               type="button"
               onClick={() => handleSkip(-15)}
               aria-label="Voltar 15 segundos"
-              className="relative text-[rgb(var(--text-secondary))] transition hover:text-[rgb(var(--text-primary))]"
+              className="relative text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))]"
             >
               <RotateCcw className="h-6 w-6" />
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[8px] font-bold">
-                15
-              </span>
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[8px] font-bold">15</span>
             </button>
             <button
               type="button"
               onClick={playPrevious}
               disabled={!hasPrevious}
               aria-label="Cena anterior"
-              className="text-[rgb(var(--text-secondary))] transition hover:text-[rgb(var(--text-primary))] disabled:opacity-30"
+              className="text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))] disabled:opacity-30"
             >
               <SkipBack className="h-6 w-6" fill="currentColor" />
             </button>
@@ -394,7 +388,7 @@ export default function CinematicPlayer() {
               type="button"
               onClick={togglePlay}
               aria-label={isPlaying ? "Pausar" : "Reproduzir"}
-              className={`player-play-glow ${isPlaying ? "play-energy-ring" : ""} flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--color-accent-primary))] text-white transition hover:scale-105 hover:bg-[rgb(var(--color-accent-dark))] active:scale-95`}
+              className={`player-play-glow player-play-pulse ${isPlaying ? "play-energy-ring" : ""} flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--color-accent-primary))] text-white transition hover:bg-[rgb(var(--color-accent-dark))]`}
             >
               {isPlaying ? <Pause className="h-7 w-7" fill="currentColor" /> : <Play className="h-7 w-7 translate-x-[2px]" fill="currentColor" />}
             </button>
@@ -403,7 +397,7 @@ export default function CinematicPlayer() {
               onClick={playNext}
               disabled={!hasNext}
               aria-label="Próxima cena"
-              className="text-[rgb(var(--text-secondary))] transition hover:text-[rgb(var(--text-primary))] disabled:opacity-30"
+              className="text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))] disabled:opacity-30"
             >
               <SkipForward className="h-6 w-6" fill="currentColor" />
             </button>
@@ -411,49 +405,32 @@ export default function CinematicPlayer() {
               type="button"
               onClick={() => handleSkip(15)}
               aria-label="Avançar 15 segundos"
-              className="relative text-[rgb(var(--text-secondary))] transition hover:text-[rgb(var(--text-primary))]"
+              className="relative text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))]"
             >
               <RotateCw className="h-6 w-6" />
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[8px] font-bold">
-                15
-              </span>
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[8px] font-bold">15</span>
             </button>
-          </div>
+          </Motion.div>
 
           {/* Narrador / Duração total / Trilha sonora */}
           {(currentTrack.narrator || currentTrack.totalDurationSeconds || currentTrack.soundtrack) && (
-            <div className="mt-6 flex items-center justify-around gap-2 rounded-2xl border border-[rgba(var(--color-accent-primary),0.14)] bg-[rgba(var(--color-accent-primary),0.05)] px-3 py-3 text-center">
-              {currentTrack.narrator && (
-                <div className="min-w-0">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[rgb(var(--text-subtle))]">Narrador</p>
-                  <p className="mt-1 truncate text-xs font-semibold text-[rgb(var(--text-primary))]">{currentTrack.narrator}</p>
-                </div>
-              )}
+            <Motion.div variants={fadeUpItem} className="mt-6 flex items-stretch gap-2">
+              {currentTrack.narrator && <MetadataCard icon={Mic} label="Narrador" value={currentTrack.narrator} />}
               {currentTrack.totalDurationSeconds ? (
-                <div className="min-w-0">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[rgb(var(--text-subtle))]">Duração total</p>
-                  <p className="mt-1 truncate text-xs font-semibold text-[rgb(var(--text-primary))]">
-                    {formatLongDuration(currentTrack.totalDurationSeconds)}
-                  </p>
-                </div>
+                <MetadataCard icon={Clock} label="Duração total" value={formatLongDuration(currentTrack.totalDurationSeconds)} />
               ) : null}
-              {currentTrack.soundtrack && (
-                <div className="min-w-0">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[rgb(var(--text-subtle))]">Trilha sonora</p>
-                  <p className="mt-1 truncate text-xs font-semibold text-[rgb(var(--text-primary))]">{currentTrack.soundtrack}</p>
-                </div>
-              )}
-            </div>
+              {currentTrack.soundtrack && <MetadataCard icon={Music} label="Trilha sonora" value={currentTrack.soundtrack} />}
+            </Motion.div>
           )}
 
           {/* Curtir / Favoritar / Compartilhar / Download */}
-          <div className="mt-5 flex items-center justify-center gap-6">
+          <Motion.div variants={fadeUpItem} className="mt-5 flex items-center justify-center gap-6">
             <button
               type="button"
               onClick={() => setLiked((v) => !v)}
               aria-label="Curtir"
               className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition ${
-                liked ? "text-rose-500" : "text-[rgb(var(--text-subtle))] hover:text-[rgb(var(--text-primary))]"
+                liked ? "text-rose-500" : "text-[rgb(var(--cinema-text-subtle))] hover:text-[rgb(var(--cinema-text))]"
               }`}
             >
               <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
@@ -464,7 +441,7 @@ export default function CinematicPlayer() {
               onClick={() => setFavorited((v) => !v)}
               aria-label="Favoritar"
               className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition ${
-                favorited ? "text-[rgb(var(--color-accent-primary))]" : "text-[rgb(var(--text-subtle))] hover:text-[rgb(var(--text-primary))]"
+                favorited ? "text-[rgb(var(--color-accent-primary))]" : "text-[rgb(var(--cinema-text-subtle))] hover:text-[rgb(var(--cinema-text))]"
               }`}
             >
               <Bookmark className="h-5 w-5" fill={favorited ? "currentColor" : "none"} />
@@ -472,18 +449,18 @@ export default function CinematicPlayer() {
             </button>
             <ShareButton
               track={currentTrack}
-              className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[rgb(var(--text-subtle))] transition hover:text-[rgb(var(--text-primary))]"
+              className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))]"
             />
             <button
               type="button"
               onClick={handleDownload}
               aria-label="Baixar"
-              className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[rgb(var(--text-subtle))] transition hover:text-[rgb(var(--text-primary))]"
+              className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[rgb(var(--cinema-text-subtle))] transition hover:text-[rgb(var(--cinema-text))]"
             >
               <Download className="h-5 w-5" />
               Download
             </button>
-          </div>
+          </Motion.div>
 
           {/* Avaliação por estrelas */}
           {bookId && (
@@ -505,14 +482,14 @@ export default function CinematicPlayer() {
                   );
                 })}
               </div>
-              <p className="mt-1 text-[11px] text-[rgb(var(--text-subtle))]">{myNota ? "Sua avaliação" : "Toque para avaliar"}</p>
+              <p className="mt-1 text-[11px] text-[rgb(var(--cinema-text-subtle))]">{myNota ? "Sua avaliação" : "Toque para avaliar"}</p>
             </div>
           )}
 
           {/* Fila */}
           {tracks.length > 1 && (
             <div className="mt-8">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-[rgb(var(--text-subtle))]">Na fila · {tracks.length}</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-[rgb(var(--cinema-text-subtle))]">Na fila · {tracks.length}</p>
               <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
                 {tracks.map((track, index) => {
                   const active = index === currentIndex;
@@ -522,13 +499,13 @@ export default function CinematicPlayer() {
                       type="button"
                       onClick={() => selectTrack(track.id)}
                       className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition ${
-                        active ? "bg-[rgba(var(--color-accent-primary),0.14)]" : "hover:bg-[rgba(var(--color-accent-primary),0.07)]"
+                        active ? "bg-[rgba(var(--color-accent-primary),0.16)]" : "hover:bg-[rgba(var(--color-accent-primary),0.08)]"
                       }`}
                     >
-                      <img src={track.cover ?? DEFAULT_COVER_PLACEHOLDER} alt="" className="h-9 w-7 flex-none rounded-md object-contain" />
+                      <img src={track.cover ?? DEFAULT_COVER_PLACEHOLDER} alt="" className="h-9 w-7 flex-none rounded-md object-cover" />
                       <span className="min-w-0 flex-1">
-                        <span className={`block truncate text-sm font-semibold ${active ? "text-[rgb(var(--text-primary))]" : "text-[rgb(var(--text-secondary))]"}`}>{track.title}</span>
-                        <span className="block truncate text-xs text-[rgb(var(--text-subtle))]">{track.author}</span>
+                        <span className={`block truncate text-sm font-semibold ${active ? "text-[rgb(var(--cinema-text))]" : "text-[rgb(var(--cinema-text-subtle))]"}`}>{track.title}</span>
+                        <span className="block truncate text-xs text-[rgb(var(--cinema-text-subtle))]">{track.author}</span>
                       </span>
                       {active && (
                         <span className="flex-none text-[rgb(var(--color-accent-primary))]">
@@ -541,7 +518,7 @@ export default function CinematicPlayer() {
               </div>
             </div>
           )}
-        </div>
+        </Motion.div>
       </Motion.section>
     </AnimatePresence>
   );

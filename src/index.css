@@ -215,6 +215,14 @@ body {
 .cinematic-player {
   height: 100vh;
   height: 100dvh;
+  /* Paleta fixa do player — independente do tema claro/escuro do site
+     (regra explícita do design: "nada branco puro, nada cinza claro,
+     tudo remete a uma sala de cinema"). O dourado continua vindo de
+     --color-accent-primary, que já é o acento personalizável do usuário. */
+  --cinema-surface: 10 8 6;
+  --cinema-glass: 20 16 12;
+  --cinema-text: 243 236 224;
+  --cinema-text-subtle: 201 189 168;
 }
 
 /* Aura da Obra — atmosfera do CinematicPlayer (borda, respiro, shimmer). */
@@ -355,10 +363,27 @@ body {
   animation: rotate-energy 2.2s linear infinite;
 }
 
+/* Pulsação muito leve, sempre ativa (independente de estar tocando) — o
+   anel de energia (.play-energy-ring) só liga durante a reprodução. */
+.player-play-pulse {
+  animation: play-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes play-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .energy-border,
   .cinematic-shimmer::before,
-  .play-energy-ring::before {
+  .play-energy-ring::before,
+  .player-play-pulse {
     animation: none;
   }
 }

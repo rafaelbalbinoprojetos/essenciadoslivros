@@ -19,10 +19,12 @@ export default function Waveform({ pct, onSeekFraction }) {
     onSeekFraction?.(frac);
   };
 
+  const safePct = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
+
   return (
-    <div ref={containerRef} onClick={handleClick} className="flex h-12 cursor-pointer items-center gap-[2px]">
+    <div ref={containerRef} onClick={handleClick} className="relative flex h-12 cursor-pointer items-center gap-[2px]">
       {bars.map((h, i) => {
-        const played = (i + 0.5) / bars.length <= pct / 100;
+        const played = (i + 0.5) / bars.length <= safePct / 100;
         return (
           <span
             key={i}
@@ -35,6 +37,12 @@ export default function Waveform({ pct, onSeekFraction }) {
           />
         );
       })}
+      {/* Indicador de posição — "o momento atual da narrativa" */}
+      <span
+        className="pointer-events-none absolute top-0 h-full w-[2px] rounded-full bg-[rgb(var(--color-accent-primary))] shadow-[0_0_10px_3px_rgba(var(--color-accent-primary),0.85)] transition-[left]"
+        style={{ left: `${safePct}%` }}
+        aria-hidden="true"
+      />
     </div>
   );
 }
