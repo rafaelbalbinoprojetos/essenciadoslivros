@@ -192,7 +192,7 @@ export default function CinematicPlayer() {
 
   if (hydrating && !currentTrack) {
     return (
-      <div className="cinematic-player fixed inset-0 z-[1000] flex items-center justify-center bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]">
+      <div className="cinematic-player cinematic-player-screen fixed inset-0 z-[1000] flex items-center justify-center bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]">
         <p className="text-sm text-[rgb(var(--cinema-text-subtle))]">Carregando player...</p>
       </div>
     );
@@ -200,7 +200,7 @@ export default function CinematicPlayer() {
 
   if (hydrateError && !currentTrack) {
     return (
-      <div className="cinematic-player fixed inset-0 z-[1000] flex flex-col items-center justify-center gap-4 bg-[rgb(var(--cinema-surface))] p-6 text-center text-[rgb(var(--cinema-text))]">
+      <div className="cinematic-player cinematic-player-screen fixed inset-0 z-[1000] flex flex-col items-center justify-center gap-4 bg-[rgb(var(--cinema-surface))] p-6 text-center text-[rgb(var(--cinema-text))]">
         <p className="text-sm text-[rgb(var(--cinema-text-subtle))]">{hydrateError}</p>
         <button
           type="button"
@@ -229,7 +229,7 @@ export default function CinematicPlayer() {
       {({ audioEnergy }) => (
     <AnimatePresence>
       <Motion.section
-        className="cinematic-player fixed inset-0 z-[1000] overflow-y-auto bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]"
+        className="cinematic-player cinematic-player-screen fixed inset-0 z-[1000] overflow-y-auto bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]"
         initial={{ y: "100%", opacity: 0.6 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0.6 }}
