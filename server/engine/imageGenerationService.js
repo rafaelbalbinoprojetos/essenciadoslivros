@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
 import { engineStep } from "./engineLogger.js";
-import { PLAYER_HERO_PROMPT } from "./playerHeroPrompt.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
 const CAPAS_BUCKET = "capas";
@@ -716,15 +715,18 @@ export async function gerarImagemCinematicaComReferencia({ obraId, titulo, promp
   });
 }
 
-export async function gerarPlayerHeroComCapaCinematica({ obraId, titulo, capaCinematicaUrl }) {
+export async function gerarPlayerHeroComCapaCinematica({ obraId, titulo, capaCinematicaUrl, prompt }) {
   if (!capaCinematicaUrl) {
     throw new Error("A capa cinematica e obrigatoria para gerar o Player Hero.");
+  }
+  if (!prompt) {
+    throw new Error("O prompt do Player Hero e obrigatorio para gerar a imagem.");
   }
 
   return gerarImagemComReferencia({
     obraId,
     titulo,
-    prompt: PLAYER_HERO_PROMPT,
+    prompt,
     tipoReferencia: "cinematica",
     tipoImagem: "player_hero",
     tipoEtapa: "player_hero_image",

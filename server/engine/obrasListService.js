@@ -32,6 +32,7 @@ const ETAPAS_RASTREADAS = [
   "heritage_image",
   "capa_cinematica_prompt",
   "capa_cinematica_image",
+  "player_hero_prompt",
   "player_hero_image",
   "pdf_cinematica",
   "guia_editorial_parte1",
