@@ -329,6 +329,15 @@ async function buscarUltimaSaidaEtapa({ obraId, tipoEtapa }) {
   return data?.saida ?? null;
 }
 
+function extrairUrlImagemDaSaida(saida) {
+  if (!saida || typeof saida !== "object") return null;
+  return saida.imagem_url
+    || saida.imagemUrl
+    || saida.saida?.imagem_url
+    || saida.saida?.imagemUrl
+    || null;
+}
+
 async function executarCuradorBEU({ obraId }) {
   let execucao = null;
   let etapa = null;
@@ -2094,12 +2103,16 @@ async function executarPromptPlayerHero({ obraId, tipoEtapa }) {
       obraId,
       versao: ENGINE_CONFIG.versaoBEU,
     });
+    const contexto = await buildContext(obraId);
     const ultimaImagemCinematica = await buscarUltimaSaidaEtapa({
       obraId,
       tipoEtapa: "capa_cinematica_image",
     });
+    const capaCinematicaUrl = extrairUrlImagemDaSaida(ultimaImagemCinematica)
+      || contexto?.arquivos_existentes?.capa_cinematica_url
+      || null;
 
-    if (!ultimaImagemCinematica?.imagem_url) {
+    if (!capaCinematicaUrl) {
       throw new Error("A imagem cinematica precisa ser concluida antes do prompt do Player Hero.");
     }
 
@@ -2109,7 +2122,10 @@ async function executarPromptPlayerHero({ obraId, tipoEtapa }) {
       payload_id: beuAtualRegistro.id,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       prompt_origem: "server/engine/playerHeroPrompt.js",
-      referencia_visual: ultimaImagemCinematica.imagem_url,
+      referencia_origem: extrairUrlImagemDaSaida(ultimaImagemCinematica)
+        ? "ai_pipeline_etapas.capa_cinematica_image.saida"
+        : "livros.capa_cinematica_url",
+      referencia_visual: capaCinematicaUrl,
       persistencia: "ai_pipeline_etapas.saida",
     };
 
@@ -2165,27 +2181,33 @@ async function executarPlayerHero({ obraId, tipoEtapa }) {
       obraId,
       tipoEtapa: "capa_cinematica_image",
     });
-    const capaCinematicaUrl = ultimaImagemCinematica?.imagem_url || null;
-    const promptPlayerHero = await buscarUltimaSaidaEtapa({
+    const urlImagemNaEtapa = extrairUrlImagemDaSaida(ultimaImagemCinematica);
+    const capaCinematicaUrl = urlImagemNaEtapa
+      || contexto?.arquivos_existentes?.capa_cinematica_url
+      || null;
+    const promptPlayerHeroPersistido = await buscarUltimaSaidaEtapa({
       obraId,
       tipoEtapa: "player_hero_prompt",
     });
+    const promptPlayerHero = typeof promptPlayerHeroPersistido === "string" && promptPlayerHeroPersistido.trim()
+      ? promptPlayerHeroPersistido
+      : PLAYER_HERO_PROMPT;
 
     if (!capaCinematicaUrl) {
       throw new Error("A ultima etapa de imagem cinematica nao produziu uma capa. Gere a imagem cinematica novamente antes do Player Hero.");
     }
-    if (typeof promptPlayerHero !== "string" || !promptPlayerHero.trim()) {
-      throw new Error("Nenhum prompt do Player Hero foi encontrado. Execute o prompt do Player Hero antes da imagem.");
-    }
-
     const entrada = {
       tipo_etapa: tipoEtapa,
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
       versao_beu: ENGINE_CONFIG.versaoBEU,
-      referencia_origem: "ai_pipeline_etapas.capa_cinematica_image.saida.imagem_url",
+      referencia_origem: urlImagemNaEtapa
+        ? "ai_pipeline_etapas.capa_cinematica_image.saida"
+        : "livros.capa_cinematica_url",
       referencia_visual: capaCinematicaUrl,
-      prompt_origem: "ai_pipeline_etapas.player_hero_prompt.saida",
+      prompt_origem: promptPlayerHeroPersistido
+        ? "ai_pipeline_etapas.player_hero_prompt.saida"
+        : "server/engine/playerHeroPrompt.js (fallback de consistencia)",
       prompt_tamanho_aproximado: promptPlayerHero.length,
       persistencia: "storage.capas + livros.player_hero_url + ai_pipeline_etapas.saida",
     };
