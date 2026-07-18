@@ -2465,7 +2465,8 @@ the interaction as intimate, bodies pressed together, holding one another tightl
 romantic or an eyes-closed embrace. Preserve the emotional bond without ambiguous contact.
 In that case, render the entire scene as a visibly stylized, painterly premium digital
 illustration — never as a photograph, photorealistic image or lifelike portrait. Do not use
-the words child, minor, youthfully, photographic, photorealistic or lifelike in the final prompt.
+the words child, minor, young, youthful, youthfully, photographic, photorealistic, lifelike,
+muscular or scarred in the final prompt. Keep skin, scars, tattoos and all weapons out of view.
 
 ━━━━ START YOUR OUTPUT WITH THIS LINE ━━━━
 LOCKED SCENE: [one sentence — who is present, what gesture, what dominant emotion]
