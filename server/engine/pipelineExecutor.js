@@ -2049,20 +2049,23 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
     });
 
     await saveEngineJsonLog({ runId, name: "saida", data: resultado });
-    await concluirEtapaPipeline({
-      etapaId: etapa.id,
-      payloadId: beuAtualRegistro.id,
-      saida: resultado,
-      custoEstimado: await calcularCustoEstimado(),
-    });
-
     if (resultado.bloqueado_por_moderacao) {
+      await falharEtapaPipeline({
+        etapaId: etapa.id,
+        erro: resultado.motivo || "A imagem cinematica foi bloqueada pela moderacao.",
+      });
       engineStep("Pipeline concluida sem imagem", "!", {
         obraId,
         tipoEtapa,
         motivo: resultado.motivo,
       });
     } else {
+      await concluirEtapaPipeline({
+        etapaId: etapa.id,
+        payloadId: beuAtualRegistro.id,
+        saida: resultado,
+        custoEstimado: await calcularCustoEstimado(),
+      });
       engineStep("Pipeline concluida", "✓", {
         obraId,
         tipoEtapa,
@@ -2071,7 +2074,7 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
     }
 
     return {
-      ok: true,
+      ok: Boolean(resultado.ok && resultado.imagem_url),
       etapa: tipoEtapa,
       obraId,
       payloadId: beuAtualRegistro.id,
@@ -2081,6 +2084,7 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       referenciaVisual: resultado.referencia_visual,
       bloqueadoPorModeracao: Boolean(resultado.bloqueado_por_moderacao),
       motivoBloqueio: resultado.motivo || null,
+      error: resultado.bloqueado_por_moderacao ? resultado.motivo : null,
     };
   } catch (error) {
     const erro = normalizarErro(error);
