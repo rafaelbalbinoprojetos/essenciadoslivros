@@ -135,6 +135,26 @@ Assassin's Creed
 This element becomes the Hero Interaction Element.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CANONICAL FIDELITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every character, creature, animal, object or artifact selected for interaction must faithfully preserve its officially established appearance.
+
+Do not redesign.
+
+Do not modernize.
+
+Do not simplify.
+
+Do not reinterpret.
+
+Do not create a generic equivalent.
+
+Study the official visual identity before generating.
+
+The final result must be instantly recognizable by longtime fans.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HERO INTERACTION RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
