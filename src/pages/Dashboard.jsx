@@ -125,7 +125,7 @@ export default function DashboardPage() {
       if (relative > half) relative -= heroBooks.length;
       if (relative < -half) relative += heroBooks.length;
       return { book, index, relative };
-    }).sort((a, b) => Math.abs(b.relative) - Math.abs(a.relative));
+    });
   }, [heroBooks, heroIndex]);
 
   const moveHero = useCallback((direction) => {
@@ -269,8 +269,8 @@ export default function DashboardPage() {
           </div>
 
           <div
-            className="relative z-[1] h-[430px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y] sm:h-[520px] md:h-[560px]"
-            style={{ perspective: "1200px", perspectiveOrigin: "50% 46%" }}
+            className="relative z-[1] mx-auto h-[430px] w-full max-w-[980px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y] sm:h-[500px] md:h-[540px]"
+            style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
             aria-label="Obras em destaque"
             onPointerDown={(event) => {
               heroSwipeStartXRef.current = event.clientX;
@@ -293,13 +293,11 @@ export default function DashboardPage() {
               const distance = Math.abs(relative);
               if (distance > 2) return null;
 
-              const side = Math.sign(relative);
-              const translateX = relative * 38;
-              const translateZ = active ? 145 : 10 - distance * 95;
-              const rotateY = active ? 0 : side * -28;
-              const rotateZ = active ? 0 : side * 3.5;
-              const scale = active ? 1 : distance === 1 ? 0.78 : 0.66;
-              const opacity = active ? 1 : distance === 1 ? 0.76 : 0.38;
+              const translateX = `${relative * 156}px`;
+              const translateZ = 230 - distance * 74;
+              const rotateY = relative * -22;
+              const scale = active ? 1 : 0.86;
+              const opacity = distance > 2 ? 0 : Math.max(0, 0.9 - distance * 0.26);
               const cinematic = hasCinematicExperience(book);
 
               return (
@@ -320,11 +318,11 @@ export default function DashboardPage() {
                       setHeroIndex(index);
                     }
                   }}
-                  className={`group absolute left-1/2 top-1/2 h-[390px] w-[76vw] max-w-[350px] overflow-hidden rounded-[28px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:h-[470px] sm:max-w-[390px] md:h-[510px] md:max-w-[430px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
+                  className={`group absolute left-1/2 top-1/2 h-[350px] w-[250px] overflow-hidden rounded-[28px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:h-[420px] sm:w-[300px] md:h-[460px] md:w-[330px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
                   style={{
                     opacity,
                     zIndex: 30 - distance,
-                    transform: `translate(-50%, -50%) translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
+                    transform: `translate(-50%, -50%) translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                     transformStyle: "preserve-3d",
                     transition: "transform 760ms cubic-bezier(0.18,0.82,0.2,1), opacity 420ms ease, filter 420ms ease, border-color 420ms ease",
                   }}
