@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import {
@@ -110,29 +110,61 @@ export default function DashboardPage() {
     }).slice(0, 6);
   }, [books, cinematicBooks]);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [heroTouched, setHeroTouched] = useState(false);
+  const heroCarouselRef = useRef(null);
+  const heroScrollRafRef = useRef(0);
   const heroBook = heroBooks[heroIndex] ?? heroBooks[0] ?? null;
-  const heroDeck = useMemo(() => {
-    if (!heroBooks.length) return [];
-    const half = Math.floor(heroBooks.length / 2);
-    return heroBooks.map((book, index) => {
-      let relative = index - heroIndex;
-      if (relative > half) relative -= heroBooks.length;
-      if (relative < -half) relative += heroBooks.length;
-      return { book, relative };
+
+  const scrollHeroTo = useCallback((index, behavior = "smooth") => {
+    const viewport = heroCarouselRef.current;
+    const slide = viewport?.children?.[index];
+    if (!viewport || !slide) return;
+    const target = slide.offsetLeft - (viewport.clientWidth - slide.clientWidth) / 2;
+    viewport.scrollTo({ left: Math.max(0, target), behavior });
+  }, []);
+
+  const handleHeroScroll = useCallback(() => {
+    const viewport = heroCarouselRef.current;
+    if (!viewport || heroScrollRafRef.current) return;
+
+    heroScrollRafRef.current = window.requestAnimationFrame(() => {
+      heroScrollRafRef.current = 0;
+      const center = viewport.scrollLeft + viewport.clientWidth / 2;
+      let closestIndex = 0;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      Array.from(viewport.children).forEach((slide, index) => {
+        const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+        const distance = Math.abs(center - slideCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      setHeroIndex((current) => (current === closestIndex ? current : closestIndex));
     });
-  }, [heroBooks, heroIndex]);
+  }, []);
 
   useEffect(() => {
     if (heroIndex >= heroBooks.length) setHeroIndex(0);
   }, [heroBooks.length, heroIndex]);
 
   useEffect(() => {
-    if (heroBooks.length < 2) return undefined;
+    if (heroBooks.length < 2 || heroTouched) return undefined;
     const interval = window.setInterval(() => {
       setHeroIndex((current) => (current + 1) % heroBooks.length);
-    }, 6500);
+    }, 7200);
     return () => window.clearInterval(interval);
-  }, [heroBooks.length]);
+  }, [heroBooks.length, heroTouched]);
+
+  useEffect(() => {
+    scrollHeroTo(heroIndex, "smooth");
+  }, [heroIndex, scrollHeroTo]);
+
+  useEffect(() => () => {
+    if (heroScrollRafRef.current) window.cancelAnimationFrame(heroScrollRafRef.current);
+  }, []);
 
   const genres = useMemo(() => {
     const map = new Map();
@@ -185,6 +217,93 @@ export default function DashboardPage() {
       )}
 
       {heroBook && (
+        <section className="relative overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] py-6 text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)] md:py-9">
+          <div className="pointer-events-none absolute inset-0">
+            <AnimatePresence mode="sync">
+              <Motion.img
+                key={`panorama-ambient-new-${heroBook.id}`}
+                src={coverOf(heroBook, hasCinematicExperience(heroBook))}
+                alt=""
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.18 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-3xl"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_30%,rgba(191,137,63,0.22),transparent_36%),radial-gradient(circle_at_82%_15%,rgba(213,176,106,0.08),transparent_28%),linear-gradient(100deg,rgba(8,6,4,0.58),rgba(8,6,4,0.88)_58%,rgba(8,6,4,0.98))]" />
+            <div className="absolute inset-x-[8%] top-0 h-px bg-gradient-to-r from-transparent via-[#d5b06a]/40 to-transparent" />
+          </div>
+
+          <div className="relative z-[1] px-5 pb-5 sm:px-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.38em] text-white/45">Bem-vindo de volta, {firstName}</p>
+            <p className="mt-2 text-sm text-white/62">Hoje é um excelente dia para revisitar grandes histórias.</p>
+          </div>
+
+          <div
+            ref={heroCarouselRef}
+            onScroll={handleHeroScroll}
+            onPointerDown={() => setHeroTouched(true)}
+            onTouchStart={() => setHeroTouched(true)}
+            className="relative z-[1] flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 pb-3 pt-1 [scrollbar-width:none] [touch-action:pan-y_pinch-zoom] [&::-webkit-scrollbar]:hidden sm:gap-5 sm:px-8"
+            aria-label="Obras em destaque"
+          >
+            {heroBooks.map((book, index) => {
+              const active = index === heroIndex;
+              const cinematic = hasCinematicExperience(book);
+              return (
+                <article
+                  key={book.id}
+                  className={`group relative h-[min(68dvh,660px)] min-h-[430px] max-h-[72dvh] flex-[0_0_88%] snap-center overflow-hidden rounded-[30px] border border-white/10 bg-black/55 shadow-[0_35px_80px_-45px_rgba(0,0,0,0.95)] transition duration-500 md:flex-[0_0_72%] xl:flex-[0_0_56%] ${active ? "scale-100 opacity-100" : "scale-[0.965] opacity-70"}`}
+                >
+                  <img src={coverOf(book, cinematic)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
+                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(7,5,3,0.98)_0%,rgba(7,5,3,0.86)_31%,rgba(7,5,3,0.18)_68%,transparent_100%)]" />
+                  <div className="absolute inset-x-5 bottom-6 z-[2] sm:inset-x-8 sm:bottom-8">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#d5b06a]/78">Seleção do acervo</span>
+                    <h1 className="mt-3 break-words font-display text-[clamp(1.9rem,8vw,3.6rem)] font-semibold leading-[0.98]">{book.titulo}</h1>
+                    <p className="mt-3 text-sm text-white/72">{book.autor?.nome ?? "Curadoria Essência"} · {book.genero?.nome ?? "Acervo Essência"}</p>
+                    <p className="mt-4 max-w-2xl overflow-hidden text-sm leading-6 text-white/70 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] md:text-base md:leading-7">{shortText(book.sinopse, 210)}</p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[rgb(var(--color-accent-dark))]">
+                        <Play className="h-4 w-4" fill="currentColor" /> Continuar
+                      </Link>
+                      <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/14">
+                        Explorar obra <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {heroBooks.length > 1 && (
+            <div className="relative z-[2] mt-3 flex items-center justify-center gap-5 px-5 sm:px-8">
+              <div className="flex items-center gap-2" aria-label="Selecionar obra em destaque">
+                {heroBooks.map((book, index) => (
+                  <button
+                    key={book.id}
+                    type="button"
+                    onClick={() => {
+                      setHeroTouched(true);
+                      setHeroIndex(index);
+                    }}
+                    aria-label={`Exibir ${book.titulo}`}
+                    aria-current={index === heroIndex ? "true" : undefined}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${index === heroIndex ? "w-8 bg-[rgb(var(--color-accent-primary))]" : "w-2 bg-white/28 hover:bg-white/55"}`}
+                  />
+                ))}
+              </div>
+              <div className="hidden gap-2 md:flex">
+                <button type="button" onClick={() => { setHeroTouched(true); setHeroIndex((current) => (current - 1 + heroBooks.length) % heroBooks.length); }} aria-label="Obra anterior" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronLeft className="h-4 w-4" /></button>
+                <button type="button" onClick={() => { setHeroTouched(true); setHeroIndex((current) => (current + 1) % heroBooks.length); }} aria-label="Próxima obra" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronRight className="h-4 w-4" /></button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {false && heroBook && (
         <section className="relative min-h-[580px] overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)]">
           <div className="pointer-events-none absolute inset-0">
             <AnimatePresence mode="sync">
