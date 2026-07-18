@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const SILENT_ENERGY = { overall: 0, bass: 0, mids: 0, highs: 0, peak: 0 };
+const AMBIENT_ENERGY = { overall: 0.18, bass: 0.11, mids: 0.14, highs: 0.08, peak: 0.16 };
 const ANALYSER_CACHE = new WeakMap();
 
 function average(values, start, end) {
@@ -13,14 +14,34 @@ function average(values, start, end) {
   return count ? total / count / 255 : 0;
 }
 
+function canReadAudioFrequencies(audioElement) {
+  const source = audioElement?.currentSrc || audioElement?.src || "";
+  if (!source || typeof window === "undefined") return false;
+  if (source.startsWith("blob:") || source.startsWith("data:")) return true;
+
+  try {
+    const url = new URL(source, window.location.href);
+    return url.origin === window.location.origin || Boolean(audioElement.crossOrigin);
+  } catch {
+    return false;
+  }
+}
+
 export function useAudioEnergy(audioElement, { active = true, isPlaying = false } = {}) {
   const [snapshot, setSnapshot] = useState(SILENT_ENERGY);
   const energyRef = useRef({ ...SILENT_ENERGY });
+  const sourceKey = audioElement?.currentSrc || audioElement?.src || "";
 
   useEffect(() => {
     if (!audioElement || !active || !isPlaying) {
       energyRef.current = { ...SILENT_ENERGY };
       setSnapshot(SILENT_ENERGY);
+      return undefined;
+    }
+
+    if (!canReadAudioFrequencies(audioElement)) {
+      energyRef.current = { ...AMBIENT_ENERGY };
+      setSnapshot(AMBIENT_ENERGY);
       return undefined;
     }
 
@@ -88,7 +109,7 @@ export function useAudioEnergy(audioElement, { active = true, isPlaying = false 
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [active, audioElement, isPlaying]);
+  }, [active, audioElement, isPlaying, sourceKey]);
 
   return snapshot;
 }
