@@ -112,6 +112,8 @@ export default function DashboardPage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroTouched, setHeroTouched] = useState(false);
   const heroCarouselRef = useRef(null);
+  const heroProgrammaticScrollRef = useRef(null);
+  const heroProgrammaticScrollTimeoutRef = useRef(0);
   const heroScrollRafRef = useRef(0);
   const heroBook = heroBooks[heroIndex] ?? heroBooks[0] ?? null;
 
@@ -119,8 +121,15 @@ export default function DashboardPage() {
     const viewport = heroCarouselRef.current;
     const slide = viewport?.children?.[index];
     if (!viewport || !slide) return;
+    heroProgrammaticScrollRef.current = index;
+    if (heroProgrammaticScrollTimeoutRef.current) {
+      window.clearTimeout(heroProgrammaticScrollTimeoutRef.current);
+    }
     const target = slide.offsetLeft - (viewport.clientWidth - slide.clientWidth) / 2;
     viewport.scrollTo({ left: Math.max(0, target), behavior });
+    heroProgrammaticScrollTimeoutRef.current = window.setTimeout(() => {
+      heroProgrammaticScrollRef.current = null;
+    }, behavior === "smooth" ? 650 : 0);
   }, []);
 
   const handleHeroScroll = useCallback(() => {
@@ -129,6 +138,7 @@ export default function DashboardPage() {
 
     heroScrollRafRef.current = window.requestAnimationFrame(() => {
       heroScrollRafRef.current = 0;
+      if (heroProgrammaticScrollRef.current !== null) return;
       const center = viewport.scrollLeft + viewport.clientWidth / 2;
       let closestIndex = 0;
       let closestDistance = Number.POSITIVE_INFINITY;
@@ -164,6 +174,7 @@ export default function DashboardPage() {
 
   useEffect(() => () => {
     if (heroScrollRafRef.current) window.cancelAnimationFrame(heroScrollRafRef.current);
+    if (heroProgrammaticScrollTimeoutRef.current) window.clearTimeout(heroProgrammaticScrollTimeoutRef.current);
   }, []);
 
   const genres = useMemo(() => {
