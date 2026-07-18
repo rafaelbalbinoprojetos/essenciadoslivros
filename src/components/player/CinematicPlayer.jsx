@@ -27,11 +27,15 @@ import { resolveAudioSource } from "../../utils/media.js";
 import { buildSimpleAudioTrack, buildNarrativeTracks } from "../../utils/playlist.js";
 import { ensureCoverSrc, DEFAULT_COVER_PLACEHOLDER } from "../../utils/covers.js";
 import { useTrackRating } from "../../hooks/useTrackRating.js";
-import Waveform from "./Waveform.jsx";
 import ShareButton from "./ShareButton.jsx";
 import MetadataCard from "./MetadataCard.jsx";
 import EnergyBorder from "./EnergyBorder.jsx";
 import GoldenParticles from "./GoldenParticles.jsx";
+import { CinematicThemeEngine } from "../cinematic-player/theme/CinematicThemeEngine.jsx";
+import { CinematicWaveform } from "../cinematic-player/CinematicWaveform.jsx";
+import { SceneProgress } from "../cinematic-player/SceneProgress.jsx";
+import { EnergyButton } from "../cinematic-player/theme/EnergyButton.jsx";
+import "../cinematic-player/cinematic-player.css";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -91,6 +95,7 @@ export default function CinematicPlayer() {
     repeat,
     toggleRepeat,
     startPlaylist,
+    audioElement,
   } = useAudioPlaylist();
 
   const [liked, setLiked] = useState(false);
@@ -210,7 +215,18 @@ export default function CinematicPlayer() {
 
   if (!currentTrack) return null;
 
+  const themeWork = {
+    title: currentTrack.title,
+    author: currentTrack.author,
+    collectionTitle: currentTrack.collection || (isCinematic ? "Memoria Cinematografica" : "Essencia dos Livros"),
+    sceneTitle: currentTrack.sceneTitle || currentTrack.title,
+    sceneSubtitle: currentTrack.description,
+    themeId: currentTrack.themeId,
+  };
+
   return (
+    <CinematicThemeEngine work={themeWork} themeId={currentTrack.themeId} audioElement={audioElement} isPlaying={isPlaying}>
+      {({ audioEnergy }) => (
     <AnimatePresence>
       <Motion.section
         className="cinematic-player fixed inset-0 z-[1000] overflow-y-auto bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]"
@@ -321,20 +337,11 @@ export default function CinematicPlayer() {
         >
           {/* Progresso da jornada */}
           <Motion.div variants={fadeUpItem}>
-            {isCinematic && (
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.25em] text-[rgb(var(--cinema-text-subtle))]">
-                <span>
-                  Cena {currentIndex + 1} de {tracks.length}
-                </span>
-                <span>{Math.round(journeyPct)}%</span>
-              </div>
-            )}
-            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[rgba(var(--color-accent-primary),0.15)]">
-              <div
-                className="h-full rounded-full bg-[rgb(var(--color-accent-primary))] transition-[width]"
-                style={{ width: `${journeyPct}%` }}
-              />
-            </div>
+            <SceneProgress
+              currentScene={isCinematic ? currentIndex + 1 : 1}
+              totalScenes={isCinematic ? tracks.length : 1}
+              sceneProgress={journeyPct}
+            />
           </Motion.div>
 
           {/* Título + subtítulo */}
@@ -357,7 +364,7 @@ export default function CinematicPlayer() {
 
           {/* Waveform + tempos */}
           <Motion.div variants={fadeUpItem} className="mt-5">
-            <Waveform pct={pct} onSeekFraction={(f) => duration && seek(f * duration)} />
+            <CinematicWaveform progressPercent={pct} audioEnergy={audioEnergy} onSeekFraction={(f) => duration && seek(f * duration)} />
             <div className="mt-1 flex items-center justify-between text-[11px] text-[rgb(var(--cinema-text-subtle))]">
               <span>{formatTime(progress)}</span>
               <span>{formatTime(duration)}</span>
@@ -384,14 +391,9 @@ export default function CinematicPlayer() {
             >
               <SkipBack className="h-6 w-6" fill="currentColor" />
             </button>
-            <button
-              type="button"
-              onClick={togglePlay}
-              aria-label={isPlaying ? "Pausar" : "Reproduzir"}
-              className={`player-play-glow player-play-pulse ${isPlaying ? "play-energy-ring" : ""} flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--color-accent-primary))] text-white transition hover:bg-[rgb(var(--color-accent-dark))]`}
-            >
+            <EnergyButton onClick={togglePlay} isActive={isPlaying} ariaLabel={isPlaying ? "Pausar" : "Reproduzir"}>
               {isPlaying ? <Pause className="h-7 w-7" fill="currentColor" /> : <Play className="h-7 w-7 translate-x-[2px]" fill="currentColor" />}
-            </button>
+            </EnergyButton>
             <button
               type="button"
               onClick={playNext}
@@ -521,5 +523,7 @@ export default function CinematicPlayer() {
         </Motion.div>
       </Motion.section>
     </AnimatePresence>
+      )}
+    </CinematicThemeEngine>
   );
 }

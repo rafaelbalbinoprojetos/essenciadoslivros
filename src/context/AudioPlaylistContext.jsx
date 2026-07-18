@@ -32,6 +32,12 @@ function normalizeTracks(tracks = []) {
       title: track.title ?? "Audiobook Essência",
       author: track.author ?? track.subtitle ?? "Conteúdo Essência",
       cover: track.cover ?? null,
+      themeId: track.themeId ?? track.cinematic_theme_id ?? track.cinematicThemeId ?? null,
+      collectionTitle: track.collectionTitle ?? track.collection_title ?? null,
+      sceneTitle: track.sceneTitle ?? track.scene_title ?? null,
+      sceneSubtitle: track.sceneSubtitle ?? track.scene_subtitle ?? null,
+      sceneQuote: track.sceneQuote ?? track.scene_quote ?? null,
+      quoteAuthor: track.quoteAuthor ?? track.quote_author ?? null,
       source,
       skipIntro: Boolean(track.skipIntro),
       skipProgress: Boolean(track.skipProgress),
@@ -61,6 +67,7 @@ export function AudioPlaylistProvider({ children }) {
   const rateRef = useRef(1);
   const repeatRef = useRef(false);
   const { user } = useAuth();
+  const [audioElement, setAudioElement] = useState(null);
 
   // Resolve (e cacheia por ~50min) o link assinado da vinheta.
   const getIntroUrl = useCallback(async () => {
@@ -533,6 +540,7 @@ export function AudioPlaylistProvider({ children }) {
       progress,
       playbackRate,
       repeat,
+      audioElement,
       startPlaylist,
       playNext,
       playPrevious,
@@ -557,6 +565,7 @@ export function AudioPlaylistProvider({ children }) {
       progress,
       playbackRate,
       repeat,
+      audioElement,
       startPlaylist,
       playNext,
       playPrevious,
@@ -582,7 +591,14 @@ export function AudioPlaylistProvider({ children }) {
           normalmente; só a leitura do AnalyserNode fica "tainted" (sempre
           zero), então --audio-energy nunca reage ao grave — a borda e o
           botão continuam com o respiro/brilho base, só sem a reatividade. */}
-      <audio ref={audioRef} preload="metadata" hidden />
+      <audio
+        ref={(node) => {
+          audioRef.current = node;
+          setAudioElement((current) => (current === node ? current : node));
+        }}
+        preload="metadata"
+        hidden
+      />
     </AudioPlaylistContext.Provider>
   );
 }
