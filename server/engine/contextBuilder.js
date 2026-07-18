@@ -16,6 +16,7 @@ export async function buildContext(obraId) {
       tipo_obra,
       capa_url,
       capa_cinematica_url,
+      player_hero_url,
       tem_experiencia_cinematica,
       titulo_cinematico,
       descricao_cinematica,
@@ -75,6 +76,7 @@ export async function buildContext(obraId) {
     arquivos_existentes: {
       capa_url: obra.capa_url,
       capa_cinematica_url: obra.capa_cinematica_url,
+      player_hero_url: obra.player_hero_url,
     },
     instrucoes_contexto: {
       idioma_saida: "pt-BR",

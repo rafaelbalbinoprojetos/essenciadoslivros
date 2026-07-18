@@ -56,6 +56,7 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
   heritage_image: 180,
   capa_cinematica_prompt: 15,
   capa_cinematica_image: 180,
+  player_hero_image: 180,
   pdf_cinematica: 30,
   guia_editorial_parte1: 150,
   guia_editorial_parte2: 150,
@@ -82,6 +83,7 @@ const PIPELINE_STEP_DEFS_NARRATIVA = [
   { key: "heritage_image", label: "Imagem Heritage", colorClass: "text-yellow-500 focus:ring-yellow-500" },
   { key: "capa_cinematica_prompt", label: "Prompt Capa Cinemática", colorClass: "text-fuchsia-500 focus:ring-fuchsia-500" },
   { key: "capa_cinematica_image", label: "Imagem Cinemática", colorClass: "text-rose-500 focus:ring-rose-500" },
+  { key: "player_hero_image", label: "Player Hero (usa a capa cinematográfica)", colorClass: "text-violet-500 focus:ring-violet-500" },
   { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-cyan-500 focus:ring-cyan-500" },
   { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-teal-500 focus:ring-teal-500" },
   { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-teal-500 focus:ring-teal-500" },
@@ -278,6 +280,7 @@ export default function EngineSolicitarObra() {
   const [executandoHeritageImage, setExecutandoHeritageImage] = useState(false);
   const [executandoCapaPrompt, setExecutandoCapaPrompt] = useState(false);
   const [executandoCapaImage, setExecutandoCapaImage] = useState(false);
+  const [executandoPlayerHero, setExecutandoPlayerHero] = useState(false);
   const [executandoPdfCinematica, setExecutandoPdfCinematica] = useState(false);
   const [atualizandoDados, setAtualizandoDados] = useState(false);
   const [resultadoCriacao, setResultadoCriacao] = useState(null);
@@ -291,6 +294,7 @@ export default function EngineSolicitarObra() {
   const [resultadoHeritageImage, setResultadoHeritageImage] = useState(null);
   const [resultadoCapaPrompt, setResultadoCapaPrompt] = useState(null);
   const [resultadoCapaImage, setResultadoCapaImage] = useState(null);
+  const [resultadoPlayerHero, setResultadoPlayerHero] = useState(null);
   const [resultadoPdfCinematica, setResultadoPdfCinematica] = useState(null);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
   const [executandoEnciclopedia, setExecutandoEnciclopedia] = useState({});
@@ -305,7 +309,7 @@ export default function EngineSolicitarObra() {
   const [executandoPipelineSelecionada, setExecutandoPipelineSelecionada] = useState(false);
   const [stepStartedAt, setStepStartedAt] = useState({});
   const [timerNow, setTimerNow] = useState(() => Date.now());
-  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados || Object.values(executandoEnciclopedia).some(Boolean) || Object.values(executandoGuiaEditorial).some(Boolean);
+  const loading = criandoObra || executandoCurador || executandoEditor || executandoDiretor || executandoNarrativa || executandoHeritagePrompt || executandoHeritageImage || executandoCapaPrompt || executandoCapaImage || executandoPlayerHero || executandoPdfCinematica || executandoPipelineSelecionada || atualizandoDados || Object.values(executandoEnciclopedia).some(Boolean) || Object.values(executandoGuiaEditorial).some(Boolean);
 
   useEffect(() => {
     setSelectedSteps(criarSelecaoDeEtapas(true, obterPipelineStepDefs(tipoObra)));
@@ -389,6 +393,7 @@ export default function EngineSolicitarObra() {
       heritage_image: executandoHeritageImage,
       capa_cinematica_prompt: executandoCapaPrompt,
       capa_cinematica_image: executandoCapaImage,
+      player_hero_image: executandoPlayerHero,
       pdf_cinematica: executandoPdfCinematica,
       ...executandoEnciclopedia,
       atualizar_dados: atualizandoDados,
@@ -422,6 +427,7 @@ export default function EngineSolicitarObra() {
     executandoHeritageImage,
     executandoCapaPrompt,
     executandoCapaImage,
+    executandoPlayerHero,
     executandoPdfCinematica,
     executandoEnciclopedia,
     atualizandoDados,
@@ -501,6 +507,7 @@ export default function EngineSolicitarObra() {
     const isHeritageImage = tipoEtapa === "heritage_image";
     const isCapaPrompt = tipoEtapa === "capa_cinematica_prompt";
     const isCapaImage = tipoEtapa === "capa_cinematica_image";
+    const isPlayerHero = tipoEtapa === "player_hero_image";
     const isPdfCinematica = tipoEtapa === "pdf_cinematica";
     const isEnciclopedia = ENCICLOPEDIA_STEP_KEYS.includes(tipoEtapa);
     const isGuiaEditorial = GUIA_EDITORIAL_STEP_KEYS.includes(tipoEtapa);
@@ -516,6 +523,7 @@ export default function EngineSolicitarObra() {
     if (isHeritageImage) setExecutandoHeritageImage(true);
     if (isCapaPrompt) setExecutandoCapaPrompt(true);
     if (isCapaImage) setExecutandoCapaImage(true);
+    if (isPlayerHero) setExecutandoPlayerHero(true);
     if (isPdfCinematica) setExecutandoPdfCinematica(true);
     if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: true }));
     if (isGuiaEditorial) setExecutandoGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: true }));
@@ -594,6 +602,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setResultadoHeritageImage(data);
       if (isCapaPrompt) setResultadoCapaPrompt(data);
       if (isCapaImage) setResultadoCapaImage(data);
+      if (isPlayerHero) setResultadoPlayerHero(data);
       if (isPdfCinematica) setResultadoPdfCinematica(data);
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: data }));
       if (isGuiaEditorial) setResultadosGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: data }));
@@ -630,6 +639,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setResultadoHeritageImage((atual) => atual || fallback);
       if (isCapaPrompt) setResultadoCapaPrompt((atual) => atual || fallback);
       if (isCapaImage) setResultadoCapaImage((atual) => atual || fallback);
+      if (isPlayerHero) setResultadoPlayerHero((atual) => atual || fallback);
       if (isPdfCinematica) setResultadoPdfCinematica((atual) => atual || fallback);
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: atual[tipoEtapa] || fallback }));
       if (isGuiaEditorial) setResultadosGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: atual[tipoEtapa] || fallback }));
@@ -647,6 +657,7 @@ export default function EngineSolicitarObra() {
       if (isHeritageImage) setExecutandoHeritageImage(false);
       if (isCapaPrompt) setExecutandoCapaPrompt(false);
       if (isCapaImage) setExecutandoCapaImage(false);
+      if (isPlayerHero) setExecutandoPlayerHero(false);
       if (isPdfCinematica) setExecutandoPdfCinematica(false);
       if (isEnciclopedia) setExecutandoEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: false }));
       if (isGuiaEditorial) setExecutandoGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: false }));
@@ -752,6 +763,7 @@ export default function EngineSolicitarObra() {
     setExecutandoHeritageImage(false);
     setExecutandoCapaPrompt(false);
     setExecutandoCapaImage(false);
+    setExecutandoPlayerHero(false);
     setExecutandoPdfCinematica(false);
     setAtualizandoDados(false);
     setExecutandoEnciclopedia({});
@@ -765,6 +777,7 @@ export default function EngineSolicitarObra() {
     setResultadoHeritageImage(null);
     setResultadoCapaPrompt(null);
     setResultadoCapaImage(null);
+    setResultadoPlayerHero(null);
     setResultadoPdfCinematica(null);
     setResultadoAtualizacao(null);
     setResultadosEnciclopedia({});
@@ -821,6 +834,7 @@ export default function EngineSolicitarObra() {
       setExecutandoHeritageImage(false);
       setExecutandoCapaPrompt(false);
       setExecutandoCapaImage(false);
+      setExecutandoPlayerHero(false);
       setExecutandoPdfCinematica(false);
       setAtualizandoDados(false);
     }
@@ -836,6 +850,7 @@ export default function EngineSolicitarObra() {
     || resultadoHeritageImage
     || resultadoCapaPrompt
     || resultadoCapaImage
+    || resultadoPlayerHero
     || resultadoPdfCinematica
     || resultadoAtualizacao
     || Object.keys(resultadosEnciclopedia).length > 0
@@ -920,12 +935,21 @@ export default function EngineSolicitarObra() {
       }),
     },
     {
+      key: "player_hero_image",
+      label: "Gerando Player Hero",
+      status: getStepStatus({
+        active: executandoPlayerHero,
+        result: resultadoPlayerHero,
+        manualWhenIdle: Boolean(resultadoCapaImage?.ok),
+      }),
+    },
+    {
       key: "pdf_cinematica",
       label: "Gerando PDF cinematográfico",
       status: getStepStatus({
         active: executandoPdfCinematica,
         result: resultadoPdfCinematica,
-        manualWhenIdle: Boolean(resultadoCapaImage?.ok),
+        manualWhenIdle: Boolean(resultadoPlayerHero?.ok),
       }),
     },
     ...ENCICLOPEDIA_STEP_KEYS.map((key) => ({
@@ -1065,11 +1089,13 @@ export default function EngineSolicitarObra() {
                             ? "Gerando prompt da capa cinematográfica..."
                             : executandoCapaImage
                               ? "Gerando imagem cinematográfica..."
-                              : executandoPdfCinematica
-                                ? "Gerando PDF cinematográfico..."
-                                : atualizandoDados
-                                  ? "Atualizando dados..."
-                                  : "Solicitar obra"}
+                              : executandoPlayerHero
+                                ? "Gerando Player Hero..."
+                                : executandoPdfCinematica
+                                  ? "Gerando PDF cinematográfico..."
+                                  : atualizandoDados
+                                    ? "Atualizando dados..."
+                                    : "Solicitar obra"}
           </button>
         </form>
 
@@ -1486,6 +1512,38 @@ export default function EngineSolicitarObra() {
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
                 {JSON.stringify(resultadoCapaImage, null, 2)}
+              </pre>
+            )}
+          </section>
+        )}
+
+        {resultadoPlayerHero && (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Resultado do player_hero_image
+            </h2>
+            {resultadoPlayerHero.ok && resultadoPlayerHero.imagemUrl ? (
+              <div className="rounded-2xl border border-violet-900 bg-black p-5">
+                <img
+                  src={resultadoPlayerHero.imagemUrl}
+                  alt="Player Hero gerado"
+                  className="mx-auto max-h-[820px] rounded-xl border border-zinc-800 object-contain"
+                />
+                <a
+                  href={resultadoPlayerHero.imagemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block truncate text-sm font-semibold text-violet-200 hover:text-violet-100"
+                >
+                  {resultadoPlayerHero.imagemUrl}
+                </a>
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-violet-100">
+                  {JSON.stringify(resultadoPlayerHero, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
+                {JSON.stringify(resultadoPlayerHero, null, 2)}
               </pre>
             )}
           </section>

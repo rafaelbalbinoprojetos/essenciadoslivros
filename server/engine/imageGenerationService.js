@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
 import { engineStep } from "./engineLogger.js";
+import { PLAYER_HERO_PROMPT } from "./playerHeroPrompt.js";
 import { supabaseAdmin } from "./supabaseAdmin.js";
 
 const CAPAS_BUCKET = "capas";
@@ -101,6 +102,10 @@ The work prompt may start with a LOCKED SCENE describing the mandatory emotional
 Never substitute a living emotional relationship with an object, symbol or artifact-centric composition.
 When there is any conflict between the visual reference and the work prompt, the work prompt wins.
 Use the image_generation tool to create the final image.
+`.trim();
+
+const INSTRUCTIONS_RESPONSES_PLAYER_HERO = `
+You are a senior cinematic interface art director. The attached image is the exact Cinematic Cover that must remain physically present and recognizable inside the new scene. Treat it as the artistic foundation, preserve its artwork, title, palette and visual identity, and expand its universe around it. Create a new vertical Player Hero artwork according to the user prompt. Do not draw any interface elements. Use the image_generation tool to create the final image.
 `.trim();
 
 let openaiClient = null;
@@ -272,6 +277,27 @@ async function carregarReferenciaComoUploadable({
     file: await toFile(buffer, fallbackName, {
       type: "image/png",
     }),
+  };
+}
+
+async function carregarReferenciaDiretaComoUploadable(url, fileName = "cinematic-cover.png") {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Erro ao baixar a capa cinematica usada no Player Hero: HTTP ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const mimeType = detectarMimeImagem(fileName, blob.type);
+  const buffer = Buffer.from(await blob.arrayBuffer());
+
+  return {
+    referencia: null,
+    source: url,
+    mimeType,
+    buffer,
+    dataUrl: `data:${mimeType};base64,${buffer.toString("base64")}`,
+    file: await toFile(blob, fileName, { type: mimeType }),
   };
 }
 
@@ -514,27 +540,34 @@ async function gerarImagemComReferencia({
   label = "Heritage",
   fallbackPath = HERITAGE_REFERENCE_PATH,
   fallbackName = "CAPA_REFERENCIA_HERITAGE.png",
+  referenciaDiretaUrl = null,
 }) {
   if (!obraId) throw new Error(`obraId e obrigatorio para gerar imagem ${label}.`);
   if (!prompt) throw new Error(`Prompt ${label} nao encontrado para gerar imagem.`);
 
   const limpador = tipoImagem === "cinematica"
     ? limparPromptCinematicaParaImagem
-    : limparPromptHeritageParaImagem;
+    : tipoImagem === "player_hero"
+      ? (valor) => String(valor || "").trim()
+      : limparPromptHeritageParaImagem;
   const instructionsResponses = tipoImagem === "cinematica"
     ? INSTRUCTIONS_RESPONSES_CINEMATICA
-    : INSTRUCTIONS_RESPONSES_HERITAGE;
+    : tipoImagem === "player_hero"
+      ? INSTRUCTIONS_RESPONSES_PLAYER_HERO
+      : INSTRUCTIONS_RESPONSES_HERITAGE;
 
   const promptDaObra = limpador(prompt);
   const promptFinal = limitarPromptImagem(`${promptReferencia}
 
 DADOS DA OBRA:
 ${promptDaObra}`);
-  const referencia = await carregarReferenciaComoUploadable({
-    tipo: tipoReferencia,
-    fallbackPath,
-    fallbackName,
-  });
+  const referencia = referenciaDiretaUrl
+    ? await carregarReferenciaDiretaComoUploadable(referenciaDiretaUrl)
+    : await carregarReferenciaComoUploadable({
+      tipo: tipoReferencia,
+      fallbackPath,
+      fallbackName,
+    });
   const inicio = Date.now();
 
   engineStep(`Imagem ${label}`, "->", {
@@ -680,5 +713,26 @@ export async function gerarImagemCinematicaComReferencia({ obraId, titulo, promp
     label: "Cinematica",
     fallbackPath: null,
     fallbackName: "CAPA_REFERENCIA_CINEMATICA.png",
+  });
+}
+
+export async function gerarPlayerHeroComCapaCinematica({ obraId, titulo, capaCinematicaUrl }) {
+  if (!capaCinematicaUrl) {
+    throw new Error("A capa cinematica e obrigatoria para gerar o Player Hero.");
+  }
+
+  return gerarImagemComReferencia({
+    obraId,
+    titulo,
+    prompt: PLAYER_HERO_PROMPT,
+    tipoReferencia: "cinematica",
+    tipoImagem: "player_hero",
+    tipoEtapa: "player_hero_image",
+    promptReferencia: "",
+    colunaCapa: "player_hero_url",
+    label: "Player Hero",
+    fallbackPath: null,
+    fallbackName: "CAPA_CINEMATICA.png",
+    referenciaDiretaUrl: capaCinematicaUrl,
   });
 }

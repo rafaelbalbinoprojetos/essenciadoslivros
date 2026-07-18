@@ -184,6 +184,7 @@ export default function CinematicPlayer() {
   };
 
   const coverSrc = currentTrack?.cover ?? DEFAULT_COVER_PLACEHOLDER;
+  const heroSrc = currentTrack?.heroImage || coverSrc;
   const safeProgress = Math.min(progress, duration || progress || 0);
   const pct = duration ? (safeProgress / duration) * 100 : 0;
   const isCinematic = tracks.length > 1;
@@ -247,7 +248,7 @@ export default function CinematicPlayer() {
         <div className="relative z-[2] h-[50vh] min-h-[320px] w-full overflow-hidden">
           <Motion.img
             layoutId={`artwork-${currentTrack.id}`}
-            src={coverSrc}
+            src={heroSrc}
             alt={currentTrack.title}
             className="h-full w-full object-cover object-center"
           />
