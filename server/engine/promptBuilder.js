@@ -2463,6 +2463,9 @@ unmistakably familial, parental, protective or companionate. Prefer standing sid
 a protective hand on the shoulder, shared forward gaze or respectful space. Never describe
 the interaction as intimate, bodies pressed together, holding one another tightly, sensual,
 romantic or an eyes-closed embrace. Preserve the emotional bond without ambiguous contact.
+In that case, render the entire scene as a visibly stylized, painterly premium digital
+illustration — never as a photograph, photorealistic image or lifelike portrait. Do not use
+the words child, minor, youthfully, photographic, photorealistic or lifelike in the final prompt.
 
 ━━━━ START YOUR OUTPUT WITH THIS LINE ━━━━
 LOCKED SCENE: [one sentence — who is present, what gesture, what dominant emotion]
@@ -2482,7 +2485,7 @@ volumetric particles, mist, dust, atmospheric depth.
 Foreground → midground → background described in sequence.
 
 Editorial layer: elegant frame in brushed metal and frosted glass, large serif typography,
-70% cinematic photograph / 30% editorial overlay.
+70% cinematic illustrated scene / 30% editorial overlay.
 
 Visible text (mandatory):
 "ESSÊNCIA DOS LIVROS" at the top in elegant serif.
@@ -2491,7 +2494,7 @@ Work title in large display serif, centered lower third.
 Compact bottom plaque: ${titulo} / ${criador}${ano ? ` / ${ano}` : ""} / Coleção Essência dos Livros.
 
 End with this exact closing line:
-"No style of any official artwork. Cinematic realistic illustration with natural materials and lighting, premium editorial collection quality, family-safe and non-graphic, vertical portrait format 2:3."
+"No style of any official artwork. High-end cinematic digital illustration with painterly natural materials and dramatic lighting, visibly fictional, premium editorial collection quality, family-safe and non-graphic, vertical portrait format 2:3."
 
 ━━━━ ABSOLUTE PROHIBITIONS ━━━━
 Never mention: audio waveform, equalizer, microphone, giant headphones, play button,

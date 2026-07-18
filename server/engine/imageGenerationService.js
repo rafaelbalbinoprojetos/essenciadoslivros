@@ -82,6 +82,15 @@ Preserve from the reference only the cinematic quality bar: dramatic visual impa
 The work prompt overrides the reference image whenever there is a conflict.
 `.trim();
 
+const PROMPT_CINEMATICA_SEM_REFERENCIA = `
+Create a premium vertical cinematic editorial cover as a visibly fictional, high-end digital illustration.
+Use painterly natural materials, dramatic atmospheric lighting, strong depth, refined serif typography and a collectible dark-fantasy editorial finish.
+Do not render the scene as a photograph, photorealistic image or exact facial likeness.
+Preserve each named fictional character through canonical silhouette, anatomy, costume, armor, markings, palette, signature objects, scale and environment.
+Keep all relationships unmistakably familial, parental, protective or companionate, with respectful physical space.
+The image must be family-safe, non-graphic and non-threatening, with no blood, visible injury or active violence.
+`.trim();
+
 const INSTRUCTIONS_RESPONSES_HERITAGE = `
 You are a senior image art director for the Essencia dos Livros Heritage Collection.
 Analyze the attached reference image only as style language.
@@ -102,6 +111,7 @@ Never substitute a living emotional relationship with an object, symbol or artif
 Preserve canonical identity through silhouette, anatomy, age, costume, armor, markings, color palette, signature objects and environment rather than demanding an exact photorealistic facial likeness.
 Keep the image family-safe, non-graphic and non-threatening. Express difficult emotions through posture, gaze, spacing, atmosphere and lighting, without blood, visible injury, active violence or extreme distress.
 When a child, teenager, baby or young-coded character is present, portray the relationship as unmistakably familial, parental, protective or companionate. Avoid ambiguous intimate wording or close body contact; prefer a protective hand on the shoulder, standing side by side, shared gaze or respectful space.
+If any young-coded character is present, render the entire scene as a visibly stylized, painterly premium digital illustration, never as a photograph, photorealistic image or lifelike portrait.
 When there is any conflict between the visual reference and the work prompt, the work prompt wins.
 Use the image_generation tool to create the final image.
 `.trim();
@@ -412,7 +422,7 @@ async function ajustarPromptAposRecusa({ promptOriginal, motivoRecusa }) {
     messages: [
       {
         role: "system",
-        content: "Você é um editor de prompts de geração de imagem. Reescreva prompts recusados pelo sistema de moderação da OpenAI sem apagar a identidade da obra. Remova violência gráfica, sangue, ferimentos visíveis, nudez, ódio, autolesão, ameaça, sofrimento extremo, armas em ação e retratos faciais fotorrealistas extremos. Para personagens fictícios conhecidos, preserve fielmente silhueta, anatomia/espécie, idade, vestuário ou armadura, marcas, paleta, objetos icônicos, escala, relação e ambiente; não crie equivalentes genéricos e não exija semelhança facial exata. Troque close-up íntimo por plano médio, três-quartos ou retrato ambiental. Expresse luto, perda ou conflito por postura, olhar, distância, atmosfera e luz, usando quiet mourning, protective resolve ou contemplative stillness em vez de agony, terror, despair, battle-worn face ou drenched in grief. Se houver criança, adolescente, bebê ou personagem de aparência jovem, torne a relação inequivocamente familiar, parental, protetora ou de companheirismo; substitua intimate, holding close, bodies pressed, eyes-closed embrace e contato ambíguo por standing side by side, protective hand on the shoulder, shared forward gaze ou respectful space. Mantenha qualidade cinematográfica como realistic cinematic illustration with natural materials and lighting, family-safe, non-graphic and non-threatening. Preserve composição, atmosfera, tipografia e fidelidade emocional. Responda apenas com o prompt reescrito em inglês, sem explicações, aspas ou markdown.",
+        content: "Você é um editor de prompts de geração de imagem. Reescreva prompts recusados pelo sistema de moderação da OpenAI sem apagar a identidade da obra. Remova violência gráfica, sangue, ferimentos visíveis, nudez, ódio, autolesão, ameaça, sofrimento extremo, armas em ação e retratos faciais fotorrealistas extremos. Para personagens fictícios conhecidos, preserve fielmente silhueta, anatomia/espécie, idade, vestuário ou armadura, marcas, paleta, objetos icônicos, escala, relação e ambiente; não crie equivalentes genéricos e não exija semelhança facial exata. Troque close-up íntimo por plano médio, três-quartos ou retrato ambiental. Expresse luto, perda ou conflito por postura, olhar, distância, atmosfera e luz, usando quiet mourning, protective resolve ou contemplative stillness em vez de agony, terror, despair, battle-worn face ou drenched in grief. Se houver criança, adolescente, bebê ou personagem de aparência jovem, torne a relação inequivocamente familiar, parental, protetora ou de companheirismo; substitua intimate, holding close, bodies pressed, eyes-closed embrace e contato ambíguo por standing side by side, protective hand on the shoulder, shared forward gaze ou respectful space. Nesse caso, exija visibly stylized painterly premium digital illustration e remova completamente photograph, photographic, photorealistic, lifelike, realistic portrait, child, minor e youthfully. Preserve composição, atmosfera, tipografia, qualidade cinematográfica e fidelidade emocional. Responda apenas com o prompt reescrito em inglês, sem explicações, aspas ou markdown.",
       },
       {
         role: "user",
@@ -530,6 +540,46 @@ async function gerarComImagesEdit({ promptFinal, referencia }) {
   };
 }
 
+async function gerarComImagesGenerate({ promptFinal }) {
+  const modelo = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
+  const resposta = await getOpenAIClient().images.generate({
+    model: modelo,
+    prompt: promptFinal,
+    size: "1024x1536",
+    quality: "high",
+    moderation: "low",
+    n: 1,
+  });
+
+  return {
+    b64: resposta.data?.[0]?.b64_json || null,
+    modelo,
+    modo: "images.generate",
+    respostaBruta: {
+      created: resposta.created ?? null,
+      usage: resposta.usage ?? null,
+    },
+  };
+}
+
+function extrairRequestId(motivo = "") {
+  return String(motivo).match(/\breq_[a-zA-Z0-9]+\b/)?.[0] || null;
+}
+
+function extrairDiagnosticoModeracao(error) {
+  const body = error?.body && typeof error.body === "object" ? error.body : {};
+  const detalhes = error?.moderation_details
+    || error?.error?.moderation_details
+    || body?.moderation_details
+    || body?.error?.moderation_details
+    || null;
+
+  return {
+    requestId: error?.request_id || extrairRequestId(error?.message),
+    detalhes,
+  };
+}
+
 async function gerarImagemComReferencia({
   obraId,
   titulo,
@@ -595,9 +645,11 @@ ${promptDaObra}`);
     }
   }
 
-  async function tentarGerarOuBloquear(promptParaGerar) {
+  async function tentarGerarOuBloquear(promptParaGerar, { semReferencia = false } = {}) {
     try {
-      const geracao = await tentarGerarImagem(promptParaGerar);
+      const geracao = semReferencia
+        ? await gerarComImagesGenerate({ promptFinal: promptParaGerar })
+        : await tentarGerarImagem(promptParaGerar);
 
       if (!geracao.b64) {
         return { bloqueado: true, motivo: "A OpenAI não retornou imagem em base64 (possível recusa silenciosa)." };
@@ -606,11 +658,18 @@ ${promptDaObra}`);
       return { bloqueado: false, geracao };
     } catch (error) {
       if (!ehRecusaPorModeracao(error)) throw error;
-      return { bloqueado: true, motivo: error.message };
+      const diagnostico = extrairDiagnosticoModeracao(error);
+      return {
+        bloqueado: true,
+        motivo: error.message,
+        requestId: diagnostico.requestId,
+        detalhesModeracao: diagnostico.detalhes,
+      };
     }
   }
 
   let promptUsado = promptFinal;
+  let retrySemReferencia = false;
   let tentativa = await tentarGerarOuBloquear(promptUsado);
 
   if (tentativa.bloqueado) {
@@ -620,8 +679,16 @@ ${promptDaObra}`);
     });
 
     try {
-      promptUsado = await ajustarPromptAposRecusa({ promptOriginal: promptFinal, motivoRecusa: tentativa.motivo });
-      tentativa = await tentarGerarOuBloquear(promptUsado);
+      const promptOriginalAjuste = tipoImagem === "cinematica" ? promptDaObra : promptFinal;
+      promptUsado = await ajustarPromptAposRecusa({
+        promptOriginal: promptOriginalAjuste,
+        motivoRecusa: tentativa.motivo,
+      });
+      retrySemReferencia = tipoImagem === "cinematica";
+      if (retrySemReferencia) {
+        promptUsado = limitarPromptImagem(`${PROMPT_CINEMATICA_SEM_REFERENCIA}\n\n${promptUsado}`);
+      }
+      tentativa = await tentarGerarOuBloquear(promptUsado, { semReferencia: retrySemReferencia });
     } catch (erroAjuste) {
       tentativa = { bloqueado: true, motivo: erroAjuste.message };
     }
@@ -643,8 +710,12 @@ ${promptDaObra}`);
       imagem_url: null,
       storage_path: null,
       referencia_visual: referencia.source,
+      referencia_usada_na_tentativa_final: !retrySemReferencia,
       prompt_tamanho: promptUsado.length,
+      prompt_enviado_final: promptUsado,
       motivo: tentativa.motivo,
+      request_id: tentativa.requestId || extrairRequestId(tentativa.motivo),
+      moderation_details: tentativa.detalhesModeracao || null,
       resposta_bruta: null,
     };
   }
@@ -680,7 +751,9 @@ ${promptDaObra}`);
     imagem_url: storage.publicUrl,
     storage_path: storage.storagePath,
     referencia_visual: referencia.source,
+    referencia_usada_na_geracao: !retrySemReferencia,
     prompt_tamanho: promptUsado.length,
+    prompt_ajustado_por_moderacao: retrySemReferencia ? promptUsado : null,
     fallback_reason: geracao.fallback_reason || null,
     resposta_bruta: geracao.respostaBruta,
   };
