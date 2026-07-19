@@ -616,18 +616,19 @@ export default function EngineSolicitarObra() {
       if (isEnciclopedia) setResultadosEnciclopedia((atual) => ({ ...atual, [tipoEtapa]: data }));
       if (isGuiaEditorial) setResultadosGuiaEditorial((atual) => ({ ...atual, [tipoEtapa]: data }));
 
+      if (data?.bloqueadoPorModeracao) {
+        toast.error(
+          `A OpenAI recusou gerar a imagem de "${tipoEtapa}" (moderação), mesmo após ajustar o prompt. A etapa foi interrompida sem imagem; gere um novo prompt antes de tentar novamente.`,
+          { duration: 8000 },
+        );
+        return data;
+      }
+
       if (!data?.ok) {
         throw new Error(data?.error || `Erro ao executar ${tipoEtapa}.`);
       }
 
-      if (data?.bloqueadoPorModeracao) {
-        toast.error(
-          `A OpenAI recusou gerar a imagem de "${tipoEtapa}" (moderação), mesmo após tentar ajustar o prompt. A etapa seguiu sem imagem — o PDF final será gerado sem essa capa.`,
-          { duration: 8000 },
-        );
-      } else {
-        toast.success(`${tipoEtapa} executado com sucesso!`);
-      }
+      toast.success(`${tipoEtapa} executado com sucesso!`);
 
       return data;
     } catch (error) {
