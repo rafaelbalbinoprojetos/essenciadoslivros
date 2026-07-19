@@ -158,8 +158,9 @@ export default function CinematicPlayer() {
   }, [slug, cenaId]);
 
   const handleClose = React.useCallback(() => {
-    if (backgroundLocation) {
-      navigate(-1);
+    if (backgroundLocation?.pathname) {
+      const returnTo = `${backgroundLocation.pathname}${backgroundLocation.search || ""}${backgroundLocation.hash || ""}`;
+      navigate(returnTo, { replace: true });
       return;
     }
     const targetBookId = currentTrack?.bookId ?? fallbackBookId;
@@ -229,7 +230,7 @@ export default function CinematicPlayer() {
       {({ audioEnergy }) => (
     <AnimatePresence>
       <Motion.section
-        className="cinematic-player cinematic-player-screen fixed inset-0 z-[1000] overflow-y-auto bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))]"
+        className="cinematic-player cinematic-player-screen fixed inset-0 z-[1000] overflow-y-auto overscroll-y-contain bg-[rgb(var(--cinema-surface))] text-[rgb(var(--cinema-text))] [touch-action:pan-y]"
         initial={{ y: "100%", opacity: 0.6 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0.6 }}
@@ -261,14 +262,16 @@ export default function CinematicPlayer() {
             className="absolute inset-0 bg-gradient-to-t from-[rgba(var(--cinema-surface),0.78)] via-transparent to-transparent"
             aria-hidden="true"
           />
+        </div>
 
-          {/* Header flutuante, transparente, sobreposto à imagem */}
-          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 px-4 pt-5">
+        {/* Cabeçalho interativo sempre acima do conteúdo e do fundo. */}
+        <div className="fixed inset-x-0 top-0 z-[40] bg-gradient-to-b from-black/80 via-black/45 to-transparent px-4 pb-8 pt-[calc(1.25rem+env(safe-area-inset-top))]">
+          <div className="mx-auto flex w-full max-w-md items-start justify-between gap-2">
             <button
               type="button"
               onClick={handleClose}
               aria-label="Voltar"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] transition hover:opacity-75"
+              className="pointer-events-auto flex h-10 w-10 flex-none items-center justify-center rounded-full border border-white/15 bg-black/25 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -277,11 +280,12 @@ export default function CinematicPlayer() {
               <p className="truncate text-[11px] font-semibold uppercase tracking-[0.35em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
                 {isCinematic ? "Memória Cinematográfica" : "Tocando agora"}
               </p>
-              {isCinematic && currentTrack.collection && (
-                <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.3em] text-[rgb(var(--color-accent-primary))] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
-                  Coleção {currentTrack.collection}
-                </p>
-              )}
+              <h1 className="mt-1 line-clamp-2 font-display text-lg font-bold leading-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+                {currentTrack.title}
+              </h1>
+              <p className="mt-0.5 max-w-full truncate text-xs text-white/70 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                {currentTrack.author}
+              </p>
             </div>
 
             <div className="relative">
@@ -289,7 +293,7 @@ export default function CinematicPlayer() {
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Mais opções"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] transition hover:opacity-75"
+                className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/25 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/45"
               >
                 <MoreHorizontal className="h-5 w-5" />
               </button>
@@ -332,6 +336,16 @@ export default function CinematicPlayer() {
               </AnimatePresence>
             </div>
           </div>
+
+          {isCinematic && (
+            <div className="mx-auto mt-3 w-full max-w-md px-1">
+              <SceneProgress
+                currentScene={currentIndex + 1}
+                totalScenes={tracks.length}
+                sceneProgress={journeyPct}
+              />
+            </div>
+          )}
         </div>
 
         {/* Conteúdo — entra em cascata, ~100ms entre blocos */}
@@ -339,25 +353,8 @@ export default function CinematicPlayer() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="relative z-[2] mx-auto flex min-h-[100dvh] w-full max-w-md flex-col justify-end px-6 pb-10 pt-32"
+          className="relative z-[2] mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[40dvh]"
         >
-          {/* Progresso da jornada */}
-          <Motion.div variants={fadeUpItem}>
-            <SceneProgress
-              currentScene={isCinematic ? currentIndex + 1 : 1}
-              totalScenes={isCinematic ? tracks.length : 1}
-              sceneProgress={journeyPct}
-            />
-          </Motion.div>
-
-          {/* Título + subtítulo */}
-          <Motion.div variants={fadeUpItem} className="mt-4 text-center">
-            <h2 className="font-display text-2xl font-bold leading-tight text-[rgb(var(--cinema-text))]">{currentTrack.title}</h2>
-            <p className="mt-1 truncate text-sm text-[rgb(var(--cinema-text-subtle))]">
-              {currentTrack.description || currentTrack.author}
-            </p>
-          </Motion.div>
-
           {/* Frase em destaque */}
           {currentTrack.quote && (
             <Motion.div variants={fadeUpItem} className="mt-4 flex justify-center">
@@ -498,7 +495,7 @@ export default function CinematicPlayer() {
           {tracks.length > 1 && (
             <div className="mt-8">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-[rgb(var(--cinema-text-subtle))]">Na fila · {tracks.length}</p>
-              <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+              <div className="space-y-1 pr-1">
                 {tracks.map((track, index) => {
                   const active = index === currentIndex;
                   return (
