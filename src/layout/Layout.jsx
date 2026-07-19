@@ -730,22 +730,22 @@ export default function Layout() {
                   : location.pathname.startsWith(item.to);
               const itemColor = isActive
                 ? "rgb(var(--color-accent-primary))"
-                : "var(--text-secondary)";
+                : "rgb(var(--text-secondary))";
               const iconColor = isActive
                 ? "rgb(var(--color-accent-primary))"
-                : "var(--text-subtle)";
+                : "rgb(var(--text-subtle))";
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className="flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-semibold transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgba(var(--color-accent-primary),0.25)]"
+                  className="mobile-bottom-nav-link flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-semibold transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgba(var(--color-accent-primary),0.25)]"
                   style={{ color: itemColor }}
                 >
                   {React.createElement(item.icon, {
                     className: "h-5 w-5",
                     style: { color: iconColor },
                   })}
-                  <span>{item.shortLabel ?? item.label}</span>
+                  <span className="mobile-bottom-nav-label">{item.shortLabel ?? item.label}</span>
                 </NavLink>
               );
             })}

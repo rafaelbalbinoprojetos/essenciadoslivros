@@ -468,6 +468,14 @@ a:hover {
   backdrop-filter: blur(18px);
 }
 
+/* No mobile, temas claros usam preto nos textos das duas navegações. */
+@media (max-width: 767px) {
+  [data-color-mode="light"] .app-sidebar .sidebar-link,
+  [data-color-mode="light"] .mobile-bottom-nav-label {
+    color: #000 !important;
+  }
+}
+
 [data-theme] body {
   background-color: rgb(var(--surface-base));
   color: rgb(var(--text-primary));
