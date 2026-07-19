@@ -292,11 +292,10 @@ export default function DashboardPage() {
               const distance = Math.abs(relative);
               if (distance > 2) return null;
 
-              const translateX = `${relative * 99}px`;
-              const translateZ = 230 - distance * 74;
-              const rotateY = relative * -22;
-              const scale = active ? 1 : 0.86;
-              const opacity = distance > 2 ? 0 : Math.max(0, 0.9 - distance * 0.26);
+              const translateZ = active ? 150 : 70 - distance * 35;
+              const rotateY = relative * -14;
+              const scale = active ? 1 : 0.88;
+              const opacity = distance > 2 ? 0 : Math.max(0, 1 - distance * 0.28);
               const cinematic = hasCinematicExperience(book);
 
               return (
@@ -317,22 +316,25 @@ export default function DashboardPage() {
                       setHeroIndex(index);
                     }
                   }}
-                  className={`group absolute left-1/2 top-1/2 h-[60%] w-[160px] overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:w-[188px] md:w-[210px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
+                  className={`group absolute left-1/2 top-1/2 aspect-[5/6] h-[60%] w-auto overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
                   style={{
                     opacity,
                     zIndex: 30 - distance,
-                    transform: `translate(-50%, -50%) translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                    transform: `translate(-50%, -50%) translateX(calc(${relative} * clamp(150px, 22vw, 215px))) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                     transformStyle: "preserve-3d",
                     transition: "transform 760ms cubic-bezier(0.18,0.82,0.2,1), opacity 420ms ease, filter 420ms ease, border-color 420ms ease",
                   }}
                 >
                   <img src={coverOf(book, cinematic)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
                   <div className={`absolute inset-0 ${active ? "bg-[linear-gradient(to_top,rgba(7,5,3,0.98)_0%,rgba(7,5,3,0.78)_30%,rgba(7,5,3,0.12)_68%,transparent_100%)]" : "bg-[linear-gradient(to_top,rgba(7,5,3,0.96)_0%,rgba(7,5,3,0.55)_48%,rgba(7,5,3,0.2)_100%)]"}`} />
+                  <span className="absolute inset-x-10 top-4 z-[2] truncate text-center text-[9px] font-bold uppercase tracking-[0.24em] text-[#d5b06a]/85">
+                    Curadoria Essência
+                  </span>
                   <div className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full border border-[#d5b06a]/25 bg-black/28 text-[#d5b06a]/80 backdrop-blur-md">
                     <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                   <div className="absolute inset-x-5 bottom-4 top-1/2 z-[2] flex flex-col justify-end sm:inset-x-6">
-                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.02] text-[#f4d088] ${active ? "text-[clamp(1.45rem,4vw,2.25rem)]" : "text-[clamp(1.25rem,3.5vw,1.8rem)]"}`}>{book.titulo}</h1>
+                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.02] text-[#f4d088] ${active ? "text-[clamp(1.4rem,3vw,2rem)]" : "text-[clamp(1.15rem,2.5vw,1.55rem)]"}`}>{book.titulo}</h1>
                     <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/78">{shortText(book.sinopse, active ? 118 : 82)}</p>
                     {active ? (
                       <div className="mt-2 flex flex-wrap gap-2">
