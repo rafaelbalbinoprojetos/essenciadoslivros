@@ -209,28 +209,6 @@ Do NOT draw interface elements.
 
 Only reserve visual breathing room.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CINEMATIC UI COMPOSITION (MANDATORY)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-This artwork will serve as the main hero background of a premium interactive mobile application.
-
-Compose the entire scene with the same visual discipline used in high-end cinematic posters, intentionally reserving space for interface elements.
-
-The primary emotional subject, characters and storytelling focal point must occupy only the upper 60–65% of the composition.
-
-Reserve approximately the lower 35–40% of the artwork as a visually calm UI Safe Zone.
-
-This lower area must contain only subtle environmental elements naturally belonging to the world of the work, such as terrain, stone, ruins, snow, water, vegetation, sand, mist, smoke, dust, blurred architecture or atmospheric lighting.
-
-Do not place faces, eyes, hands, creatures, weapons, major artifacts, strong silhouettes, high-frequency textures or important storytelling details inside this lower region.
-
-Never crop, shrink or unnaturally reposition the main subject simply to create this space. Instead, naturally recompose the entire scene so the visual balance remains cinematic and intentional.
-
-The transition between the emotional focal area and the UI Safe Zone must feel organic, with depth, atmospheric perspective and smooth visual continuity.
-
-The final artwork must appear as if it had originally been designed by a cinematic art director knowing that interface elements would later occupy the lower portion of the composition.
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DEPTH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
