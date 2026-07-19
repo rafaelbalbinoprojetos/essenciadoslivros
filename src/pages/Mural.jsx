@@ -15,6 +15,7 @@ function isRecent(dateStr) {
 function toCard(book) {
   return {
     id: book.id,
+    slug: book.slug,
     title: book.titulo,
     author: book.autor?.nome ?? "—",
     category: book.genero?.nome,

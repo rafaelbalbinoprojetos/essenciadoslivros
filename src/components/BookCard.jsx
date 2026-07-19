@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import EssenceArchiveCard from "./EssenceArchiveCard.jsx";
 import { openResolvedMedia, resolveAudioSource, resolvePdfSource } from "../utils/media.js";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
@@ -12,6 +12,7 @@ import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
  */
 export default function BookCard({ book, likeCount = 0, liked = false, saved = false, onToggleLike, onToggleSave }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { startPlaylist } = useAudioPlaylist();
   const detailTo = book.id ? `/biblioteca/${book.id}` : "/biblioteca";
 
@@ -19,17 +20,20 @@ export default function BookCard({ book, likeCount = 0, liked = false, saved = f
     if (!book.audioUrl) return;
     const source = await resolveAudioSource(book.audioUrl);
     if (!source) return;
-    startPlaylist([
-      {
-        id: book.id ?? `archive-${book.title}`,
-        bookId: book.id ?? null,
-        title: book.title ?? "Audiobook Essência",
-        author: book.author ?? "Autor não informado",
-        cover: book.cover,
-        heroImage: book.heroImage,
-        source,
-      },
-    ]);
+    const track = {
+      id: book.id ?? `archive-${book.title}`,
+      bookId: book.id ?? null,
+      slug: book.slug ?? null,
+      title: book.title ?? "Audiobook Essência",
+      author: book.author ?? "Autor não informado",
+      cover: book.cover,
+      heroImage: book.heroImage,
+      source,
+    };
+    startPlaylist([track]);
+    if (track.slug) {
+      navigate(`/obra/${encodeURIComponent(track.slug)}/player`, { state: { backgroundLocation: location } });
+    }
   };
 
   return (

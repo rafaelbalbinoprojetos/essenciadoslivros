@@ -1,11 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion.js";
 
-function readAccentRgb() {
-  const raw = getComputedStyle(document.documentElement).getPropertyValue("--color-accent-primary");
-  const [r, g, b] = raw.trim().split(/\s+/).map(Number);
-  return Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b) ? `${r}, ${g}, ${b}` : "212, 166, 87";
-}
+const GOLD_DUST_COLORS = ["231, 195, 112", "214, 166, 74", "244, 216, 145"];
 
 // Poeira dourada flutuando lentamente atrás da interface do player.
 export default function GoldenParticles() {
@@ -20,14 +16,16 @@ export default function GoldenParticles() {
     const context = canvas.getContext("2d");
     if (!context) return undefined;
 
-    const accentRgb = readAccentRgb();
-    const count = window.innerWidth < 768 ? 22 : 38;
+    const count = window.innerWidth < 768 ? 48 : 76;
     const particles = Array.from({ length: count }, () => ({
       x: Math.random(),
       y: Math.random(),
-      radius: Math.random() * 2.5 + 1.5,
-      speed: Math.random() * 0.00035 + 0.00008,
-      opacity: Math.random() * 0.4 + 0.45,
+      radius: Math.random() * 1.05 + 0.35,
+      speed: Math.random() * 0.00022 + 0.00004,
+      drift: (Math.random() - 0.5) * 0.00008,
+      opacity: Math.random() * 0.35 + 0.18,
+      phase: Math.random() * Math.PI * 2,
+      color: GOLD_DUST_COLORS[Math.floor(Math.random() * GOLD_DUST_COLORS.length)],
     }));
 
     let animationFrame = 0;
@@ -50,18 +48,23 @@ export default function GoldenParticles() {
       const height = canvas.clientHeight;
       context.clearRect(0, 0, width, height);
 
+      const now = performance.now() * 0.001;
       for (const particle of particles) {
         particle.y -= particle.speed;
+        particle.x += particle.drift;
         if (particle.y < -0.05) {
           particle.y = 1.05;
           particle.x = Math.random();
         }
+        if (particle.x < -0.03) particle.x = 1.03;
+        if (particle.x > 1.03) particle.x = -0.03;
 
         context.beginPath();
         context.arc(particle.x * width, particle.y * height, particle.radius, 0, Math.PI * 2);
-        context.fillStyle = `rgba(${accentRgb}, ${particle.opacity})`;
-        context.shadowBlur = 14;
-        context.shadowColor = `rgba(${accentRgb}, 0.9)`;
+        const shimmer = 0.72 + Math.sin(now * 0.8 + particle.phase) * 0.28;
+        context.fillStyle = `rgba(${particle.color}, ${particle.opacity * shimmer})`;
+        context.shadowBlur = particle.radius * 2.5;
+        context.shadowColor = `rgba(${particle.color}, 0.35)`;
         context.fill();
       }
 

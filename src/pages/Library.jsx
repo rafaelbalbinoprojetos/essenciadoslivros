@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { Swords, Compass, Heart, Drama, Lightbulb, Scroll, Cpu, Sparkles } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BookLink from "../components/BookLink.jsx";
 
 const chipContainerVariants = {
@@ -219,6 +219,7 @@ function summarize(text, maxLength = 180) {
 function mapBookToFlowCard(book, fallbackIndex = 0) {
   return {
     id: book.id,
+    slug: book.slug,
     detailsId: book.id ?? null,
     title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
@@ -235,6 +236,7 @@ function mapBookToFlowCard(book, fallbackIndex = 0) {
 function mapBookToSectionCard(book, fallbackIndex = 0) {
   return {
     id: book.id,
+    slug: book.slug,
     detailsId: book.id ?? null,
     title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
@@ -257,6 +259,7 @@ function mapBookToPlaylistTrack(book, fallbackIndex = 0) {
   return {
     id: book.id ?? `playlist-${fallbackIndex}`,
     bookId: book.id ?? null,
+    slug: book.slug ?? null,
     title: book.titulo ?? book.title ?? "Audiobook Essência",
     author: book.autor?.nome ?? book.author ?? "Autor não informado",
     cover: pickCover(book, fallbackIndex),
@@ -311,6 +314,7 @@ function pickFeaturedBook(books) {
   const candidate = books.find((book) => book.destaque) ?? books[0];
   return {
     id: candidate.id,
+    slug: candidate.slug,
     detailsId: candidate.id ?? null,
     title: candidate.titulo,
     author: candidate.autor?.nome ?? "Autor não informado",
@@ -398,6 +402,8 @@ const TIMELINE = [
 ];
 
 export default function LibraryPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") ?? "";
   const rawPageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
@@ -487,25 +493,32 @@ export default function LibraryPage() {
         }
       }
       startPlaylist(playlistTracks, { startIndex });
+      const selectedTrack = playlistTracks[startIndex];
+      if (selectedTrack?.slug) {
+        navigate(`/obra/${encodeURIComponent(selectedTrack.slug)}/player`, { state: { backgroundLocation: location } });
+      }
     },
-    [playlistTracks, startPlaylist],
+    [location, navigate, playlistTracks, startPlaylist],
   );
   const handlePlayFeaturedAudio = useCallback(async () => {
     if (!featuredBook.audio_url) return;
     const source = await resolveAudioSource(featuredBook.audio_url);
     if (!source) return;
-    startPlaylist([
-      {
-        id: featuredBook.detailsId ?? "featured-book",
-        bookId: featuredBook.detailsId ?? null,
-        title: featuredBook.title ?? "Audiobook Essência",
-        author: featuredBook.author ?? "Autor não informado",
-        cover: featuredBook.cover,
-        heroImage: featuredBook.heroImage,
-        source,
-      },
-    ]);
-  }, [featuredBook, startPlaylist]);
+    const track = {
+      id: featuredBook.detailsId ?? "featured-book",
+      bookId: featuredBook.detailsId ?? null,
+      slug: featuredBook.slug ?? null,
+      title: featuredBook.title ?? "Audiobook Essência",
+      author: featuredBook.author ?? "Autor não informado",
+      cover: featuredBook.cover,
+      heroImage: featuredBook.heroImage,
+      source,
+    };
+    startPlaylist([track]);
+    if (track.slug) {
+      navigate(`/obra/${encodeURIComponent(track.slug)}/player`, { state: { backgroundLocation: location } });
+    }
+  }, [featuredBook, location, navigate, startPlaylist]);
   const hasPlaylist = playlistTracks.length > 0;
   const handleToggleManualSelection = useCallback(
     (bookId) => {
@@ -543,8 +556,12 @@ export default function LibraryPage() {
   const handlePlayManualSelection = useCallback(() => {
     if (!manualSelection.length) return;
     startPlaylist(manualSelection, { startIndex: 0 });
+    const selectedTrack = manualSelection[0];
+    if (selectedTrack?.slug) {
+      navigate(`/obra/${encodeURIComponent(selectedTrack.slug)}/player`, { state: { backgroundLocation: location } });
+    }
     setManualSelection([]);
-  }, [manualSelection, startPlaylist]);
+  }, [location, manualSelection, navigate, startPlaylist]);
   const handleQueueManualSelection = useCallback(() => {
     if (!manualSelection.length) return;
     addToQueue(manualSelection, { playNext: true, autoplay: false });
@@ -1084,6 +1101,7 @@ export default function LibraryPage() {
                     key={book.id ?? `${section.id}-${idx}`}
                     book={{
                       id: detailsId,
+                      slug: book.slug,
                       title: book.title,
                       author: book.author,
                       category: book.genero ?? (idx === 0 ? "Atual" : "Descoberta"),

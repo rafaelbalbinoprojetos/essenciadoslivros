@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { BookOpen, FileText, Film, ListMusic, Pause, Pencil, Play, Trash2 } from "lucide-react";
 import { deleteBook, getBookById } from "../services/books.js";
@@ -39,6 +39,7 @@ function getAuthorInitials(name = "") {
 export default function BookDetailsPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     startPlaylist,
     addToQueue,
@@ -193,11 +194,22 @@ export default function BookDetailsPage() {
   const displayProgress = isCurrentTrack ? playerProgress : 0;
   const displayDuration = isCurrentTrack ? playerDuration : 0;
 
+  const openPlayer = useCallback((track = playlistTrack) => {
+    const playerSlug = track?.slug ?? book?.slug;
+    if (!playerSlug) return;
+    const sceneSegment = track?.sceneId ? `/cena-${track.sceneId}` : "";
+    navigate(`/obra/${encodeURIComponent(playerSlug)}/player${sceneSegment}`, {
+      state: { backgroundLocation: location },
+    });
+  }, [book?.slug, location, navigate, playlistTrack]);
+
   const handlePlaybackToggle = () => {
     if (isCurrentTrack) {
       togglePlay();
+      if (!playerIsPlaying) openPlayer(currentTrack);
     } else if (playlistTrack) {
       startPlaylist([playlistTrack]);
+      openPlayer(playlistTrack);
     }
   };
 
@@ -223,6 +235,7 @@ export default function BookDetailsPage() {
     const selectedPlayerId = selectedTrack ? `narrative-${selectedTrack.id}` : null;
     if (selectedPlayerId && currentTrack?.id === selectedPlayerId) {
       togglePlay();
+      if (!playerIsPlaying) openPlayer(currentTrack);
       return;
     }
 
@@ -235,13 +248,14 @@ export default function BookDetailsPage() {
       const requestedId = selectedPlayerId;
       const playableIndex = Math.max(0, playable.findIndex((track) => track.id === requestedId));
       startPlaylist(playable, { startIndex: playableIndex, autoplay: true });
+      openPlayer(playable[playableIndex]);
     } catch (narrativePlaybackError) {
       console.error("[BookDetails] erro ao iniciar narrativa:", narrativePlaybackError);
       setNarrativeError(narrativePlaybackError.message ?? "Não foi possível carregar a narrativa.");
     } finally {
       setNarrativeStarting(false);
     }
-  }, [book, coverSrc, currentTrack?.id, narrative, narrativeStarting, narrativeTracks, startPlaylist, togglePlay]);
+  }, [book, coverSrc, currentTrack, narrative, narrativeStarting, narrativeTracks, openPlayer, playerIsPlaying, startPlaylist, togglePlay]);
 
   const handleExcluirObra = useCallback(async () => {
     if (!book?.id) return;
