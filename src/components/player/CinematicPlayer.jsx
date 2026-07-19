@@ -246,20 +246,27 @@ export default function CinematicPlayer() {
 
         {/* Fundo: Player Hero, capa cinematográfica ou capa padrão, nessa ordem. */}
         <div className="fixed inset-0 z-0 overflow-hidden bg-[rgb(var(--cinema-surface))]">
+          <img
+            src={heroSrc}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-45 blur-3xl saturate-75"
+          />
+          <div className="absolute inset-0 bg-black/28" aria-hidden="true" />
           <Motion.img
             src={heroSrc}
             alt={currentTrack.title}
-            className="h-full w-full object-cover object-center"
+            className="relative z-[1] h-full max-h-[100dvh] w-full max-w-[100vw] object-contain object-center"
             initial={{ opacity: 0, scale: 1.03 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
           />
           <div
-            className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80"
+            className="absolute inset-0 z-[2] bg-gradient-to-b from-black/30 via-black/10 to-black/80"
             aria-hidden="true"
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[rgba(var(--cinema-surface),0.78)] via-transparent to-transparent"
+            className="absolute inset-0 z-[2] bg-gradient-to-t from-[rgba(var(--cinema-surface),0.78)] via-transparent to-transparent"
             aria-hidden="true"
           />
         </div>
