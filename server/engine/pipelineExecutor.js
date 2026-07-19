@@ -161,6 +161,12 @@ const DEFINICOES_ETAPAS = {
 
 const ETAPAS_SUPORTADAS = new Set(Object.keys(DEFINICOES_ETAPAS));
 
+const COLUNAS_PROMPT_IMAGEM_LIVRO = Object.freeze({
+  heritage_prompt: "heritage_prompt",
+  capa_cinematica_prompt: "capa_cinematica_prompt",
+  player_hero_prompt: "player_hero_prompt",
+});
+
 function normalizarErro(error) {
   if (!error) return "Erro desconhecido.";
   if (typeof error === "string") return error;
@@ -336,6 +342,34 @@ function extrairUrlImagemDaSaida(saida) {
     || saida.saida?.imagem_url
     || saida.saida?.imagemUrl
     || null;
+}
+
+async function salvarPromptImagemNoLivro({ obraId, tipoEtapa, prompt }) {
+  const coluna = COLUNAS_PROMPT_IMAGEM_LIVRO[tipoEtapa];
+  if (!coluna) {
+    throw new Error(`Etapa sem coluna de prompt configurada em livros: ${tipoEtapa}`);
+  }
+  if (typeof prompt !== "string" || !prompt.trim()) {
+    throw new Error(`A etapa ${tipoEtapa} não produziu um prompt textual válido para salvar em livros.${coluna}.`);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("livros")
+    .update({ [coluna]: prompt })
+    .eq("id", obraId)
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Erro ao salvar o prompt em livros.${coluna}: ${error?.message || "obra não encontrada"}`);
+  }
+
+  engineStep("Prompt salvo na obra", "✓", {
+    obraId,
+    tipoEtapa,
+    coluna,
+    caracteres: prompt.length,
+  });
 }
 
 async function executarCuradorBEU({ obraId }) {
@@ -1815,7 +1849,7 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
       payload_id: beuAtualRegistro.id,
       versao_beu: ENGINE_CONFIG.versaoBEU,
       narrativa_cinematica_disponivel: Boolean(narrativaCinematica),
-      persistencia: "ai_pipeline_etapas.saida",
+      persistencia: `livros.${COLUNAS_PROMPT_IMAGEM_LIVRO[tipoEtapa]} + ai_pipeline_etapas.saida`,
     };
 
     const promptMontado = await montarPromptAgente({
@@ -1863,6 +1897,11 @@ async function executarPromptImagem({ obraId, tipoEtapa }) {
     });
 
     await saveEngineJsonLog({ runId, name: "saida", data: resultado.saida });
+    await salvarPromptImagemNoLivro({
+      obraId,
+      tipoEtapa,
+      prompt: resultado.saida,
+    });
     await concluirExecucaoAgente({
       execucaoId: execucao.id,
       payloadId: beuAtualRegistro.id,
@@ -1920,10 +1959,14 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       obraId,
       versao: ENGINE_CONFIG.versaoBEU,
     });
-    const promptHeritage = await buscarUltimaSaidaEtapa({
+    const promptHeritageEtapa = await buscarUltimaSaidaEtapa({
       obraId,
       tipoEtapa: "heritage_prompt",
     });
+    const promptHeritageLivro = contexto?.prompts_imagem?.heritage_prompt;
+    const promptHeritage = typeof promptHeritageEtapa === "string" && promptHeritageEtapa.trim()
+      ? promptHeritageEtapa
+      : promptHeritageLivro;
 
     if (typeof promptHeritage !== "string" || !promptHeritage.trim()) {
       throw new Error("Nenhum prompt Heritage concluido foi encontrado. Gere o prompt Heritage antes da imagem.");
@@ -1934,7 +1977,9 @@ async function executarImagemHeritage({ obraId, tipoEtapa }) {
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
       versao_beu: ENGINE_CONFIG.versaoBEU,
-      prompt_origem: "ai_pipeline_etapas.heritage_prompt.saida",
+      prompt_origem: promptHeritage === promptHeritageEtapa
+        ? "ai_pipeline_etapas.heritage_prompt.saida"
+        : "livros.heritage_prompt",
       prompt_tamanho_aproximado: promptHeritage.length,
       persistencia: "storage.capas + livros.capa_url + ai_pipeline_etapas.saida",
     };
@@ -2012,10 +2057,14 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       obraId,
       versao: ENGINE_CONFIG.versaoBEU,
     });
-    const promptCinematico = await buscarUltimaSaidaEtapa({
+    const promptCinematicoEtapa = await buscarUltimaSaidaEtapa({
       obraId,
       tipoEtapa: "capa_cinematica_prompt",
     });
+    const promptCinematicoLivro = contexto?.prompts_imagem?.capa_cinematica_prompt;
+    const promptCinematico = typeof promptCinematicoEtapa === "string" && promptCinematicoEtapa.trim()
+      ? promptCinematicoEtapa
+      : promptCinematicoLivro;
 
     if (typeof promptCinematico !== "string" || !promptCinematico.trim()) {
       throw new Error("Nenhum prompt de capa cinematica concluido foi encontrado. Gere o prompt da capa cinematica antes da imagem.");
@@ -2026,7 +2075,9 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
       obra_id: obraId,
       payload_id: beuAtualRegistro.id,
       versao_beu: ENGINE_CONFIG.versaoBEU,
-      prompt_origem: "ai_pipeline_etapas.capa_cinematica_prompt.saida",
+      prompt_origem: promptCinematico === promptCinematicoEtapa
+        ? "ai_pipeline_etapas.capa_cinematica_prompt.saida"
+        : "livros.capa_cinematica_prompt",
       prompt_tamanho_aproximado: promptCinematico.length,
       persistencia: "storage.capas + livros.capa_cinematica_url + ai_pipeline_etapas.saida",
     };
@@ -2130,7 +2181,7 @@ async function executarPromptPlayerHero({ obraId, tipoEtapa }) {
         ? "ai_pipeline_etapas.capa_cinematica_image.saida"
         : "livros.capa_cinematica_url",
       referencia_visual: capaCinematicaUrl,
-      persistencia: "ai_pipeline_etapas.saida",
+      persistencia: "livros.player_hero_prompt + ai_pipeline_etapas.saida",
     };
 
     await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
@@ -2143,6 +2194,11 @@ async function executarPromptPlayerHero({ obraId, tipoEtapa }) {
     });
 
     await saveEngineJsonLog({ runId, name: "saida", data: PLAYER_HERO_PROMPT });
+    await salvarPromptImagemNoLivro({
+      obraId,
+      tipoEtapa,
+      prompt: PLAYER_HERO_PROMPT,
+    });
     await concluirEtapaPipeline({
       etapaId: etapa.id,
       payloadId: beuAtualRegistro.id,
@@ -2193,9 +2249,12 @@ async function executarPlayerHero({ obraId, tipoEtapa }) {
       obraId,
       tipoEtapa: "player_hero_prompt",
     });
+    const promptPlayerHeroLivro = contexto?.prompts_imagem?.player_hero_prompt;
     const promptPlayerHero = typeof promptPlayerHeroPersistido === "string" && promptPlayerHeroPersistido.trim()
       ? promptPlayerHeroPersistido
-      : PLAYER_HERO_PROMPT;
+      : typeof promptPlayerHeroLivro === "string" && promptPlayerHeroLivro.trim()
+        ? promptPlayerHeroLivro
+        : PLAYER_HERO_PROMPT;
 
     if (!capaCinematicaUrl) {
       throw new Error("A ultima etapa de imagem cinematica nao produziu uma capa. Gere a imagem cinematica novamente antes do Player Hero.");
@@ -2209,9 +2268,11 @@ async function executarPlayerHero({ obraId, tipoEtapa }) {
         ? "ai_pipeline_etapas.capa_cinematica_image.saida"
         : "livros.capa_cinematica_url",
       referencia_visual: capaCinematicaUrl,
-      prompt_origem: promptPlayerHeroPersistido
+      prompt_origem: promptPlayerHero === promptPlayerHeroPersistido
         ? "ai_pipeline_etapas.player_hero_prompt.saida"
-        : "server/engine/playerHeroPrompt.js (fallback de consistencia)",
+        : promptPlayerHero === promptPlayerHeroLivro
+          ? "livros.player_hero_prompt"
+          : "server/engine/playerHeroPrompt.js (fallback de consistencia)",
       prompt_tamanho_aproximado: promptPlayerHero.length,
       persistencia: "storage.capas + livros.player_hero_url + ai_pipeline_etapas.saida",
     };

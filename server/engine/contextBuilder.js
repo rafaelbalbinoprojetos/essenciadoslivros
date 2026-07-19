@@ -17,6 +17,9 @@ export async function buildContext(obraId) {
       capa_url,
       capa_cinematica_url,
       player_hero_url,
+      heritage_prompt,
+      capa_cinematica_prompt,
+      player_hero_prompt,
       tem_experiencia_cinematica,
       titulo_cinematico,
       descricao_cinematica,
@@ -77,6 +80,11 @@ export async function buildContext(obraId) {
       capa_url: obra.capa_url,
       capa_cinematica_url: obra.capa_cinematica_url,
       player_hero_url: obra.player_hero_url,
+    },
+    prompts_imagem: {
+      heritage_prompt: obra.heritage_prompt,
+      capa_cinematica_prompt: obra.capa_cinematica_prompt,
+      player_hero_prompt: obra.player_hero_prompt,
     },
     instrucoes_contexto: {
       idioma_saida: "pt-BR",
