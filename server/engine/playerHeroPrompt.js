@@ -155,6 +155,26 @@ Study the official visual identity before generating.
 The final result must be instantly recognizable by longtime fans.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CANONICAL RELEVANCE (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every generated element must be directly relevant to the analyzed work and faithfully grounded in its established universe.
+
+This requirement applies to characters, creatures, animals, objects, artifacts, architecture, locations, terrain, vegetation, weather, materials, symbols, particles, lighting phenomena and environmental details.
+
+Use only elements that have a clear canonical, narrative, emotional or geographical connection to the work.
+
+Do not add decorative elements merely because they look cinematic, dramatic, epic or visually attractive.
+
+Do not import visual language, objects, environments, mythology or design conventions from unrelated works or generic genre imagery.
+
+Every visible element must help identify the work, reinforce its story, express its emotional essence or establish an authentic location from its universe.
+
+If an element cannot be confidently justified by the analyzed work, omit it.
+
+Canonical accuracy and relevance always take priority over spectacle.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HERO INTERACTION RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
