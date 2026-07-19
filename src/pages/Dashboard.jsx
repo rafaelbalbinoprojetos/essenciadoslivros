@@ -333,21 +333,21 @@ export default function DashboardPage() {
                   <div className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full border border-[#d5b06a]/25 bg-black/28 text-[#d5b06a]/80 backdrop-blur-md">
                     <ArrowRight className="h-3.5 w-3.5" />
                   </div>
-                  <div className="absolute inset-x-5 bottom-4 top-1/2 z-[2] flex flex-col justify-end sm:inset-x-6">
-                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.02] text-[#f4d088] ${active ? "text-[clamp(1.4rem,3vw,2rem)]" : "text-[clamp(1.15rem,2.5vw,1.55rem)]"}`}>{book.titulo}</h1>
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/78">{shortText(book.sinopse, active ? 118 : 82)}</p>
+                  <div className="absolute inset-x-3 bottom-3 top-1/2 z-[2] flex flex-col justify-end">
+                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.04] text-[#f4d088] ${active ? "text-[clamp(1rem,2vw,1.35rem)]" : "text-[clamp(0.9rem,1.7vw,1.1rem)]"}`}>{book.titulo}</h1>
+                    <p className="mt-1 line-clamp-1 text-[9px] leading-4 text-white/78">{shortText(book.sinopse, active ? 90 : 68)}</p>
                     {active ? (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-[rgb(var(--color-accent-primary))] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-[0_0_28px_rgba(124,83,255,0.32)] transition hover:bg-[rgb(var(--color-accent-dark))]">
-                          <Play className="h-3 w-3" fill="currentColor" /> Continuar
+                      <div className="mt-1 flex flex-nowrap items-center gap-1">
+                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-7 items-center gap-0.5 whitespace-nowrap rounded-full bg-[rgb(var(--color-accent-primary))] px-1.5 py-1 text-[9px] font-semibold text-white shadow-[0_0_22px_rgba(124,83,255,0.28)] transition hover:bg-[rgb(var(--color-accent-dark))]">
+                          <Play className="h-2.5 w-2.5" fill="currentColor" /> Continuar
                         </Link>
-                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-8 items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/10">
-                          Explorar <ArrowRight className="h-3 w-3" />
+                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-7 items-center gap-0.5 whitespace-nowrap rounded-full px-1.5 py-1 text-[9px] font-semibold text-white transition hover:bg-white/10">
+                          Explorar <ArrowRight className="h-2.5 w-2.5" />
                         </Link>
                       </div>
                     ) : (
-                      <span className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-[#d5b06a]/76">
-                        Explorar obra <ArrowRight className="h-3.5 w-3.5" />
+                      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#d5b06a]/76">
+                        Explorar obra <ArrowRight className="h-3 w-3" />
                       </span>
                     )}
                   </div>
