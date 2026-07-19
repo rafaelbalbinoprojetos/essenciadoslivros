@@ -17,12 +17,14 @@ import {
 import {
   gerarImagemCinematicaComReferencia,
   gerarImagemHeritageComReferencia,
+  gerarPlayerHeroComCapaCinematica,
 } from "./imageGenerationService.js";
 import { executarAgenteAnthropic } from "./anthropicService.js";
 import { executarAgenteOpenAI } from "./openaiService.js";
 import { gerarPdfCinematico } from "./pdfCinematicaService.js";
 import { gerarPdfEnciclopedico } from "./pdfEnciclopediaService.js";
 import { gerarPdfGuiaEditorial } from "./pdfGuiaEditorialService.js";
+import { PLAYER_HERO_PROMPT } from "./playerHeroPrompt.js";
 import {
   calcularAssinaturaBloco,
   calcularBlocosProducaoNarrativa,
@@ -114,37 +116,45 @@ const DEFINICOES_ETAPAS = {
     ordem: 8,
     executor: executarImagemCinematica,
   },
-  pdf_cinematica: {
+  player_hero_prompt: {
     ordem: 9,
+    executor: executarPromptPlayerHero,
+  },
+  player_hero_image: {
+    ordem: 10,
+    executor: executarPlayerHero,
+  },
+  pdf_cinematica: {
+    ordem: 11,
     executor: executarPdfCinematica,
   },
   enciclopedia_parte1: {
-    ordem: 10,
-    agenteSlug: "essence-engine",
-    executor: executarEnciclopediaParte,
-  },
-  enciclopedia_parte2: {
-    ordem: 11,
-    agenteSlug: "essence-engine",
-    executor: executarEnciclopediaParte,
-  },
-  enciclopedia_parte3: {
     ordem: 12,
     agenteSlug: "essence-engine",
     executor: executarEnciclopediaParte,
   },
-  enciclopedia_parte4: {
+  enciclopedia_parte2: {
     ordem: 13,
     agenteSlug: "essence-engine",
     executor: executarEnciclopediaParte,
   },
-  enciclopedia_parte5: {
+  enciclopedia_parte3: {
     ordem: 14,
     agenteSlug: "essence-engine",
     executor: executarEnciclopediaParte,
   },
-  enciclopedia_pdf: {
+  enciclopedia_parte4: {
     ordem: 15,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_parte5: {
+    ordem: 16,
+    agenteSlug: "essence-engine",
+    executor: executarEnciclopediaParte,
+  },
+  enciclopedia_pdf: {
+    ordem: 17,
     executor: executarEnciclopediaPdf,
   },
 };
@@ -317,6 +327,15 @@ async function buscarUltimaSaidaEtapa({ obraId, tipoEtapa }) {
   }
 
   return data?.saida ?? null;
+}
+
+function extrairUrlImagemDaSaida(saida) {
+  if (!saida || typeof saida !== "object") return null;
+  return saida.imagem_url
+    || saida.imagemUrl
+    || saida.saida?.imagem_url
+    || saida.saida?.imagemUrl
+    || null;
 }
 
 async function executarCuradorBEU({ obraId }) {
@@ -2067,6 +2086,180 @@ async function executarImagemCinematica({ obraId, tipoEtapa }) {
     const erro = normalizarErro(error);
     engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
 
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarPromptPlayerHero({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    const contexto = await buildContext(obraId);
+    const ultimaImagemCinematica = await buscarUltimaSaidaEtapa({
+      obraId,
+      tipoEtapa: "capa_cinematica_image",
+    });
+    const capaCinematicaUrl = extrairUrlImagemDaSaida(ultimaImagemCinematica)
+      || contexto?.arquivos_existentes?.capa_cinematica_url
+      || null;
+
+    if (!capaCinematicaUrl) {
+      throw new Error("A imagem cinematica precisa ser concluida antes do prompt do Player Hero.");
+    }
+
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      prompt_origem: "server/engine/playerHeroPrompt.js",
+      referencia_origem: extrairUrlImagemDaSaida(ultimaImagemCinematica)
+        ? "ai_pipeline_etapas.capa_cinematica_image.saida"
+        : "livros.capa_cinematica_url",
+      referencia_visual: capaCinematicaUrl,
+      persistencia: "ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: PLAYER_HERO_PROMPT });
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: PLAYER_HERO_PROMPT,
+      custoEstimado: 0,
+    });
+
+    engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      custoEstimado: 0,
+      saida: PLAYER_HERO_PROMPT,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
+    if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
+    throw error;
+  }
+}
+
+async function executarPlayerHero({ obraId, tipoEtapa }) {
+  let etapa = null;
+  const definicao = DEFINICOES_ETAPAS[tipoEtapa];
+  const runId = criarRunId({ obraId, tipoEtapa });
+
+  try {
+    engineStep("Pipeline iniciada", "→", { obraId, tipoEtapa });
+
+    const contexto = await buildContext(obraId);
+    const beuAtualRegistro = await buscarBEUAtual({
+      obraId,
+      versao: ENGINE_CONFIG.versaoBEU,
+    });
+    const ultimaImagemCinematica = await buscarUltimaSaidaEtapa({
+      obraId,
+      tipoEtapa: "capa_cinematica_image",
+    });
+    const urlImagemNaEtapa = extrairUrlImagemDaSaida(ultimaImagemCinematica);
+    const capaCinematicaUrl = urlImagemNaEtapa
+      || contexto?.arquivos_existentes?.capa_cinematica_url
+      || null;
+    const promptPlayerHeroPersistido = await buscarUltimaSaidaEtapa({
+      obraId,
+      tipoEtapa: "player_hero_prompt",
+    });
+    const promptPlayerHero = typeof promptPlayerHeroPersistido === "string" && promptPlayerHeroPersistido.trim()
+      ? promptPlayerHeroPersistido
+      : PLAYER_HERO_PROMPT;
+
+    if (!capaCinematicaUrl) {
+      throw new Error("A ultima etapa de imagem cinematica nao produziu uma capa. Gere a imagem cinematica novamente antes do Player Hero.");
+    }
+    const entrada = {
+      tipo_etapa: tipoEtapa,
+      obra_id: obraId,
+      payload_id: beuAtualRegistro.id,
+      versao_beu: ENGINE_CONFIG.versaoBEU,
+      referencia_origem: urlImagemNaEtapa
+        ? "ai_pipeline_etapas.capa_cinematica_image.saida"
+        : "livros.capa_cinematica_url",
+      referencia_visual: capaCinematicaUrl,
+      prompt_origem: promptPlayerHeroPersistido
+        ? "ai_pipeline_etapas.player_hero_prompt.saida"
+        : "server/engine/playerHeroPrompt.js (fallback de consistencia)",
+      prompt_tamanho_aproximado: promptPlayerHero.length,
+      persistencia: "storage.capas + livros.player_hero_url + ai_pipeline_etapas.saida",
+    };
+
+    await saveEngineJsonLog({ runId, name: "contexto", data: contexto });
+    await saveEngineJsonLog({ runId, name: "entrada", data: entrada });
+
+    etapa = await registrarInicioEtapa({
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      tipoEtapa,
+      entrada,
+      ordem: definicao.ordem,
+    });
+
+    const resultado = await gerarPlayerHeroComCapaCinematica({
+      obraId,
+      titulo: contexto?.obra?.titulo || "obra",
+      capaCinematicaUrl,
+      prompt: promptPlayerHero,
+    });
+
+    await saveEngineJsonLog({ runId, name: "saida", data: resultado });
+
+    if (resultado.bloqueado_por_moderacao || !resultado.imagem_url) {
+      throw new Error(resultado.motivo || "A geracao obrigatoria do Player Hero nao retornou uma imagem.");
+    }
+
+    await concluirEtapaPipeline({
+      etapaId: etapa.id,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      custoEstimado: await calcularCustoEstimado(),
+    });
+
+    engineStep("Pipeline concluida", "✓", { obraId, tipoEtapa, imagem_url: resultado.imagem_url });
+
+    return {
+      ok: true,
+      etapa: tipoEtapa,
+      obraId,
+      payloadId: beuAtualRegistro.id,
+      saida: resultado,
+      imagemUrl: resultado.imagem_url,
+      storagePath: resultado.storage_path,
+      referenciaVisual: resultado.referencia_visual,
+      bloqueadoPorModeracao: Boolean(resultado.bloqueado_por_moderacao),
+      motivoBloqueio: resultado.motivo || null,
+    };
+  } catch (error) {
+    const erro = normalizarErro(error);
+    engineStep("Pipeline falhou", "✕", { obraId, tipoEtapa, erro });
     if (etapa?.id) await falharEtapaPipeline({ etapaId: etapa.id, erro });
     throw error;
   }

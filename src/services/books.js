@@ -13,6 +13,7 @@ const BOOK_SELECT_FIELDS = `
   sinopse,
   capa_url,
   capa_cinematica_url,
+  player_hero_url,
   pdf_url,
   pdf_cinematica_url,
   pdf_enciclopedico_url,
@@ -167,7 +168,7 @@ export async function updateBook(id, payload) {
   return data;
 }
 
-// capa_url/capa_cinematica_url guardam a URL pública completa; pdf_cinematica_url,
+// capa_url/capa_cinematica_url/player_hero_url guardam a URL pública completa; pdf_cinematica_url,
 // pdf_enciclopedico_url e pdf_guia_editorial_url guardam uma URL ASSINADA (com
 // token, que pode já ter expirado); pdf_url e audio_url guardam o caminho cru
 // dentro do bucket. Esta função normaliza os três formatos pro caminho relativo
@@ -237,6 +238,7 @@ export async function deleteBook(id) {
 
   agendarRemocao(BUCKETS.capas, livro?.capa_url);
   agendarRemocao(BUCKETS.capas, livro?.capa_cinematica_url);
+  agendarRemocao(BUCKETS.capas, livro?.player_hero_url);
   agendarRemocao(BUCKETS.pdfs, livro?.pdf_url);
   agendarRemocao(BUCKETS.pdfs, livro?.pdf_cinematica_url);
   agendarRemocao(BUCKETS.pdfs, livro?.pdf_enciclopedico_url);
