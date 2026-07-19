@@ -353,7 +353,7 @@ export default function CinematicPlayer() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="relative z-[2] mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[40dvh]"
+          className="relative z-[2] mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[70dvh]"
         >
           {/* Frase em destaque */}
           {currentTrack.quote && (
