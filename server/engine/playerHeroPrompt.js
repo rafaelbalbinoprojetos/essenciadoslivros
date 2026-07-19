@@ -216,7 +216,7 @@ Vertical.
 
 9:16.
 
-Book cover positioned approximately in the upper-middle area.
+Book cover positioned entirely within the upper half of the artwork.
 
 Enough negative space below for:
 
@@ -230,6 +230,30 @@ Do NOT draw interface elements.
 Only reserve visual breathing room.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CENTRAL HERO PLACEMENT (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The complete central hero arrangement — the physical book cover together with the single Hero Interaction Element — must occupy the upper 50% of the image.
+
+Treat the horizontal midpoint as a strict composition boundary.
+
+The cover, its frame, every edge and corner, and the complete interacting element — including hands, fingers, claws, tendrils, creatures, objects, artifacts or extensions — must remain above that midpoint.
+
+The lowest visible edge of the cover and the lowest extremity of the Hero Interaction Element must end at or above 50% of the total image height.
+
+Do not vertically center the cover.
+
+Do not allow the cover or interaction element to descend into the lower half, even partially.
+
+Compose the camera distance, physical placement, environment and perspective from the beginning so both elements fit naturally and prominently in the upper half without cropping, distortion or loss of canonical detail.
+
+The cover must remain clearly readable and visually important, while the interaction element must remain instantly recognizable and physically connected to it.
+
+The lower 50% must continue the same environment with calm terrain, architecture, atmosphere, depth, mist, water, stone, vegetation, shadow or other canonically relevant low-detail scenery suitable for player interface content.
+
+This upper-half placement rule takes priority over conventional poster centering or placing the cover near the vertical center.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CINEMATIC UI COMPOSITION (MANDATORY)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -237,7 +261,7 @@ This artwork will serve as the main hero background of a premium interactive mob
 
 Compose the entire scene with the same visual discipline used in high-end cinematic posters, intentionally reserving space for interface elements.
 
-The primary emotional subject, characters and storytelling focal point must occupy only the upper 60–65% of the composition.
+The primary emotional subject, physical cover, Hero Interaction Element, characters and storytelling focal point must remain entirely within the upper 50% of the composition. Only supporting environmental storytelling may continue through the upper 60–65%.
 
 Reserve approximately the lower 35–40% of the artwork as a visually calm UI Safe Zone.
 
