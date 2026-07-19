@@ -20,24 +20,15 @@ import BookCard from "../components/BookCard.jsx";
 import { useEngagement } from "../hooks/useEngagement.js";
 import { hasCinematicExperience } from "../services/narratives.js";
 
-const coverManifest = import.meta.glob("../bookCover/*", { eager: true, import: "default" });
-const COVER_POOL = Object.values(coverManifest).filter(Boolean);
-
-function coverFromPool(index) {
-  if (!COVER_POOL.length) return DEFAULT_COVER_PLACEHOLDER;
-  const normalized = ((index % COVER_POOL.length) + COVER_POOL.length) % COVER_POOL.length;
-  return COVER_POOL[normalized];
-}
-
-const CATEGORY_ITEMS = [
-  { id: "acao", label: "Ação", icon: Swords, gradient: "linear-gradient(150deg,#c25a4d,#7a2f37)" },
-  { id: "aventura", label: "Aventura", icon: Compass, gradient: "linear-gradient(150deg,#cd8f4c,#7c4c22)" },
-  { id: "romance", label: "Romance", icon: Heart, gradient: "linear-gradient(150deg,#c75b87,#722f5a)" },
-  { id: "drama", label: "Drama", icon: Drama, gradient: "linear-gradient(150deg,#7d60ab,#3f3566)" },
-  { id: "filosofia", label: "Filosofia", icon: Lightbulb, gradient: "linear-gradient(150deg,#5c7f8c,#2f4a55)" },
-  { id: "biografia", label: "Biografia", icon: Scroll, gradient: "linear-gradient(150deg,#b48b50,#6f5225)" },
-  { id: "tecnico", label: "Técnico", icon: Cpu, gradient: "linear-gradient(150deg,#6b809d,#34435f)" },
-  { id: "fantasia", label: "Fantasia", icon: Sparkles, gradient: "linear-gradient(150deg,#8d6dc2,#4a3a86)" },
+const CATEGORY_VISUALS = [
+  { icon: Swords, gradient: "linear-gradient(150deg,#c25a4d,#7a2f37)" },
+  { icon: Compass, gradient: "linear-gradient(150deg,#cd8f4c,#7c4c22)" },
+  { icon: Heart, gradient: "linear-gradient(150deg,#c75b87,#722f5a)" },
+  { icon: Drama, gradient: "linear-gradient(150deg,#7d60ab,#3f3566)" },
+  { icon: Lightbulb, gradient: "linear-gradient(150deg,#5c7f8c,#2f4a55)" },
+  { icon: Scroll, gradient: "linear-gradient(150deg,#b48b50,#6f5225)" },
+  { icon: Cpu, gradient: "linear-gradient(150deg,#6b809d,#34435f)" },
+  { icon: Sparkles, gradient: "linear-gradient(150deg,#8d6dc2,#4a3a86)" },
 ];
 
 const FLOW_ACCENTS = [
@@ -48,161 +39,10 @@ const FLOW_ACCENTS = [
   { glow: "rgba(205,143,76,0.34)", solid: "#cd8f4c" },
 ];
 
-const FALLBACK_FLOW_BOOKS = [
-  {
-    id: "flow-aurora",
-    title: "Aurora sobre Códigos",
-    author: "Luna Arendt",
-    tag: "Recém adicionado",
-    mood: "Mistério elegante · 312 páginas",
-    summary: "Investigação sensorial em bibliotecas subterrâneas guiada por IA curatorial.",
-    cover: coverFromPool(0),
-    detailsId: null,
-  },
-  {
-    id: "flow-yugen",
-    title: "Yūgen Prisma",
-    author: "Sohei Nakamura",
-    tag: "Favorito da casa",
-    mood: "Ficção especulativa · 288 páginas",
-    summary: "Arquitetos silenciosos moldam cidades lendo diário de viajantes interdimensionais.",
-    cover: coverFromPool(1),
-    detailsId: null,
-  },
-  {
-    id: "flow-atlas",
-    title: "Atlas do Âmbar",
-    author: "Helena Prado",
-    tag: "Em alta na semana",
-    mood: "Romance histórico · 354 páginas",
-    summary: "Cartógrafa descobre cartas escondidas em bordados que contam revoluções invisíveis.",
-    cover: coverFromPool(2),
-    detailsId: null,
-  },
-  {
-    id: "flow-vertigem",
-    title: "Vertigem dos Silêncios",
-    author: "Ícaro Mendes",
-    tag: "IA recomenda",
-    mood: "Drama contemporâneo · 198 páginas",
-    summary: "Retratos de leitores que trocam memórias por capítulos inéditos.",
-    cover: coverFromPool(3),
-    detailsId: null,
-  },
-  {
-    id: "flow-satori",
-    title: "Satori de Papel",
-    author: "Clarice Montevidéu",
-    tag: "Coleção Essência",
-    mood: "Filosofia lírica · 240 páginas",
-    summary: "Meditativos fragmentos sobre o ato de reler e reescrever a si mesmo.",
-    cover: coverFromPool(4),
-    detailsId: null,
-  },
-];
-
-const FALLBACK_FEATURED_BOOK = {
-  title: "Cartas ao Horizonte Interno",
-  author: "Clarice em Essência",
-  sinopse: "Uma curadoria comentada de trechos, áudios e provocações para quem quer transformar leitura em ritual diário.",
-  stats: "Audiobook · 26 minutos · 62% concluído",
-  cover: coverFromPool(2),
-  pdf_url: "",
-  audio_url: "",
-  detailsId: null,
-};
-
-const CONTENT_RAIL_TEMPLATES = [
-  {
-    id: "biografias",
-    title: "Bibliografias inspiradoras",
-    subtitle: "Memórias e perfis que ampliam o repertório criativo",
-    keywords: ["biografia", "memória", "memoria", "memoir", "perfil"],
-  },
-  {
-    id: "times",
-    title: "Times e liderança",
-    subtitle: "Práticas para conduzir equipes e projetos complexos",
-    keywords: ["liderança", "gestão", "time", "times", "empresa", "startup"],
-  },
-  {
-    id: "ficcao-cientifica",
-    title: "Ficção científica e futuros",
-    subtitle: "Mundos especulativos, tecnologia e novas fronteiras",
-    keywords: ["ficção científica", "sci-fi", "distopia", "futuro", "tecnologia"],
-  },
-  {
-    id: "autoajuda",
-    title: "Autoajuda e bem-estar",
-    subtitle: "Rituais de presença, foco e autocuidado",
-    keywords: ["autoajuda", "bem-estar", "produtividade", "mindfulness"],
-  },
-  {
-    id: "animes",
-    title: "Animes e universos ilustrados",
-    subtitle: "Influências orientais, mangás e mundos expansivos",
-    keywords: ["anime", "mangá", "manga", "otaku"],
-  },
-  {
-    id: "games",
-    title: "Games e storytelling interativo",
-    subtitle: "Histórias que nasceram dos consoles e comunidades digitais",
-    keywords: ["game", "jogo", "gamificação", "gameplay"],
-  },
-];
-
-const FALLBACK_CONTENT_RAILS = CONTENT_RAIL_TEMPLATES.map((template, templateIndex) => ({
-  ...template,
-  cards: Array.from({ length: 4 }, (_, cardIndex) => {
-    const coverIndex = templateIndex * 4 + cardIndex;
-    return {
-      id: `${template.id}-fallback-${cardIndex}`,
-      title: `${template.title} ${cardIndex + 1}`,
-      author: "Coleção Essência",
-      summary: "Seleção curada pela equipe Essência para inspirar sua próxima imersão.",
-      cover: coverFromPool(coverIndex),
-      detailsId: null,
-    };
-  }),
-}));
-
 const PAGE_SIZE = 24;
 
-const FALLBACK_LIST_SECTIONS = [
-  {
-    id: "progress",
-    title: "📚 Em andamento",
-    subtitle: "Continue do ponto onde parou",
-    books: [
-      { id: "clarice", detailsId: null, title: "Clarice em Essência", author: "Clarice Lispector", progress: 62, minutes: 12, cover: coverFromPool(6) },
-      { id: "fundamentos", detailsId: null, title: "Fundamentos da Leitura Atenta", author: "Equipe Essência", progress: 35, minutes: 18, cover: coverFromPool(7) },
-      { id: "aurora", detailsId: null, title: "Aurora sobre Códigos", author: "Luna Arendt", progress: 18, minutes: 9, cover: coverFromPool(0) },
-    ],
-  },
-  {
-    id: "ai",
-    title: "✨ Recomendados pela IA",
-    subtitle: "Escolhas alinhadas ao seu ritmo atual",
-    books: [
-      { id: "oceano", detailsId: null, title: "Oceano Diagonal", author: "Iris M. Alencar", progress: 0, minutes: 22, cover: coverFromPool(1) },
-      { id: "manifesto", detailsId: null, title: "Manifesto das Pequenas Revoluções", author: "Hugo Rial", progress: 0, minutes: 16, cover: coverFromPool(2) },
-      { id: "sombras", detailsId: null, title: "Sombras de Âmbar", author: "Marina Valença", progress: 0, minutes: 11, cover: coverFromPool(3) },
-    ],
-  },
-  {
-    id: "collections",
-    title: "🕮 Coleções",
-    subtitle: "Curadorias Essência para mergulhos temáticos",
-    books: [
-      { id: "classicos", detailsId: null, title: "Clássicos Modernos", author: "12 títulos selecionados", progress: 0, minutes: 0, cover: coverFromPool(4) },
-      { id: "reflexoes", detailsId: null, title: "Reflexões Diárias", author: "7 ensaios breves", progress: 0, minutes: 0, cover: coverFromPool(5) },
-      { id: "audio", detailsId: null, title: "Audiobooks Curtos", author: "Coleção 15 min", progress: 0, minutes: 0, cover: coverFromPool(6) },
-    ],
-  },
-];
-
-function pickCover(book, fallbackIndex = 0) {
-  return ensureCoverSrc(book?.capa_url || book?.capa_cinematica_url, coverFromPool(fallbackIndex));
+function pickCover(book) {
+  return ensureCoverSrc(book?.capa_url || book?.capa_cinematica_url, DEFAULT_COVER_PLACEHOLDER);
 }
 
 function handleCoverFallback(event) {
@@ -223,7 +63,7 @@ function mapBookToFlowCard(book, fallbackIndex = 0) {
     detailsId: book.id ?? null,
     title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
-    tag: book.destaque ? "Em destaque" : "Novo no catálogo",
+    tag: book.destaque ? "Em destaque" : "Na biblioteca",
     mood: [book.genero?.nome, book.duracao_audio ? `${book.duracao_audio} min` : null].filter(Boolean).join(" · ") || "Disponível agora",
     summary: summarize(book.sinopse, 140) || "Sinopse não informada no momento.",
     cover: pickCover(book, fallbackIndex),
@@ -274,7 +114,7 @@ function buildPlaylistFromBooks(books) {
 }
 
 function buildSectionsFromBooks(books) {
-  if (!books?.length) return FALLBACK_LIST_SECTIONS;
+  if (!books?.length) return [];
 
   const highlights = books.filter((book) => book.destaque).slice(0, 3);
   const newcomers = books.filter((book) => !book.destaque).slice(0, 3);
@@ -306,11 +146,11 @@ function buildSectionsFromBooks(books) {
     });
   }
 
-  return sections.length ? sections : FALLBACK_LIST_SECTIONS;
+  return sections;
 }
 
 function pickFeaturedBook(books) {
-  if (!books?.length) return FALLBACK_FEATURED_BOOK;
+  if (!books?.length) return null;
   const candidate = books.find((book) => book.destaque) ?? books[0];
   return {
     id: candidate.id,
@@ -320,11 +160,11 @@ function pickFeaturedBook(books) {
     author: candidate.autor?.nome ?? "Autor não informado",
     cover: pickCover(candidate, 0),
     heroImage: candidate.player_hero_url ? ensureCoverSrc(candidate.player_hero_url) : null,
-    sinopse: candidate.sinopse ?? FALLBACK_FEATURED_BOOK.sinopse,
+    sinopse: candidate.sinopse || "Sinopse não informada.",
     stats:
       [candidate.genero?.nome, candidate.audio_url && "Audiobook disponível", candidate.pdf_url && "PDF disponível"]
         .filter(Boolean)
-        .join(" · ") || FALLBACK_FEATURED_BOOK.stats,
+        .join(" · ") || "Disponível na biblioteca",
     pdf_url: candidate.pdf_url,
     audio_url: candidate.audio_url,
   };
@@ -333,73 +173,33 @@ function pickFeaturedBook(books) {
 function mapBookToRailCard(book, fallbackIndex = 0) {
   if (!book) return null;
   return {
-    id: book.id ?? `rail-card-${fallbackIndex}`,
+    id: book.id,
     detailsId: book.id ?? null,
-    title: book.titulo ?? "Título Essência",
+    title: book.titulo,
     author: book.autor?.nome ?? "Autor não informado",
     summary: summarize(book.sinopse, 120) || "Sinopse em atualização.",
     cover: pickCover(book, fallbackIndex),
   };
 }
 
-function matchesRailTemplate(book = {}, template = {}) {
-  const haystack = [
-    book.genero?.nome,
-    book.titulo,
-    book.sinopse,
-    book.autor?.nome,
-    book.colecao?.nome,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  return template.keywords?.some((keyword) => haystack.includes(keyword)) ?? false;
-}
-
 function buildContentRails(books) {
-  if (!books?.length) return FALLBACK_CONTENT_RAILS;
+  if (!books?.length) return [];
 
-  const rails = CONTENT_RAIL_TEMPLATES.map((template, templateIndex) => {
-    const cards = books
-      .filter((book) => matchesRailTemplate(book, template))
-      .slice(0, 8)
-      .map((book, cardIndex) => mapBookToRailCard(book, templateIndex * 8 + cardIndex))
-      .filter(Boolean);
-
-    return cards.length
-      ? { ...template, cards }
-      : FALLBACK_CONTENT_RAILS[templateIndex];
+  const groups = new Map();
+  books.forEach((book) => {
+    const genre = book.genero?.nome?.trim();
+    if (!genre) return;
+    if (!groups.has(genre)) groups.set(genre, []);
+    groups.get(genre).push(book);
   });
 
-  return rails;
+  return Array.from(groups.entries()).map(([genre, genreBooks], railIndex) => ({
+    id: `genero-${genre.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}`,
+    title: genre,
+    subtitle: `${genreBooks.length} ${genreBooks.length === 1 ? "título" : "títulos"} nesta página`,
+    cards: genreBooks.slice(0, 8).map((book, cardIndex) => mapBookToRailCard(book, railIndex * 8 + cardIndex)),
+  }));
 }
-
-const TOP_RATED = [
-  { id: "silencio", detailsId: null, title: "O Invisível e o Silêncio", author: "Helena Prado", rating: 4.9, category: "Filosofia", cover: coverFromPool(2) },
-  { id: "fragmentos", detailsId: null, title: "Fragmentos de Sábado", author: "Ícaro Mendes", rating: 4.8, category: "Drama", cover: coverFromPool(0) },
-  { id: "atlas", detailsId: null, title: "Atlas do Âmbar", author: "Helena Prado", rating: 4.7, category: "Romance", cover: coverFromPool(1) },
-  { id: "playlist", detailsId: null, title: "Playlists para Pensar", author: "Equipe Essência", rating: 4.7, category: "Curadoria", cover: coverFromPool(4) },
-];
-
-const TRENDING = [
-  { id: "fluxo", detailsId: null, title: "Fluxo das Pequenas Coragens", badge: "🔥 em alta", cover: coverFromPool(7) },
-  { id: "paisagens", detailsId: null, title: "Paisagens em Frequência", badge: "🔥 em alta", cover: coverFromPool(5) },
-  { id: "labirinto", detailsId: null, title: "Labirintos Claros", badge: "🔥 em alta", cover: coverFromPool(6) },
-];
-
-const USER_STATS = {
-  monthReads: 6,
-  minutes: 1240,
-  categories: ["Romance sensorial", "Ficção histórica", "Filosofia"],
-  streak: 14,
-};
-
-const TIMELINE = [
-  { id: "clarice", label: "Você concluiu Clarice em Essência", time: "há 2 dias" },
-  { id: "ia", label: "IA sugeriu 3 novas leituras", time: "há 3 dias" },
-  { id: "colecao", label: "Você salvou a coleção Audiobooks Curtos", time: "há 5 dias" },
-  { id: "nota", label: "Nova anotação em Atlas do Âmbar", time: "há 1 semana" },
-];
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -459,7 +259,7 @@ export default function LibraryPage() {
   const [manualSelection, setManualSelection] = useState([]);
 
   const flowBooks = useMemo(() => {
-    return books.length ? books.slice(0, 5).map((book, index) => mapBookToFlowCard(book, index)) : FALLBACK_FLOW_BOOKS;
+    return books.slice(0, 5).map((book, index) => mapBookToFlowCard(book, index));
   }, [books]);
   const flowCount = flowBooks.length;
   const flowControlsDisabled = flowCount <= 1;
@@ -467,19 +267,35 @@ export default function LibraryPage() {
   const featuredBook = useMemo(() => pickFeaturedBook(books), [books]);
   const listSections = useMemo(() => buildSectionsFromBooks(books), [books]);
   const contentRails = useMemo(() => buildContentRails(books), [books]);
+  const categoryItems = useMemo(() => {
+    const genres = Array.from(new Set(books.map((book) => book.genero?.nome?.trim()).filter(Boolean)));
+    return genres.map((label, index) => ({
+      id: `categoria-${index}-${label}`,
+      label,
+      ...CATEGORY_VISUALS[index % CATEGORY_VISUALS.length],
+    }));
+  }, [books]);
   const playlistTracks = useMemo(() => buildPlaylistFromBooks(books), [books]);
   const catalogBooksById = useMemo(() => new Map(books.map((book) => [book.id, book])), [books]);
-  const librarySectionIds = useMemo(() => {
-    const ids = [];
-    listSections.forEach((section) => {
-      section.books.forEach((book) => {
-        const id = book.detailsId ?? (books.length > 0 ? book.id : null);
-        if (id) ids.push(id);
-      });
-    });
-    return ids;
-  }, [listSections, books.length]);
+  const librarySectionIds = useMemo(() => books.map((book) => book.id).filter(Boolean), [books]);
   const engagement = useEngagement(librarySectionIds);
+  const sidebarHighlights = useMemo(() => {
+    return [...books]
+      .sort((a, b) => {
+        const likesDifference = (engagement.likeCounts[b.id] || 0) - (engagement.likeCounts[a.id] || 0);
+        if (likesDifference !== 0) return likesDifference;
+        return Number(Boolean(b.destaque)) - Number(Boolean(a.destaque));
+      })
+      .slice(0, 4);
+  }, [books, engagement.likeCounts]);
+  const sidebarMedia = useMemo(
+    () => books.filter((book) => book.audio_url || book.pdf_url || hasCinematicExperience(book)).slice(0, 3),
+    [books],
+  );
+  const pageGenres = useMemo(
+    () => Array.from(new Set(books.map((book) => book.genero?.nome?.trim()).filter(Boolean))),
+    [books],
+  );
   const handleStartPlaylist = useCallback(
     (bookId = null) => {
       if (!playlistTracks.length) return;
@@ -656,6 +472,7 @@ export default function LibraryPage() {
           </div>
         )}
         
+      {categoryItems.length > 0 && (
       <section className="relative w-full overflow-hidden">
   <div className="flex items-center justify-between gap-3">
     <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.65)]">
@@ -677,23 +494,16 @@ export default function LibraryPage() {
         WebkitOverflowScrolling: "touch",
       }}
     >
-      {CATEGORY_ITEMS.map((category, index) => {
-        const active = index === 0;
+      {categoryItems.map((category) => {
         return (
-          <Motion.button
+          <Motion.div
             key={category.id}
-            type="button"
             variants={chipItemVariants}
             whileHover={{ y: -6 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative flex flex-shrink-0 snap-start flex-col items-center gap-2.5 rounded-2xl px-1 py-1 focus-visible:outline-none"
+            className="group relative flex flex-shrink-0 snap-start flex-col items-center gap-2.5 rounded-2xl px-1 py-1"
           >
             <span
-              className={`relative flex h-16 w-16 items-center justify-center rounded-2xl text-2xl text-white transition-shadow duration-300 group-hover:shadow-[0_22px_34px_-14px_rgba(40,25,10,0.6)] ${
-                active
-                  ? "ring-2 ring-[rgba(214,162,92,0.85)] ring-offset-2 ring-offset-[rgba(var(--surface-card),0.55)] shadow-[0_22px_34px_-14px_rgba(40,25,10,0.6)]"
-                  : "ring-1 ring-white/10"
-              }`}
+              className="relative flex h-16 w-16 items-center justify-center rounded-2xl text-2xl text-white ring-1 ring-white/10 transition-shadow duration-300 group-hover:shadow-[0_22px_34px_-14px_rgba(40,25,10,0.6)]"
               style={{ background: category.gradient }}
             >
               <span className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/25 to-transparent" aria-hidden="true" />
@@ -702,24 +512,16 @@ export default function LibraryPage() {
                 strokeWidth: 1.75,
               })}
             </span>
-            <span
-              className={`font-serif text-sm transition ${
-                active
-                  ? "font-semibold text-[rgb(var(--text-primary))]"
-                  : "text-[rgb(var(--text-secondary))] group-hover:text-[rgb(var(--text-primary))]"
-              }`}
-            >
+            <span className="font-serif text-sm text-[rgb(var(--text-secondary))] transition group-hover:text-[rgb(var(--text-primary))]">
               {category.label}
             </span>
-            {active && (
-              <span className="absolute -bottom-1.5 h-1 w-7 rounded-full bg-[rgb(var(--color-accent-primary))]" aria-hidden="true" />
-            )}
-          </Motion.button>
+          </Motion.div>
         );
       })}
       </Motion.div>
     </div>
 </section>
+      )}
 
         {hasPlaylist && (
           <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.85)] p-6 text-[rgb(var(--text-primary))] shadow-[0_30px_70px_-60px_rgba(15,10,35,0.8)]">
@@ -836,6 +638,7 @@ export default function LibraryPage() {
         )}
 
 
+{activeFlowCard && (
 <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[rgba(12,10,22,0.9)] px-6 py-10 text-white shadow-[0_45px_90px_-60px_rgba(5,3,20,0.95)]">
   {/* Fundo iluminado — reage à cor da capa ativa */}
   <div className="pointer-events-none absolute inset-0">
@@ -873,7 +676,7 @@ export default function LibraryPage() {
               className="hover:text-[rgba(255,255,255,0.9)]"
               stopPropagation
             >
-              {activeFlowCard?.title ?? "Descubra uma nova obra"}
+              {activeFlowCard.title}
             </BookLink>
           </h2>
           <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-white/70">
@@ -1015,7 +818,9 @@ export default function LibraryPage() {
     </div>
   </div>
 </section>
+)}
 
+        {featuredBook && (
         <section className="rounded-[30px] border border-[rgba(255,255,255,0.08)] bg-[rgba(var(--surface-card),0.92)] p-5 backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row">
             <div className="w-full lg:w-1/3">
@@ -1083,6 +888,7 @@ export default function LibraryPage() {
             </div>
           </div>
         </section>
+        )}
 
         {listSections.map((section) => (
           <section key={section.id} className="space-y-4">
@@ -1091,11 +897,10 @@ export default function LibraryPage() {
                 <p className="text-sm font-semibold text-[color:rgb(var(--text-primary))]">{section.title}</p>
                 <p className="text-sm text-[rgb(var(--text-secondary))]">{section.subtitle}</p>
               </div>
-              <button className="text-sm font-semibold text-[color:rgb(var(--color-accent-dark))]">Ver todos →</button>
             </header>
             <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
               {section.books.map((book, idx) => {
-                const detailsId = book.detailsId ?? (books.length > 0 ? book.id : null);
+                const detailsId = book.detailsId;
                 return (
                   <BookCard
                     key={book.id ?? `${section.id}-${idx}`}
@@ -1104,7 +909,7 @@ export default function LibraryPage() {
                       slug: book.slug,
                       title: book.title,
                       author: book.author,
-                      category: book.genero ?? (idx === 0 ? "Atual" : "Descoberta"),
+                      category: book.genero || null,
                       cover: book.cover,
                       heroImage: book.heroImage,
                       synopsis: book.sinopse ?? book.summary,
@@ -1136,12 +941,6 @@ export default function LibraryPage() {
                 </p>
                 <h3 className="text-xl font-semibold text-[rgb(var(--text-primary))]">{rail.title}</h3>
               </div>
-              <button
-                type="button"
-                className="rounded-full border border-[rgba(255,255,255,0.2)] px-4 py-1 text-sm font-semibold text-[rgb(var(--text-primary))] hover:bg-white/10"
-              >
-                Explorar tudo
-              </button>
             </header>
             <div className="relative -mx-4 sm:mx-0">
               <div
@@ -1255,133 +1054,113 @@ export default function LibraryPage() {
       </main>
 
       <aside className="space-y-6 xl:sticky xl:top-24 xl:border-l xl:border-[rgba(186,123,79,0.18)] xl:pl-12">
+        {sidebarHighlights.length > 0 && (
         <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
           <header className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Mais bem avaliados</p>
-              <p className="text-xs text-[rgb(var(--text-secondary))]">Favoritos da comunidade</p>
+              <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Obras da biblioteca</p>
+              <p className="text-xs text-[rgb(var(--text-secondary))]">Destaques e títulos mais curtidos</p>
             </div>
-            <button className="text-xs font-semibold text-[color:rgb(var(--color-accent-dark))]">Ver todos</button>
           </header>
           <div className="mt-5 space-y-4">
-            {TOP_RATED.map((book) => (
+            {sidebarHighlights.map((book) => (
               <div key={book.id} className="flex items-center gap-4 rounded-2xl border border-white/5 p-3">
                 <img
-                  src={book.cover}
-                  alt={book.title}
+                  src={pickCover(book)}
+                  alt={book.titulo}
                   className="h-16 w-12 rounded-xl object-contain"
                   draggable={false}
                   onError={handleCoverFallback}
                 />
                 <div className="text-sm">
                   <p className="font-semibold text-[rgb(var(--text-primary))]">
-                    <BookLink bookId={book.detailsId} className="text-[rgb(var(--text-primary))]">
-                      {book.title}
+                    <BookLink bookId={book.id} className="text-[rgb(var(--text-primary))]">
+                      {book.titulo}
                     </BookLink>
                   </p>
-                  <p className="text-[color:rgb(var(--text-secondary))]">{book.author}</p>
-                  <p className="text-xs text-amber-400">⭐ {book.rating} · {book.category}</p>
+                  <p className="text-[color:rgb(var(--text-secondary))]">{book.autor?.nome || "Autor não informado"}</p>
+                  <p className="text-xs text-amber-400">
+                    {engagement.likeCounts[book.id] || 0} curtida{(engagement.likeCounts[book.id] || 0) === 1 ? "" : "s"}
+                    {book.genero?.nome ? ` · ${book.genero.nome}` : ""}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         </section>
+        )}
 
+        {sidebarMedia.length > 0 && (
         <section className="rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-br from-[rgba(24,22,40,0.9)] via-[rgba(46,37,69,0.85)] to-[rgba(214,162,92,0.2)] p-5 text-white shadow-[0_35px_60px_-45px_rgba(5,2,20,0.9)]">
           <header className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold">Popular da semana</p>
-              <p className="text-xs text-white/70">Descobertas em movimento</p>
+              <p className="text-sm font-semibold">Experiências disponíveis</p>
+              <p className="text-xs text-white/70">Conteúdos cadastrados nas obras</p>
             </div>
-            <span className="rounded-full bg-white/15 px-3 py-1 text-[0.7rem] uppercase tracking-[0.3em]">Trend</span>
           </header>
           <div className="mt-5 space-y-4">
-            {TRENDING.map((item, index) => (
+            {sidebarMedia.map((book) => (
               <div
-                key={item.id}
+                key={book.id}
                 className="relative overflow-hidden rounded-[24px] border border-white/10 bg-white/5 p-4 backdrop-blur"
-                style={{ opacity: 1 - index * 0.15 }}
               >
-                <span className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-                  {item.badge}
-                </span>
                 <div className="flex gap-4">
                 <img
-                  src={item.cover}
-                  alt={item.title}
+                  src={pickCover(book)}
+                  alt={book.titulo}
                   className="h-24 w-[72px] rounded-2xl object-contain"
                   draggable={false}
                   onError={handleCoverFallback}
                 />
                   <div className="space-y-2">
                     <p className="text-lg font-semibold">
-                      <BookLink bookId={item.detailsId} className="text-white">
-                        {item.title}
+                      <BookLink bookId={book.id} className="text-white">
+                        {book.titulo}
                       </BookLink>
                     </p>
-                    <p className="text-sm text-white/70">Anotações, playlists e insights em alta.</p>
+                    <p className="text-sm text-white/70">
+                      {[book.audio_url && "Áudio", book.pdf_url && "PDF", hasCinematicExperience(book) && "Narrativa cinematográfica"]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </section>
+        )}
 
+        {totalBooks > 0 && (
         <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
-          <header className="flex items-center justify-between">
+          <header>
             <div>
-              <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Suas estatísticas</p>
-              <p className="text-xs text-[rgb(var(--text-secondary))]">Resumo visual do mês</p>
+              <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Resumo da biblioteca</p>
+              <p className="text-xs text-[rgb(var(--text-secondary))]">Informações do catálogo ativo</p>
             </div>
-            <span className="text-xs font-semibold text-[color:rgb(var(--color-accent-dark))]">+{USER_STATS.streak} dias</span>
           </header>
           <div className="mt-6 space-y-4 text-sm text-[rgb(var(--text-secondary))]">
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-3xl font-semibold text-[rgb(var(--text-primary))]">{USER_STATS.monthReads}</p>
-                <p>livros lidos</p>
-              </div>
-              <div>
-                <p className="text-3xl font-semibold text-[rgb(var(--text-primary))]">{USER_STATS.minutes}</p>
-                <p>minutos de leitura</p>
-              </div>
+            <div>
+              <p className="text-3xl font-semibold text-[rgb(var(--text-primary))]">{totalBooks}</p>
+              <p>{totalBooks === 1 ? "título ativo" : "títulos ativos"}</p>
             </div>
+            {pageGenres.length > 0 && (
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
-                Categorias em foco
+                Gêneros nesta página
               </p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                {USER_STATS.categories.map((cat) => (
+                {pageGenres.map((cat) => (
                   <span key={cat} className="rounded-full border border-[rgba(214,162,92,0.4)] px-3 py-1 text-[color:rgb(var(--color-accent-dark))]">
                     {cat}
                   </span>
                 ))}
               </div>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[color:rgba(var(--color-secondary-primary),0.7)]">Fluxo</p>
-              <div className="mt-3 h-2 rounded-full bg-[rgba(255,255,255,0.08)]">
-                <div className="h-full rounded-full bg-gradient-to-r from-[rgba(214,162,92,0.9)] via-[rgba(118,93,255,0.7)] to-[rgba(38,255,236,0.6)]" style={{ width: "78%" }} />
-              </div>
-            </div>
+            )}
           </div>
         </section>
-
-        <section className="rounded-[32px] border border-[rgba(186,123,79,0.16)] bg-[rgba(var(--surface-card),0.7)] p-5 shadow-[0_30px_70px_-58px_rgba(40,25,10,0.85)] backdrop-blur-xl">
-          <header className="mb-4">
-            <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">Atividades recentes</p>
-            <p className="text-xs text-[rgb(var(--text-secondary))]">Linha do tempo Essência</p>
-          </header>
-          <div className="space-y-4">
-            {TIMELINE.map((item) => (
-              <div key={item.id} className="relative pl-6 text-sm">
-                <span className="absolute left-1 top-1 h-3 w-3 rounded-full bg-gradient-to-br from-[rgba(214,162,92,0.9)] to-[rgba(118,93,255,0.8)] shadow-[0_0_10px_rgba(214,162,92,0.6)]" />
-                <p className="font-semibold text-[rgb(var(--text-primary))]">{item.label}</p>
-                <p className="text-xs text-[rgb(var(--text-secondary))]">{item.time}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        )}
       </aside>
 
       {selectedFlow && (
