@@ -2346,7 +2346,7 @@ ${narrativaCinematica || "Não disponível. Use somente o contexto e a BEU."}
 //   Agora o GPT-4o faz o raciocínio e entrega apenas a cena já resolvida.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+function _montarPromptCapaCinematicaCompacto({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   // ─────────────────────────────────────────────────────────────────────────
   // ARQUITETURA DE DOIS ESTÁGIOS — v5 (com anchor de relação viva)
   //
@@ -2498,10 +2498,9 @@ ${narrativaCinematica || "Not available. Use BEU and context only."}
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FUNÇÃO LEGADA — mantida apenas como arquivo morto, não é chamada em nenhum lugar
+// DIRETOR DE ARTE COMPLETO — memória cultural, fidelidade, emoção e arquivo narrativo
 // ─────────────────────────────────────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-function _montarPromptCapaCinematicaLegado({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
+function montarPromptCapaCinematica({ contexto, beuAtual, narrativaCinematica, referenciaVisual = null }) {
   const cinematicReferenceSource = referenciaVisual?.public_url || referenciaVisual?.storage_path || null;
   const cinematicReferenceBlock = cinematicReferenceSource
     ? `
@@ -2843,6 +2842,18 @@ FRANCHISE AND CANONICAL LOCK
 Every visual element must be faithful to the specific work and franchise. Characters, costumes, creatures, animals, architecture, weapons, artifacts, environments and materials must follow the canonical visual identity of the original work, without copying official artwork.
 Never replace a canonical element with a generic equivalent. Preserve recognizable silhouette, proportions, materials, colors, ornaments, inscriptions, wear, costume logic, construction, and presence. Do not invent components.
 
+CANONICAL CHARACTER IDENTITY — MANDATORY
+The selected character must be unmistakably the canonical character from this specific work, never a generic person, approximate substitute or loosely inspired lookalike.
+Before writing the final prompt, identify internally the character's established age range, facial structure, eye shape, nose, jaw, hair color and style, skin details, scars or marks, body proportions, posture, costume layers, signature materials and the exact physical condition appropriate to the selected canonical moment.
+Translate those identity anchors into precise visual language in the final prompt. Preserve natural asymmetry and human specificity. Do not beautify, idealize, redesign, modernize or merge the character with another actor or franchise.
+The character must remain recognizable to longtime fans even if the title, plaque and every editorial panel are removed.
+
+EMOTIONAL TRUTH — MANDATORY
+Select the most emotionally truthful canonical instant, not the safest, prettiest or most promotional pose.
+When the work is remembered for rage, terror, grief, exhaustion, guilt, desperation, sacrifice or irreversible loss, show that emotion at its authentic intensity through eyes, brow, jaw, breath, tears, moisture, tension, posture, hands and physical aftermath.
+Never reduce a powerful canonical moment to a neutral portrait, quiet horizon gaze, generic sadness or model-like pose.
+Any dirt, rain, sweat, tears, scratches, wear or non-graphic aftermath must belong naturally to the selected moment and must never be added as unrelated spectacle.
+
 HERO OBJECT RULE
 The hero object is not mandatory.
 Include it only when it has emotional function, is essential for recognition, belongs directly to the selected moment, and can be integrated organically.
@@ -2853,6 +2864,11 @@ First design the central image as a complete cinematic photograph.
 If all titles, panels, borders and plaques were removed, the central image must still be emotionally powerful and recognizable.
 Only after that, add the editorial layer.
 Visual priority: emotion or memorable presence, subject or bond, physical action or consequence, environment, hero object if needed, title, panels, plaque.
+
+PHOTOREALISM FLOOR — MANDATORY
+The central image must look like a frame captured by an elite live-action unit photographer inside the real physical world of the work, never like concept art, fan art, a game render, a wax figure or an AI illustration.
+Require physically plausible skin translucency, pores, fine facial hair, wetness, tears, dirt adhesion, individual hair strands, fabric weave, leather grain, metal wear, environmental moisture, coherent shadows, natural lens behavior and restrained cinematic color science.
+Use realistic anatomy, credible facial muscle tension and scene-motivated light. Avoid plastic skin, over-sharpening, painterly surfaces, synthetic symmetry, beauty retouching, generic faces and digital-render smoothness.
 
 FOREGROUND, MIDGROUND AND BACKGROUND
 Foreground: the emotional core, pain, bond, antagonist, creature, consequence, revelation, or dominant subject.
@@ -2865,18 +2881,22 @@ Translate audio into light, distance, visual echo, dust, breath, texture, reverb
 
 EDITORIAL LAYER
 The editorial layer frames the photograph; it must not dominate it.
-Use at most 2 or 3 editorial panels with short text, elegant borders, legible serif typography, strong title, compact lower plaque, physical museum-like materials.
-Approximate balance: 70% emotional cinematic photograph, 30% editorial layer.
-Do not create an encyclopedia, infographic, technical sheet, document grid, streaming thumbnail, or generic poster.
+Build a dense but disciplined cinematic production archive around the central photograph, using physical museum-like materials, elegant borders and legible serif typography.
+Approximate balance: 65–70% emotionally dominant cinematic photograph, 30–35% narrative archive layer.
+Include 4 to 6 compact curatorial zones selected from: legacy, work identification, curatorial concept, emotional tone, emotional palette, production documents, canonical location/date details, director notes, pinned photographs, sketches, maps, handwritten fragments, catalog seal and lower archive plaque.
+Every archival element must be specific and relevant to the work. Use canonical symbols, locations, materials and production identity; never fill space with generic decoration or unrelated objects.
+The archive must feel physically assembled and photographed: aged paper, metal plaque, pins, worn edges, ink, embossed borders, dust, scratches and real cast shadows.
+Do not let the archive reduce the scale or emotional force of the central face. Do not create a clean generic poster, streaming thumbnail or flat infographic.
 
 VISIBLE TEXT
-Visible text must be few, large and legible:
+Visible text must be concise, hierarchical and legible:
 - "ESSENCIA DOS LIVROS";
 - work title;
 - short audio subtitle only if useful;
 - one short original curatorial phrase;
+- short curatorial labels such as legacy, concept, emotional tone and archive details when supported by the BEU;
 - compact plaque with title, creator/author/studio when available, year when available, collection/archive wording, and a derived catalog code.
-No tiny paragraphs, pseudo-typography, crowded plaques, misspellings, fake logos, or invented quotes.
+No invented quotations attributed to real creators, pseudo-typography, misspellings or fake logos.
 
 VISUAL REFERENCE RULE
 The attached/active reference defines HOW the cover should feel: quality, texture, lighting, finish, atmosphere, editorial hierarchy, balance, density, museum-like language and premium collection standard.
