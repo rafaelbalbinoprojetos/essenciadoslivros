@@ -2419,7 +2419,7 @@ If YES and fans remember this bond more than any object or spectacle → this bo
 Canon examples: Sam + BB (not backpack), Joel + Ellie, Kratos + Atreus, Wander + Agro, Ico + Yorda.
 
 STEP 2 — If no living bond dominates, evaluate in strict order:
-  a) Quiet emotional consequence — mourning, guilt, sacrifice, resilience, solitude
+  a) Intense human pain — grief, guilt, sacrifice, despair, extreme loneliness
   b) Iconic cultural antagonist — the villain fans remember most
   c) Irreversible consequence — what remained after everything changed
   d) Revelation or transformation — the instant perception shifts forever
@@ -2441,33 +2441,6 @@ ${blocoAncora}
 Every visual element must match the work's official identity: character design, costume,
 creature, weapon, environment, materials. Nothing generic. Nothing invented.
 
-Preserve recognition through the canonical silhouette, anatomy or species, age, costume or
-armor, markings, color palette, signature objects, scale, relationships and environment.
-Do not redesign, modernize, simplify or replace a known element with a generic equivalent.
-Do not request an exact facial likeness or imitate the style of official promotional artwork.
-
-━━━━ SAFETY-ROBUST EMOTIONAL DIRECTION ━━━━
-Keep the scene family-safe, non-graphic and non-threatening: no blood, visible injuries,
-active violence, weapons aimed at anyone, physical restraint or extreme distress.
-Express grief, loss and conflict through posture, gaze, distance, weather, light and the
-environment — use quiet mourning, protective resolve or contemplative stillness instead of
-agony, terror, despair, a battle-worn face or language such as "drenched in grief".
-
-For a known character, prefer a cinematic realistic illustration with natural materials,
-lighting and anatomy. Preserve canonical identity through non-facial traits; never demand an
-extreme photorealistic facial likeness. Use a medium, three-quarter or environmental portrait
-instead of an intimate facial close-up.
-
-If a child, teenager, baby or young-coded character is present, make the relationship
-unmistakably familial, parental, protective or companionate. Prefer standing side by side,
-a protective hand on the shoulder, shared forward gaze or respectful space. Never describe
-the interaction as intimate, bodies pressed together, holding one another tightly, sensual,
-romantic or an eyes-closed embrace. Preserve the emotional bond without ambiguous contact.
-In that case, render the entire scene as a visibly stylized, painterly premium digital
-illustration — never as a photograph, photorealistic image or lifelike portrait. Do not use
-the words child, minor, young, youthful, youthfully, photographic, photorealistic, lifelike,
-muscular or scarred in the final prompt. Keep skin, scars, tattoos and all weapons out of view.
-
 ━━━━ START YOUR OUTPUT WITH THIS LINE ━━━━
 LOCKED SCENE: [one sentence — who is present, what gesture, what dominant emotion]
 Then immediately write the full image prompt below it in flowing prose.
@@ -2477,8 +2450,8 @@ Then immediately write the full image prompt below it in flowing prose.
 Describe the locked scene: who is present, what emotional gesture anchors it,
 what the viewer feels before reading the title.
 
-Camera and composition: use a medium, three-quarter or environmental shot, camera height and
-angle, depth of field, foreground/midground/background separation. Avoid extreme facial close-ups.
+Camera and composition: shot type, ~85mm lens equivalent, camera height and angle,
+depth of field, foreground/midground/background separation.
 
 Lighting: key light direction and temperature, quality (hard/soft), backlight halo,
 volumetric particles, mist, dust, atmospheric depth.
@@ -2486,7 +2459,7 @@ volumetric particles, mist, dust, atmospheric depth.
 Foreground → midground → background described in sequence.
 
 Editorial layer: elegant frame in brushed metal and frosted glass, large serif typography,
-70% cinematic illustrated scene / 30% editorial overlay.
+70% cinematic photograph / 30% editorial overlay.
 
 Visible text (mandatory):
 "ESSÊNCIA DOS LIVROS" at the top in elegant serif.
@@ -2495,7 +2468,7 @@ Work title in large display serif, centered lower third.
 Compact bottom plaque: ${titulo} / ${criador}${ano ? ` / ${ano}` : ""} / Coleção Essência dos Livros.
 
 End with this exact closing line:
-"No style of any official artwork. High-end cinematic digital illustration with painterly natural materials and dramatic lighting, visibly fictional, premium editorial collection quality, family-safe and non-graphic, vertical portrait format 2:3."
+"No style of any official artwork. Photorealistic cinematic render, premium editorial collection quality, vertical portrait format 2:3."
 
 ━━━━ ABSOLUTE PROHIBITIONS ━━━━
 Never mention: audio waveform, equalizer, microphone, giant headphones, play button,
