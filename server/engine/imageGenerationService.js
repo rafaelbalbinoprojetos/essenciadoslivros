@@ -93,16 +93,6 @@ When there is any conflict between visual reference and work prompt, the work pr
 Use the image_generation tool to create the final image.
 `.trim();
 
-const INSTRUCTIONS_RESPONSES_CINEMATICA = `
-You are a senior image art director for the Essencia dos Livros cinematic audio cover collection.
-Analyze the attached reference image only as quality and style language: dramatic lighting, texture, depth, atmosphere, editorial hierarchy, premium cinematic finish.
-This is NOT a Heritage museum archive cover. Do not add archival tables, museum plaques, aged documents, inventories of artifacts, or documentary density unless the work prompt explicitly asks for them.
-The work prompt may start with a LOCKED SCENE describing the mandatory emotional subject of the image, including a living relationship between the protagonist and another living being (animal, child, companion, partner, sentient creature). When that living relationship is present, it MUST dominate the composition and be immediately recognizable. Objects, weapons, bags or artifacts may only appear as supporting elements in the background or midground and must never replace, upstage or compete with the living being.
-Never substitute a living emotional relationship with an object, symbol or artifact-centric composition.
-When there is any conflict between the visual reference and the work prompt, the work prompt wins.
-Use the image_generation tool to create the final image.
-`.trim();
-
 const INSTRUCTIONS_RESPONSES_PLAYER_HERO = `
 You are a senior cinematic interface art director. The attached image is the exact Cinematic Cover that must remain physically present and recognizable inside the new scene. Treat it as the artistic foundation, preserve its artwork, title, palette and visual identity, and expand its universe around it. Create a new vertical Player Hero artwork according to the user prompt. Do not draw any interface elements. Use the image_generation tool to create the final image.
 `.trim();
@@ -549,11 +539,9 @@ async function gerarImagemComReferencia({
     : tipoImagem === "player_hero"
       ? (valor) => String(valor || "").trim()
       : limparPromptHeritageParaImagem;
-  const instructionsResponses = tipoImagem === "cinematica"
-    ? INSTRUCTIONS_RESPONSES_CINEMATICA
-    : tipoImagem === "player_hero"
-      ? INSTRUCTIONS_RESPONSES_PLAYER_HERO
-      : INSTRUCTIONS_RESPONSES_HERITAGE;
+  const instructionsResponses = tipoImagem === "player_hero"
+    ? INSTRUCTIONS_RESPONSES_PLAYER_HERO
+    : INSTRUCTIONS_RESPONSES_HERITAGE;
 
   const promptDaObra = limpador(prompt);
   const promptFinal = limitarPromptImagem(`${promptReferencia}
