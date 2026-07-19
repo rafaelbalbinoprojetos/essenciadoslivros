@@ -77,6 +77,8 @@ Absolute priority:
 The final cover must feel premium, cinematic, emotional and designed for an audio presentation experience.
 It should make the viewer want to press play.
 
+Never include a visible emotional palette, color palette panel, color swatches, colored circles, color chips, color legend or written list of colors. Use the work's palette only through the photograph, lighting, atmosphere and physical materials.
+
 Preserve from the reference only the cinematic quality bar: dramatic visual impact, strong composition, atmospheric lighting, depth, texture, readable title hierarchy, and collectible editorial finish.
 
 The work prompt overrides the reference image whenever there is a conflict.

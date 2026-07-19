@@ -2883,10 +2883,11 @@ EDITORIAL LAYER
 The editorial layer frames the photograph; it must not dominate it.
 Build a dense but disciplined cinematic production archive around the central photograph, using physical museum-like materials, elegant borders and legible serif typography.
 Approximate balance: 65–70% emotionally dominant cinematic photograph, 30–35% narrative archive layer.
-Include 4 to 6 compact curatorial zones selected from: legacy, work identification, curatorial concept, emotional tone, emotional palette, production documents, canonical location/date details, director notes, pinned photographs, sketches, maps, handwritten fragments, catalog seal and lower archive plaque.
+Include 4 to 6 compact curatorial zones selected from: legacy, work identification, curatorial concept, emotional tone, production documents, canonical location/date details, director notes, pinned photographs, sketches, maps, handwritten fragments, catalog seal and lower archive plaque.
 Every archival element must be specific and relevant to the work. Use canonical symbols, locations, materials and production identity; never fill space with generic decoration or unrelated objects.
 The archive must feel physically assembled and photographed: aged paper, metal plaque, pins, worn edges, ink, embossed borders, dust, scratches and real cast shadows.
 Do not let the archive reduce the scale or emotional force of the central face. Do not create a clean generic poster, streaming thumbnail or flat infographic.
+Never create a visible emotional palette, color palette panel, color swatches, colored circles, color chips, color legend or any written list of colors. Color direction must influence only the photograph, lighting and materials, never appear as editorial information.
 
 VISIBLE TEXT
 Visible text must be concise, hierarchical and legible:
@@ -2917,7 +2918,7 @@ Return only the final image prompt, organized exactly in these blocks:
 10. NEGATIVE CONSTRAINTS
 
 NEGATIVE CONSTRAINTS
-No modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no wallpaper, no banner, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts.
+No modern UI, no audio waveform, no equalizer, no microphone hero object, no giant headphones, no giant play button, no podcast template, no streaming cover template, no YouTube thumbnail, no generic fantasy poster, no wallpaper, no banner, no clutter, no tiny text, no unreadable typography, no misspelled words, no fake logos, no copied official poster, no celebrity likeness, no random montage, no flat digital card, no AI artifacts, no emotional palette panel, no color swatches, no colored circles, no color chips, no color legend, no written list of colors.
 
 ACCEPTANCE CRITERIA
 The prompt is correct only if:
