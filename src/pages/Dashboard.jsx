@@ -46,24 +46,33 @@ function shortText(value, limit = 150) {
 
 function RailCard({ book, cinematic = false, badge, featured = false }) {
   return (
-    <article className={`group flex-none ${featured ? "w-[280px] sm:w-[330px]" : "w-[220px] sm:w-[245px]"}`}>
+    <article className={`group flex-none ${featured ? "w-[250px] sm:w-[286px]" : "w-[205px] sm:w-[228px]"}`}>
       <Link
         to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`}
-        className="block overflow-hidden rounded-[22px] border border-[rgba(var(--color-accent-primary),0.14)] bg-[rgb(var(--surface-card))] shadow-[0_24px_55px_-38px_rgba(32,22,15,0.72)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_65px_-34px_rgba(32,22,15,0.78)]"
+        className="relative block aspect-[2/3] overflow-hidden rounded-[22px] border border-[#d4ad67]/45 bg-[#0b0805] shadow-[0_24px_55px_-30px_rgba(24,14,5,0.88)] ring-1 ring-black/20 transition duration-500 hover:-translate-y-1.5 hover:border-[#e1bd72]/75 hover:shadow-[0_34px_72px_-30px_rgba(48,29,9,0.95)]"
       >
-        <div className={`relative overflow-hidden bg-black/5 p-2 pb-0 ${featured ? "aspect-[4/5]" : "aspect-[3/4]"}`}>
-          <img src={coverOf(book, cinematic)} alt={book.titulo} loading="lazy" className="h-full w-full object-contain" />
-          {badge && (
-            <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/48 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md">
-              {badge}
-            </span>
-          )}
-          <span className="absolute inset-x-2 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent" />
-          <span className="absolute inset-x-5 bottom-4 text-white">
-            <span className="block truncate font-display text-lg font-semibold">{book.titulo}</span>
-            <span className="mt-1 block truncate text-xs text-white/68">{book.autor?.nome ?? "Curadoria Essência"}</span>
+        <img
+          src={coverOf(book, cinematic)}
+          alt={book.titulo}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.035]"
+        />
+        <span className="pointer-events-none absolute inset-0 rounded-[21px] ring-1 ring-inset ring-white/12" aria-hidden="true" />
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-black via-black/72 to-transparent" aria-hidden="true" />
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/42 to-transparent" aria-hidden="true" />
+        {badge && (
+          <span className="absolute left-3 top-3 rounded-full border border-[#e1bd72]/38 bg-black/58 px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.19em] text-[#f3d69a] shadow-lg backdrop-blur-md">
+            {badge}
           </span>
-        </div>
+        )}
+        <span className="absolute inset-x-4 bottom-4 text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+          <span className={`block line-clamp-2 font-display font-semibold leading-[1.05] text-[#f5ddb0] ${featured ? "text-xl" : "text-lg"}`}>
+            {book.titulo}
+          </span>
+          <span className="mt-1.5 block truncate text-[11px] font-medium text-white/72">
+            {book.autor?.nome ?? "Autor não informado"}
+          </span>
+        </span>
       </Link>
     </article>
   );
