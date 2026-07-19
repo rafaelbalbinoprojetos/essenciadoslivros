@@ -13,7 +13,7 @@ const chipItemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 22 } },
 };
 import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
-import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc } from "../utils/covers.js";
+import { DEFAULT_COVER_PLACEHOLDER, ensureCoverSrc, resolvePlayerHeroSrc } from "../utils/covers.js";
 import { buildAudioSource, openResolvedMedia, resolveAudioSource, resolvePdfSource } from "../utils/media.js";
 import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 import BookCard from "../components/BookCard.jsx";
@@ -83,7 +83,7 @@ function mapBookToSectionCard(book, fallbackIndex = 0) {
     genero: book.genero?.nome,
     sinopse: summarize(book.sinopse, 210),
     cover: pickCover(book, fallbackIndex),
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
+    heroImage: resolvePlayerHeroSrc(book),
     pdf_url: book.pdf_url,
     audio_url: book.audio_url,
     hasNarrative: hasCinematicExperience(book),
@@ -103,7 +103,7 @@ function mapBookToPlaylistTrack(book, fallbackIndex = 0) {
     title: book.titulo ?? book.title ?? "Audiobook Essência",
     author: book.autor?.nome ?? book.author ?? "Autor não informado",
     cover: pickCover(book, fallbackIndex),
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
+    heroImage: resolvePlayerHeroSrc(book),
     source,
   };
 }
@@ -159,7 +159,7 @@ function pickFeaturedBook(books) {
     title: candidate.titulo,
     author: candidate.autor?.nome ?? "Autor não informado",
     cover: pickCover(candidate, 0),
-    heroImage: candidate.player_hero_url ? ensureCoverSrc(candidate.player_hero_url) : null,
+    heroImage: resolvePlayerHeroSrc(candidate),
     sinopse: candidate.sinopse || "Sinopse não informada.",
     stats:
       [candidate.genero?.nome, candidate.audio_url && "Audiobook disponível", candidate.pdf_url && "PDF disponível"]

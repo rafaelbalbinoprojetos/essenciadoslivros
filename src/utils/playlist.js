@@ -1,5 +1,5 @@
 import { resolveNarrativeSource } from "./media.js";
-import { ensureCoverSrc } from "./covers.js";
+import { ensureCoverSrc, resolvePlayerHeroSrc } from "./covers.js";
 
 /** Monta o track do audiobook simples (1 áudio por livro) para a fila do player. */
 export function buildSimpleAudioTrack(book, coverSrc, audioSource) {
@@ -12,7 +12,7 @@ export function buildSimpleAudioTrack(book, coverSrc, audioSource) {
     title: book.titulo ?? "Audiobook Essência",
     author: book.autor?.nome ?? "Conteúdo Essência",
     cover: coverSrc,
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
+    heroImage: resolvePlayerHeroSrc(book),
     source: audioSource,
     collection: book.colecao?.nome ?? null,
     totalDurationSeconds: (book.duracao_audio || 0) * 60,
@@ -38,7 +38,7 @@ export async function buildNarrativeTracks(book, narrative, coverSrc) {
       title: track.titulo,
       author: narrative.titulo ?? authorName,
       cover: narrativeCover,
-      heroImage: book?.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
+      heroImage: resolvePlayerHeroSrc(book),
       source: await resolveNarrativeSource(track.audio_path),
       skipIntro: true,
       skipProgress: true,

@@ -72,4 +72,15 @@ export function ensureCoverSrc(rawValue, fallback = DEFAULT_COVER_PLACEHOLDER) {
   return normalizeCoverUrl(rawValue) || fallback;
 }
 
+/**
+ * Resolve a arte de fundo do player pela prioridade editorial da obra.
+ * A capa padrão só é usada quando nenhuma das três imagens foi cadastrada.
+ */
+export function resolvePlayerHeroSrc(book, fallback = DEFAULT_COVER_PLACEHOLDER) {
+  return ensureCoverSrc(
+    book?.player_hero_url || book?.capa_cinematica_url || book?.capa_url,
+    fallback,
+  );
+}
+
 export { DEFAULT_COVER_PLACEHOLDER };

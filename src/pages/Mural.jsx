@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, X, LayoutGrid } from "lucide-react";
 import { listBooks } from "../services/books.js";
-import { ensureCoverSrc } from "../utils/covers.js";
+import { ensureCoverSrc, resolvePlayerHeroSrc } from "../utils/covers.js";
 import BookCard from "../components/BookCard.jsx";
 import { useEngagement } from "../hooks/useEngagement.js";
 import { hasCinematicExperience } from "../services/narratives.js";
@@ -20,7 +20,7 @@ function toCard(book) {
     author: book.autor?.nome ?? "—",
     category: book.genero?.nome,
     cover: ensureCoverSrc(book.capa_url || book.capa_cinematica_url),
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
+    heroImage: resolvePlayerHeroSrc(book),
     synopsis: book.sinopse,
     hasPdf: Boolean(book.pdf_url),
     hasAudio: Boolean(book.audio_url),

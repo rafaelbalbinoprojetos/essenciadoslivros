@@ -184,7 +184,7 @@ export default function CinematicPlayer() {
     toast("Download em breve.");
   };
 
-  const heroSrc = currentTrack?.heroImage || DEFAULT_COVER_PLACEHOLDER;
+  const heroSrc = currentTrack?.heroImage || currentTrack?.cover || DEFAULT_COVER_PLACEHOLDER;
   const safeProgress = Math.min(progress, duration || progress || 0);
   const pct = duration ? (safeProgress / duration) * 100 : 0;
   const isCinematic = tracks.length > 1;
@@ -244,7 +244,7 @@ export default function CinematicPlayer() {
         <GoldenParticles />
         <div className="cinematic-shimmer" aria-hidden="true" />
 
-        {/* Player Hero: arte exclusiva em player_hero_url ocupando todo o fundo. */}
+        {/* Fundo: Player Hero, capa cinematográfica ou capa padrão, nessa ordem. */}
         <div className="fixed inset-0 z-0 overflow-hidden bg-[rgb(var(--cinema-surface))]">
           <Motion.img
             src={heroSrc}
