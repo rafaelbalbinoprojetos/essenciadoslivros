@@ -24,11 +24,20 @@ const STATUS_OPCOES = [
 ];
 
 async function chamarExecutarEtapaHttp(obraId, tipoEtapa) {
-  const response = await fetch("/api/engine/executar-etapa", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ obraId, tipoEtapa }),
-  });
+  let response;
+  try {
+    response = await fetch("/api/engine/executar-etapa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ obraId, tipoEtapa }),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      etapa: tipoEtapa,
+      error: error?.message || "Falha de rede ao executar a etapa.",
+    };
+  }
 
   try {
     return await response.json();
@@ -78,13 +87,32 @@ async function chamarExecutarEtapa(obraId, tipoEtapa, onProgresso) {
 }
 
 async function chamarAtualizarDados(obraId) {
-  const response = await fetch("/api/engine/atualizar-dados-ausentes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ obraId }),
-  });
+  let response;
+  try {
+    response = await fetch("/api/engine/atualizar-dados-ausentes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ obraId }),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      etapa: "atualizar_dados",
+      error: error?.message || "Falha de rede ao atualizar os dados da obra.",
+    };
+  }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    return {
+      ok: false,
+      etapa: "atualizar_dados",
+      error: response.status === 504
+        ? "O servidor demorou demais para responder (tempo esgotado)."
+        : `Erro inesperado do servidor (status ${response.status}).`,
+    };
+  }
 }
 
 const ETAPAS_SELECIONAVEIS = [...ETAPAS_PIPELINE, "atualizar_dados"];
@@ -331,16 +359,31 @@ export default function EngineProcessarLote() {
           etapaAtual: ETAPA_LABELS[etapa] || etapa,
         });
 
-        const resultado = etapa === "atualizar_dados"
-          ? await chamarAtualizarDados(obra.id)
-          : await chamarExecutarEtapa(obra.id, etapa, (progressoParcial) => {
-            setProgresso({
-              atual: indice + 1,
-              total: alvo.length,
-              obraTitulo: obra.titulo,
-              etapaAtual: `${ETAPA_LABELS[etapa] || etapa} — ${descreverFaseNarrativa(progressoParcial)}`,
+        let resultado;
+        try {
+          resultado = etapa === "atualizar_dados"
+            ? await chamarAtualizarDados(obra.id)
+            : await chamarExecutarEtapa(obra.id, etapa, (progressoParcial) => {
+              setProgresso({
+                atual: indice + 1,
+                total: alvo.length,
+                obraTitulo: obra.titulo,
+                etapaAtual: `${ETAPA_LABELS[etapa] || etapa} — ${descreverFaseNarrativa(progressoParcial)}`,
+              });
             });
+        } catch (error) {
+          console.error("[ENGINE LOTE] erro isolado na obra", {
+            obraId: obra.id,
+            titulo: obra.titulo,
+            etapa,
+            error,
           });
+          resultado = {
+            ok: false,
+            etapa,
+            error: error?.message || "Erro inesperado ao executar a etapa.",
+          };
+        }
 
         const ok = Boolean(resultado?.ok);
         etapasResultado.push({
