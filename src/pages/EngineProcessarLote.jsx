@@ -342,6 +342,7 @@ export default function EngineProcessarLote() {
 
     setProcessandoLote(true);
     setResultados([]);
+    let obrasComFalha = 0;
 
     for (let indice = 0; indice < alvo.length; indice += 1) {
       const obra = alvo[indice];
@@ -398,12 +399,25 @@ export default function EngineProcessarLote() {
         if (!ok) break;
       }
 
+      if (etapasResultado.some((etapa) => !etapa.ok)) {
+        obrasComFalha += 1;
+      }
+
       setResultados((atual) => [...atual, { obraId: obra.id, titulo: obra.titulo, etapas: etapasResultado }]);
     }
 
     setProgresso(null);
     setProcessandoLote(false);
-    toast.success("Processamento em lote concluído.");
+    const obrasConcluidas = alvo.length - obrasComFalha;
+    if (obrasConcluidas > 0) {
+      toast.success(`${obrasConcluidas} obra${obrasConcluidas === 1 ? "" : "s"} processada${obrasConcluidas === 1 ? "" : "s"} com sucesso.`);
+    }
+    if (obrasComFalha > 0) {
+      toast.error(
+        `${obrasComFalha} obra${obrasComFalha === 1 ? "" : "s"} apresentou${obrasComFalha === 1 ? "" : "aram"} erro. As demais continuaram normalmente.`,
+        { duration: 7000 },
+      );
+    }
     carregarObras();
   }
 
