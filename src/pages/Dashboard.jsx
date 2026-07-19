@@ -265,11 +265,10 @@ export default function DashboardPage() {
 
           <div className="relative z-[1] px-5 pb-5 sm:px-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.38em] text-white/45">Bem-vindo de volta, {firstName}</p>
-            <p className="mt-2 text-sm text-white/62">Hoje é um excelente dia para revisitar grandes histórias.</p>
           </div>
 
           <div
-            className="relative z-[1] mx-auto h-[430px] w-full max-w-[980px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y] sm:h-[500px] md:h-[540px]"
+            className="relative z-[1] mx-auto h-[calc(35dvh+2rem)] w-full max-w-[980px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y]"
             style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
             aria-label="Obras em destaque"
             onPointerDown={(event) => {
@@ -318,7 +317,7 @@ export default function DashboardPage() {
                       setHeroIndex(index);
                     }
                   }}
-                  className={`group absolute left-1/2 top-1/2 h-[350px] w-[250px] overflow-hidden rounded-[28px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:h-[420px] sm:w-[300px] md:h-[460px] md:w-[330px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
+                  className={`group absolute left-1/2 top-1/2 h-[35dvh] w-[250px] overflow-hidden rounded-[28px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:w-[300px] md:w-[330px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
                   style={{
                     opacity,
                     zIndex: 30 - distance,
@@ -332,21 +331,20 @@ export default function DashboardPage() {
                   <div className="absolute right-5 top-5 grid h-8 w-8 place-items-center rounded-full border border-[#d5b06a]/25 bg-black/28 text-[#d5b06a]/80 backdrop-blur-md">
                     <ArrowRight className="h-4 w-4" />
                   </div>
-                  <div className="absolute inset-x-5 bottom-5 z-[2] sm:inset-x-7 sm:bottom-7">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#d5b06a]/82">Curadoria Essencia</span>
-                    <h1 className={`mt-3 break-words font-display font-semibold leading-[0.98] text-[#f4d088] ${active ? "text-[clamp(2rem,7vw,3.7rem)]" : "text-[clamp(1.65rem,5vw,2.45rem)]"}`}>{book.titulo}</h1>
-                    <p className="mt-3 text-sm leading-6 text-white/78">{shortText(book.sinopse, active ? 118 : 82)}</p>
+                  <div className="absolute inset-x-5 bottom-4 top-1/2 z-[2] flex flex-col justify-end sm:inset-x-6">
+                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.02] text-[#f4d088] ${active ? "text-[clamp(1.45rem,4vw,2.25rem)]" : "text-[clamp(1.25rem,3.5vw,1.8rem)]"}`}>{book.titulo}</h1>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/78">{shortText(book.sinopse, active ? 118 : 82)}</p>
                     {active ? (
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(124,83,255,0.32)] transition hover:bg-[rgb(var(--color-accent-dark))]">
-                          <Play className="h-4 w-4" fill="currentColor" /> Continuar
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[rgb(var(--color-accent-primary))] px-3 py-2 text-xs font-semibold text-white shadow-[0_0_28px_rgba(124,83,255,0.32)] transition hover:bg-[rgb(var(--color-accent-dark))]">
+                          <Play className="h-3.5 w-3.5" fill="currentColor" /> Continuar
                         </Link>
-                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                          Explorar obra <ArrowRight className="h-4 w-4" />
+                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                          Explorar <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     ) : (
-                      <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#d5b06a]/76">
+                      <span className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-[#d5b06a]/76">
                         Explorar obra <ArrowRight className="h-3.5 w-3.5" />
                       </span>
                     )}
@@ -491,7 +489,6 @@ export default function DashboardPage() {
               className="flex min-w-0 flex-col justify-center p-6 sm:p-7 md:p-11 lg:px-12 lg:py-14 xl:px-16"
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-white/48">Bem-vindo de volta, {firstName}</p>
-              <p className="mt-4 text-sm text-white/62">Hoje é um excelente dia para revisitar grandes histórias.</p>
               <p className="mt-9 text-[10px] font-bold uppercase tracking-[0.34em] text-[rgb(var(--color-accent-light))]">Seleção do acervo</p>
               <h1 className="mt-3 max-w-3xl break-words font-display text-4xl font-semibold leading-[1.02] md:text-6xl">{heroBook.titulo}</h1>
               <p className="mt-4 text-base text-white/70">{heroBook.autor?.nome ?? "Curadoria Essência"} · {heroBook.genero?.nome ?? "Acervo Essência"}</p>
