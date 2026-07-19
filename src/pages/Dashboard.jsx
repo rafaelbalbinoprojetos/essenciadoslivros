@@ -115,24 +115,7 @@ export default function DashboardPage() {
   const heroProgrammaticScrollRef = useRef(null);
   const heroProgrammaticScrollTimeoutRef = useRef(0);
   const heroScrollRafRef = useRef(0);
-  const heroSwipeStartXRef = useRef(null);
   const heroBook = heroBooks[heroIndex] ?? heroBooks[0] ?? null;
-  const heroDeck = useMemo(() => {
-    if (!heroBooks.length) return [];
-    const half = Math.floor(heroBooks.length / 2);
-    return heroBooks.map((book, index) => {
-      let relative = index - heroIndex;
-      if (relative > half) relative -= heroBooks.length;
-      if (relative < -half) relative += heroBooks.length;
-      return { book, index, relative };
-    });
-  }, [heroBooks, heroIndex]);
-
-  const moveHero = useCallback((direction) => {
-    if (heroBooks.length < 2) return;
-    setHeroTouched(true);
-    setHeroIndex((current) => (current + direction + heroBooks.length) % heroBooks.length);
-  }, [heroBooks.length]);
 
   const scrollHeroTo = useCallback((index, behavior = "smooth") => {
     const viewport = heroCarouselRef.current;
@@ -269,101 +252,6 @@ export default function DashboardPage() {
           </div>
 
           <div
-            className="relative z-[1] mx-auto h-[430px] w-full max-w-[980px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y] sm:h-[500px] md:h-[540px]"
-            style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
-            aria-label="Obras em destaque"
-            onPointerDown={(event) => {
-              heroSwipeStartXRef.current = event.clientX;
-              setHeroTouched(true);
-            }}
-            onPointerUp={(event) => {
-              if (heroSwipeStartXRef.current === null) return;
-              const delta = event.clientX - heroSwipeStartXRef.current;
-              heroSwipeStartXRef.current = null;
-              if (Math.abs(delta) < 42) return;
-              moveHero(delta < 0 ? 1 : -1);
-            }}
-            onPointerCancel={() => {
-              heroSwipeStartXRef.current = null;
-            }}
-          >
-            <div className="pointer-events-none absolute inset-x-8 bottom-1 h-20 rounded-[50%] bg-black/50 blur-2xl" />
-            {heroDeck.map(({ book, index, relative }) => {
-              const active = relative === 0;
-              const distance = Math.abs(relative);
-              if (distance > 2) return null;
-
-              const translateX = `${relative * 156}px`;
-              const translateZ = 230 - distance * 74;
-              const rotateY = relative * -22;
-              const scale = active ? 1 : 0.86;
-              const opacity = distance > 2 ? 0 : Math.max(0, 0.9 - distance * 0.26);
-              const cinematic = hasCinematicExperience(book);
-
-              return (
-                <article
-                  key={book.id}
-                  role="button"
-                  tabIndex={active ? -1 : 0}
-                  onClick={() => {
-                    if (!active) {
-                      setHeroTouched(true);
-                      setHeroIndex(index);
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (!active && (event.key === "Enter" || event.key === " ")) {
-                      event.preventDefault();
-                      setHeroTouched(true);
-                      setHeroIndex(index);
-                    }
-                  }}
-                  className={`group absolute left-1/2 top-1/2 h-[350px] w-[250px] overflow-hidden rounded-[28px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:h-[420px] sm:w-[300px] md:h-[460px] md:w-[330px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
-                  style={{
-                    opacity,
-                    zIndex: 30 - distance,
-                    transform: `translate(-50%, -50%) translateX(${translateX}) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                    transformStyle: "preserve-3d",
-                    transition: "transform 760ms cubic-bezier(0.18,0.82,0.2,1), opacity 420ms ease, filter 420ms ease, border-color 420ms ease",
-                  }}
-                >
-                  <img src={coverOf(book, cinematic)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
-                  <div className={`absolute inset-0 ${active ? "bg-[linear-gradient(to_top,rgba(7,5,3,0.98)_0%,rgba(7,5,3,0.78)_30%,rgba(7,5,3,0.12)_68%,transparent_100%)]" : "bg-[linear-gradient(to_top,rgba(7,5,3,0.96)_0%,rgba(7,5,3,0.55)_48%,rgba(7,5,3,0.2)_100%)]"}`} />
-                  <div className="absolute right-5 top-5 grid h-8 w-8 place-items-center rounded-full border border-[#d5b06a]/25 bg-black/28 text-[#d5b06a]/80 backdrop-blur-md">
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                  <div className="absolute inset-x-5 bottom-5 z-[2] sm:inset-x-7 sm:bottom-7">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#d5b06a]/82">Curadoria Essencia</span>
-                    <h1 className={`mt-3 break-words font-display font-semibold leading-[0.98] text-[#f4d088] ${active ? "text-[clamp(2rem,7vw,3.7rem)]" : "text-[clamp(1.65rem,5vw,2.45rem)]"}`}>{book.titulo}</h1>
-                    <p className="mt-3 text-sm leading-6 text-white/78">{shortText(book.sinopse, active ? 118 : 82)}</p>
-                    {active ? (
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(124,83,255,0.32)] transition hover:bg-[rgb(var(--color-accent-dark))]">
-                          <Play className="h-4 w-4" fill="currentColor" /> Continuar
-                        </Link>
-                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                          Explorar obra <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    ) : (
-                      <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#d5b06a]/76">
-                        Explorar obra <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-            {heroBooks.length > 1 && (
-              <>
-                <button type="button" onClick={() => moveHero(-1)} aria-label="Obra anterior" className="absolute left-2 top-1/2 z-40 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/36 text-white shadow-lg backdrop-blur-md transition hover:bg-white/12 sm:left-6"><ChevronLeft className="h-5 w-5" /></button>
-                <button type="button" onClick={() => moveHero(1)} aria-label="Proxima obra" className="absolute right-2 top-1/2 z-40 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/36 text-white shadow-lg backdrop-blur-md transition hover:bg-white/12 sm:right-6"><ChevronRight className="h-5 w-5" /></button>
-              </>
-            )}
-          </div>
-
-          {false && (
-          <div
             ref={heroCarouselRef}
             onScroll={handleHeroScroll}
             onPointerDown={() => setHeroTouched(true)}
@@ -399,7 +287,6 @@ export default function DashboardPage() {
               );
             })}
           </div>
-          )}
 
           {heroBooks.length > 1 && (
             <div className="relative z-[2] mt-3 flex items-center justify-center gap-5 px-5 sm:px-8">
@@ -418,7 +305,7 @@ export default function DashboardPage() {
                   />
                 ))}
               </div>
-              <div className="hidden">
+              <div className="hidden gap-2 md:flex">
                 <button type="button" onClick={() => { setHeroTouched(true); setHeroIndex((current) => (current - 1 + heroBooks.length) % heroBooks.length); }} aria-label="Obra anterior" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronLeft className="h-4 w-4" /></button>
                 <button type="button" onClick={() => { setHeroTouched(true); setHeroIndex((current) => (current + 1) % heroBooks.length); }} aria-label="Próxima obra" className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-white/5 transition hover:bg-white/12"><ChevronRight className="h-4 w-4" /></button>
               </div>

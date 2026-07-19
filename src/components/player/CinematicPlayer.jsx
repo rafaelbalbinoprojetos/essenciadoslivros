@@ -183,7 +183,7 @@ export default function CinematicPlayer() {
     toast("Download em breve.");
   };
 
-  const heroSrc = currentTrack?.heroImage || DEFAULT_COVER_PLACEHOLDER;
+  const coverSrc = currentTrack?.cover ?? DEFAULT_COVER_PLACEHOLDER;
   const safeProgress = Math.min(progress, duration || progress || 0);
   const pct = duration ? (safeProgress / duration) * 100 : 0;
   const isCinematic = tracks.length > 1;
@@ -243,22 +243,16 @@ export default function CinematicPlayer() {
         <GoldenParticles />
         <div className="cinematic-shimmer" aria-hidden="true" />
 
-        {/* Player Hero: arte exclusiva em player_hero_url ocupando todo o fundo. */}
-        <div className="fixed inset-0 z-0 overflow-hidden bg-[rgb(var(--cinema-surface))]">
+        {/* Hero: capa cheia, sem margens — layoutId compartilhado com o mini-player */}
+        <div className="relative z-[2] h-[50vh] min-h-[320px] w-full overflow-hidden">
           <Motion.img
-            src={heroSrc}
+            layoutId={`artwork-${currentTrack.id}`}
+            src={coverSrc}
             alt={currentTrack.title}
             className="h-full w-full object-cover object-center"
-            initial={{ opacity: 0, scale: 1.03 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
           />
           <div
-            className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-[rgba(var(--cinema-surface),0.78)] via-transparent to-transparent"
+            className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-b from-transparent to-[rgb(var(--cinema-surface))]"
             aria-hidden="true"
           />
 
@@ -339,7 +333,7 @@ export default function CinematicPlayer() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="relative z-[2] mx-auto flex min-h-[100dvh] w-full max-w-md flex-col justify-end px-6 pb-10 pt-32"
+          className="relative z-[2] mx-auto -mt-2 flex w-full max-w-md flex-col px-6 pb-10"
         >
           {/* Progresso da jornada */}
           <Motion.div variants={fadeUpItem}>

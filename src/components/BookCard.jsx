@@ -26,7 +26,6 @@ export default function BookCard({ book, likeCount = 0, liked = false, saved = f
         title: book.title ?? "Audiobook Essência",
         author: book.author ?? "Autor não informado",
         cover: book.cover,
-        heroImage: book.heroImage,
         source,
       },
     ]);

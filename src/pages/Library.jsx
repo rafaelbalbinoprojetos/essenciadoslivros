@@ -241,7 +241,6 @@ function mapBookToSectionCard(book, fallbackIndex = 0) {
     genero: book.genero?.nome,
     sinopse: summarize(book.sinopse, 210),
     cover: pickCover(book, fallbackIndex),
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
     pdf_url: book.pdf_url,
     audio_url: book.audio_url,
     hasNarrative: hasCinematicExperience(book),
@@ -260,7 +259,6 @@ function mapBookToPlaylistTrack(book, fallbackIndex = 0) {
     title: book.titulo ?? book.title ?? "Audiobook Essência",
     author: book.autor?.nome ?? book.author ?? "Autor não informado",
     cover: pickCover(book, fallbackIndex),
-    heroImage: book.player_hero_url ? ensureCoverSrc(book.player_hero_url) : null,
     source,
   };
 }
@@ -315,7 +313,6 @@ function pickFeaturedBook(books) {
     title: candidate.titulo,
     author: candidate.autor?.nome ?? "Autor não informado",
     cover: pickCover(candidate, 0),
-    heroImage: candidate.player_hero_url ? ensureCoverSrc(candidate.player_hero_url) : null,
     sinopse: candidate.sinopse ?? FALLBACK_FEATURED_BOOK.sinopse,
     stats:
       [candidate.genero?.nome, candidate.audio_url && "Audiobook disponível", candidate.pdf_url && "PDF disponível"]
@@ -501,7 +498,6 @@ export default function LibraryPage() {
         title: featuredBook.title ?? "Audiobook Essência",
         author: featuredBook.author ?? "Autor não informado",
         cover: featuredBook.cover,
-        heroImage: featuredBook.heroImage,
         source,
       },
     ]);
@@ -1088,7 +1084,6 @@ export default function LibraryPage() {
                       author: book.author,
                       category: book.genero ?? (idx === 0 ? "Atual" : "Descoberta"),
                       cover: book.cover,
-                      heroImage: book.heroImage,
                       synopsis: book.sinopse ?? book.summary,
                       hasPdf: Boolean(book.pdf_url),
                       hasAudio: Boolean(book.audio_url),

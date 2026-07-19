@@ -58,7 +58,6 @@ create table if not exists livros (
   sinopse text,
   capa_url text,
   capa_cinematica_url text,
-  player_hero_url text,
   pdf_url text,
   audio_url text,
   tem_experiencia_cinematica boolean not null default false,

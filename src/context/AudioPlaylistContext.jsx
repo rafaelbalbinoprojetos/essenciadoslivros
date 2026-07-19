@@ -32,7 +32,6 @@ function normalizeTracks(tracks = []) {
       title: track.title ?? "Audiobook Essência",
       author: track.author ?? track.subtitle ?? "Conteúdo Essência",
       cover: track.cover ?? null,
-      heroImage: track.heroImage ?? track.player_hero_url ?? null,
       themeId: track.themeId ?? track.cinematic_theme_id ?? track.cinematicThemeId ?? null,
       collectionTitle: track.collectionTitle ?? track.collection_title ?? null,
       sceneTitle: track.sceneTitle ?? track.scene_title ?? null,
