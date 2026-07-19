@@ -164,11 +164,17 @@ export function AudioPlaylistProvider({ children }) {
         }
         return;
       }
-      if (currentIndex + 1 < tracks.length) {
+      const activeIndex = currentIndexRef.current;
+      const nextIndex = activeIndex + 1;
+      if (activeIndex >= 0 && nextIndex < tracks.length) {
         // Ignora o evento pause disparado pelo navegador durante a troca de src.
         loadingRef.current = true;
         autoplayRef.current = true;
-        setCurrentIndex((prev) => (prev + 1 < tracks.length ? prev + 1 : prev));
+        currentIndexRef.current = nextIndex;
+        setProgress(0);
+        setDuration(0);
+        setIsPlaying(true);
+        setCurrentIndex(nextIndex);
       } else {
         setIsPlaying(false);
         setProgress(0);
@@ -196,7 +202,7 @@ export function AudioPlaylistProvider({ children }) {
       node.removeEventListener("play", handlePlay);
       node.removeEventListener("pause", handlePause);
     };
-  }, [currentIndex, tracks.length]);
+  }, [tracks.length]);
 
   useEffect(() => {
     const node = audioRef.current;
@@ -252,7 +258,7 @@ export function AudioPlaylistProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [currentTrack?.source, currentTrack?.skipIntro, getIntroUrl]);
+  }, [currentTrack?.id, currentTrack?.source, currentTrack?.skipIntro, getIntroUrl]);
 
   useEffect(() => {
     const node = audioRef.current;
