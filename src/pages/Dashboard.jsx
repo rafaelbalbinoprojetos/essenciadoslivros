@@ -292,7 +292,7 @@ export default function DashboardPage() {
               const distance = Math.abs(relative);
               if (distance > 2) return null;
 
-              const translateX = `${relative * 132}px`;
+              const translateX = `${relative * 99}px`;
               const translateZ = 230 - distance * 74;
               const rotateY = relative * -22;
               const scale = active ? 1 : 0.86;
@@ -317,7 +317,7 @@ export default function DashboardPage() {
                       setHeroIndex(index);
                     }
                   }}
-                  className={`group absolute left-1/2 top-1/2 h-[60%] w-[215px] overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:w-[250px] md:w-[280px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
+                  className={`group absolute left-1/2 top-1/2 h-[60%] w-[160px] overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 sm:w-[188px] md:w-[210px] ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
                   style={{
                     opacity,
                     zIndex: 30 - distance,
