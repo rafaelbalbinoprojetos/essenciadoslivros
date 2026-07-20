@@ -7,7 +7,6 @@ export default function PremiumPlansModal({
   onClose,
   onSubscribe,
   subscribingPlanId = null,
-  hasPremiumAccess = false,
   currentPlanId = "free",
   trialActive = false,
   trialEndsAt = null,
@@ -132,7 +131,7 @@ export default function PremiumPlansModal({
                     className={`mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                       disableAction
                         ? "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                        : "bg-gradient-to-r from-[#6c63ff] via-[#4c3f8f] to-[#b38b59] text-white shadow-lg shadow-[#6c63ff]/30 hover:from-[#574de3] hover:to-[#9c784f] disabled:cursor-not-allowed disabled:opacity-75"
+                        : "bg-[rgb(var(--color-accent-primary))] text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.3)] hover:bg-[rgb(var(--color-accent-dark))] disabled:cursor-not-allowed disabled:opacity-75"
                     }`}
                   >
                     {isCurrentPlan

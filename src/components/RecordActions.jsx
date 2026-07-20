@@ -3,9 +3,9 @@ import React from "react";
 function ActionButton({ children, onClick, disabled, tone = "neutral" }) {
   const toneClasses = {
     neutral:
-      "border-gray-300 text-gray-600 hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:text-gray-300 dark:hover:border-temaEmerald dark:hover:text-temaEmerald",
+      "border-gray-300 text-gray-600 hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:text-gray-300 dark:hover:border-temaSky dark:hover:text-temaSky",
     info:
-      "border-temaSky/70 text-temaSky hover:bg-temaSky/10 dark:border-temaEmerald/70 dark:text-temaEmerald dark:hover:bg-temaEmerald/10",
+      "border-temaSky/70 text-temaSky hover:bg-temaSky/10 dark:border-temaSky/70 dark:text-temaSky dark:hover:bg-temaSky/10",
     danger:
       "border-rose-400/60 text-rose-500 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-500/10",
   };

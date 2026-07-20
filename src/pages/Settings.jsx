@@ -173,7 +173,7 @@ export default function SettingsPage() {
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
                 placeholder="Como você quer ser chamado"
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
+                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaSky dark:focus:ring-temaSky/20"
               />
             </label>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -188,7 +188,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={profileSaving || !profileDirty}
-              className="mt-2 inline-flex items-center justify-center rounded-md border border-transparent bg-temaSky px-4 py-2 text-sm font-semibold text-white transition hover:bg-temaSky-dark disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark"
+              className="mt-2 inline-flex items-center justify-center rounded-md border border-transparent bg-temaSky px-4 py-2 text-sm font-semibold text-white transition hover:bg-temaSky-dark disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaSky dark:hover:bg-temaSky-dark"
             >
               {profileSaving ? "Salvando..." : "Salvar preferências"}
             </button>
@@ -231,13 +231,13 @@ export default function SettingsPage() {
                   key={link.to}
                   className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm transition ${
                     checked
-                      ? "border-temaSky/60 bg-temaSky/5 text-temaSky dark:border-temaEmerald/60 dark:bg-temaEmerald/10 dark:text-temaEmerald"
+                      ? "border-temaSky/60 bg-temaSky/5 text-temaSky dark:border-temaSky/60 dark:bg-temaSky/10 dark:text-temaSky"
                       : "border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200"
                   }`}
                 >
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-temaSky focus:ring-temaSky dark:border-gray-600 dark:bg-gray-900 dark:text-temaEmerald dark:focus:ring-temaEmerald"
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-temaSky focus:ring-temaSky dark:border-gray-600 dark:bg-gray-900 dark:text-temaSky dark:focus:ring-temaSky"
                     checked={checked}
                     onChange={() => handleToggleMobileNav(link.to)}
                   />
@@ -259,7 +259,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={handleResetMobileNav}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/30 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:focus-visible:ring-temaEmerald/30"
+                className="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/30 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:focus-visible:ring-temaSky/30"
                 disabled={mobileNavSaving || (mobileNavSelection.length === DEFAULT_MOBILE_NAV_PATHS.length &&
                   mobileNavSelection.every((path, index) => path === DEFAULT_MOBILE_NAV_PATHS[index]))}
               >
@@ -267,7 +267,7 @@ export default function SettingsPage() {
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark dark:focus-visible:ring-temaEmerald/40"
+                className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaSky dark:hover:bg-temaSky-dark dark:focus-visible:ring-temaSky/40"
                 disabled={mobileNavSaving || !mobileNavDirty}
               >
                 {mobileNavSaving ? "Salvando..." : "Salvar menu"}
@@ -300,7 +300,7 @@ export default function SettingsPage() {
                 checked={alertsForm.showToasts}
                 onChange={handleAlertsToggle}
               />
-              <span className="h-6 w-12 rounded-full bg-gray-300 transition peer-checked:bg-temaSky dark:bg-gray-700 dark:peer-checked:bg-temaEmerald" />
+              <span className="h-6 w-12 rounded-full bg-gray-300 transition peer-checked:bg-temaSky dark:bg-gray-700 dark:peer-checked:bg-temaSky" />
               <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-6" />
             </label>
           </div>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark dark:focus-visible:ring-temaEmerald/40"
+              className="inline-flex items-center justify-center rounded-md bg-temaSky px-4 py-2 text-xs font-semibold text-white transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaSky dark:hover:bg-temaSky-dark dark:focus-visible:ring-temaSky/40"
               disabled={alertsSaving || !alertsDirty}
             >
               {alertsSaving ? "Salvando..." : "Salvar notificações"}

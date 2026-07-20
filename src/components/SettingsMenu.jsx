@@ -108,7 +108,7 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="settings-menu"
-        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-temaEmerald dark:hover:text-temaEmerald ${open ? "ring-2 ring-temaSky/30 dark:ring-temaEmerald/30" : ""}`}
+        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-temaSky dark:hover:text-temaSky ${open ? "ring-2 ring-temaSky/30 dark:ring-temaSky/30" : ""}`}
         title="Abrir configurações do usuário"
       >
         <span className="sr-only">{open ? "Fechar configurações" : "Abrir configurações"}</span>
@@ -134,7 +134,7 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
                   <button
                     type="button"
                     onClick={() => item.action(navigate, helpers)}
-                    className="flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-left text-sm transition hover:border-temaSky/50 hover:bg-temaSky/10 hover:text-temaSky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:hover:border-temaEmerald/50 dark:hover:bg-temaEmerald/10 dark:hover:text-temaEmerald dark:focus-visible:ring-temaEmerald/40"
+                    className="flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-left text-sm transition hover:border-temaSky/50 hover:bg-temaSky/10 hover:text-temaSky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:hover:border-temaSky/50 dark:hover:bg-temaSky/10 dark:hover:text-temaSky dark:focus-visible:ring-temaSky/40"
                   >
                     <item.icon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <div className="flex flex-col">
@@ -152,7 +152,7 @@ export default function SettingsMenu({ onSignOut, onReload, onOpenNotifications,
             <button
               type="button"
               onClick={handleReload}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 font-semibold text-temaSky transition hover:bg-temaSky/10 hover:text-temaSky/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:text-temaEmerald dark:hover:bg-temaEmerald/10 dark:hover:text-temaEmerald/90 dark:focus-visible:ring-temaEmerald/40"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 font-semibold text-temaSky transition hover:bg-temaSky/10 hover:text-temaSky/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:text-temaSky dark:hover:bg-temaSky/10 dark:hover:text-temaSky/90 dark:focus-visible:ring-temaSky/40"
             >
               <RotateCw className="h-4 w-4" />
               Atualizar

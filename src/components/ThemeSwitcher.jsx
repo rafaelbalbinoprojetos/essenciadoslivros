@@ -15,7 +15,7 @@ export default function ThemeSwitcher() {
       aria-pressed={isDark}
       aria-label={label}
       title={`${label} (atual: ${theme?.name ?? "desconhecido"})`}
-      className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:bg-gray-800 dark:hover:border-temaEmerald dark:hover:text-temaEmerald"
+      className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:bg-gray-800 dark:hover:border-temaSky dark:hover:text-temaSky"
     >
       <span className="sr-only">{label}</span>
       {isDark ? <SunIcon /> : <MoonIcon />}

@@ -505,7 +505,7 @@ export default function EngineProcessarLote() {
                 type="button"
                 onClick={ativarSelecionadasEmLote}
                 disabled={ativandoLote || quantidadeSelecionada === 0}
-                className="rounded-lg border border-emerald-500/60 px-3 py-1.5 font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-40"
+                className="rounded-lg border border-[rgba(var(--color-accent-primary),0.6)] px-3 py-1.5 font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)] disabled:opacity-40"
               >
                 {ativandoLote ? "Ativando..." : `Marcar selecionadas como ativas (${quantidadeSelecionada})`}
               </button>
@@ -656,7 +656,7 @@ export default function EngineProcessarLote() {
               type="button"
               disabled={processandoLote || quantidadeSelecionada === 0 || etapasSelecionadas.length === 0}
               onClick={() => processarLote("todas")}
-              className="rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60"
+              className="rounded-xl bg-[rgb(var(--color-accent-primary))] px-4 py-3 text-sm font-semibold text-white hover:bg-[rgb(var(--color-accent-dark))] disabled:opacity-60"
             >
               Atualizar todos os itens selecionados ({quantidadeSelecionada} obra{quantidadeSelecionada === 1 ? "" : "s"} · {etapasSelecionadas.length} etapa{etapasSelecionadas.length === 1 ? "" : "s"})
             </button>
@@ -664,7 +664,7 @@ export default function EngineProcessarLote() {
               type="button"
               disabled={processandoLote || quantidadeSelecionada === 0 || etapasSelecionadas.length === 0}
               onClick={() => processarLote("faltantes")}
-              className="rounded-xl border border-emerald-500/60 px-4 py-3 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
+              className="rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-3 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)] disabled:opacity-60"
             >
               Atualizar somente os itens faltantes ({quantidadeSelecionada} obra{quantidadeSelecionada === 1 ? "" : "s"} · {etapasSelecionadas.length} etapa{etapasSelecionadas.length === 1 ? "" : "s"})
             </button>

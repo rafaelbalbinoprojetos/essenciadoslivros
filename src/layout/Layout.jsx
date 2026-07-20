@@ -716,7 +716,6 @@ export default function Layout() {
           onClose={handleClosePlans}
           onSubscribe={handleSubscribe}
           subscribingPlanId={subscribingPlan}
-          hasPremiumAccess={subscriptionTier === "premium" || trialActive}
           currentPlanId={subscriptionTier}
           trialActive={trialActive}
           trialEndsAt={trialEndsAt}

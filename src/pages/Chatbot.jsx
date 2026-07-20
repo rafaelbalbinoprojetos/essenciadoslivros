@@ -27,7 +27,7 @@ function MessageBubble({ role, content }) {
         className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm shadow-sm sm:max-w-[75%] ${
           isAssistant
             ? "bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100"
-            : "bg-temaSky text-white dark:bg-temaEmerald"
+            : "bg-temaSky text-white dark:bg-temaSky"
         }`}
       >
         {content.split("\n").map((line, index) => (
@@ -44,9 +44,9 @@ function TypingIndicator() {
   return (
     <div className="flex justify-start">
       <div className="flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs text-gray-500 shadow dark:bg-gray-900 dark:text-gray-300">
-        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaEmerald" />
-        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaEmerald" style={{ animationDelay: "0.15s" }} />
-        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaEmerald" style={{ animationDelay: "0.3s" }} />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaSky" />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaSky" style={{ animationDelay: "0.15s" }} />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-temaSky dark:bg-temaSky" style={{ animationDelay: "0.3s" }} />
       </div>
     </div>
   );
@@ -436,10 +436,10 @@ export default function ChatbotPage() {
                 type="button"
                 onClick={handleStartRecording}
                 disabled={!recordingSupported}
-                className={`inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:focus-visible:ring-temaEmerald/40 ${
+                className={`inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:focus-visible:ring-temaSky/40 ${
                   isRecording
                     ? "border-transparent bg-rose-500 text-white hover:bg-rose-600"
-                    : "border-gray-300 text-gray-500 hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:text-gray-300 dark:hover:border-temaEmerald dark:hover:text-temaEmerald"
+                    : "border-gray-300 text-gray-500 hover:border-temaSky hover:text-temaSky dark:border-gray-700 dark:text-gray-300 dark:hover:border-temaSky dark:hover:text-temaSky"
                 }`}
                 aria-label={isRecording ? "Encerrar gravação" : "Iniciar gravação"}
               >
@@ -451,13 +451,13 @@ export default function ChatbotPage() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Digite sua mensagem..."
-                  className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaEmerald dark:focus:ring-temaEmerald/20"
+                  className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-temaSky focus:outline-none focus:ring-2 focus:ring-temaSky/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-temaSky dark:focus:ring-temaSky/20"
                   disabled={loading}
                 />
               </div>
               <button
                 type="submit"
-                className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-full bg-temaSky text-white shadow transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaEmerald dark:hover:bg-temaEmerald-dark dark:focus-visible:ring-temaEmerald/40"
+                className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-full bg-temaSky text-white shadow transition hover:bg-temaSky-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-temaSky dark:hover:bg-temaSky-dark dark:focus-visible:ring-temaSky/40"
                 disabled={loading}
                 aria-label="Enviar mensagem"
               >
@@ -484,7 +484,7 @@ export default function ChatbotPage() {
                   <button
                     type="button"
                     onClick={() => handleSuggestionClick(prompt)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-temaSky hover:text-temaSky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-temaEmerald dark:hover:text-temaEmerald dark:focus-visible:ring-temaEmerald/40"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-temaSky hover:text-temaSky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-temaSky/40 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-temaSky dark:hover:text-temaSky dark:focus-visible:ring-temaSky/40"
                   >
                     {prompt}
                   </button>

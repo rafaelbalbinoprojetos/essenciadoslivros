@@ -98,7 +98,7 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
             <button
               type="button"
               onClick={onStart}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#6c63ff] via-[#4c3f8f] to-[#b38b59] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#6c63ff]/30 transition hover:from-[#574de3] hover:via-[#3c2f75] hover:to-[#8f683f] sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.3)] transition hover:bg-[rgb(var(--color-accent-dark))] sm:w-auto"
             >
               Começar agora
             </button>

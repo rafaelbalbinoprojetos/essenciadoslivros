@@ -73,7 +73,7 @@ function ArchiveCard({ book }) {
 
   return (
     <article className="group relative overflow-hidden rounded-[4px] border border-[#80612d]/55 bg-[#0c0c0a] shadow-[0_18px_45px_-28px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-[#c39649]/80 hover:shadow-[0_24px_55px_-25px_rgba(197,150,73,0.25)]">
-      <Link to={`/biblioteca/${book.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a657]" aria-label={`Abrir ${book.titulo}`}>
+      <Link to={`/biblioteca/${book.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--color-accent-primary))]" aria-label={`Abrir ${book.titulo}`}>
         <div className="relative aspect-[4/5] overflow-hidden bg-[#171610]">
           <img
             src={cover}
@@ -279,7 +279,7 @@ export default function AcervoPage() {
               <BookOpen className="h-8 w-8 text-[#96743d]" />
               <h2 className="mt-4 font-display text-xl text-[#e5c77f]">Nenhuma obra encontrada</h2>
               <p className="mt-1 max-w-md text-sm text-[#8f8572]">Tente alterar a pesquisa ou remover alguns filtros para ampliar o acervo.</p>
-              {hasFilters && <button type="button" onClick={clearFilters} className="mt-5 rounded-lg border border-[#a47c39]/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#d9bb78] hover:bg-[#d4a657]/10">Limpar filtros</button>}
+              {hasFilters && <button type="button" onClick={clearFilters} className="mt-5 rounded-lg border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)]">Limpar filtros</button>}
             </div>
           )}
 

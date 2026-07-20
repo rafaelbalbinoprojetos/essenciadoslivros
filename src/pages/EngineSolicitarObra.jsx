@@ -212,7 +212,7 @@ function PipelineStepSelector({ stepDefs, selectedSteps, onToggle, onSelectAll, 
         type="button"
         disabled={disabled || quantidadeSelecionada === 0}
         onClick={onRun}
-        className="mt-4 w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+        className="mt-4 w-full rounded-xl bg-[rgb(var(--color-accent-primary))] px-4 py-3 text-sm font-semibold text-white hover:bg-[rgb(var(--color-accent-dark))] disabled:opacity-60"
       >
         {running
           ? "Executando pipeline selecionada..."
@@ -1094,7 +1094,7 @@ export default function EngineSolicitarObra() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-amber-500 text-black font-semibold py-3 hover:bg-amber-400 disabled:opacity-60"
+            className="w-full rounded-xl bg-[rgb(var(--color-accent-primary))] py-3 font-semibold text-white hover:bg-[rgb(var(--color-accent-dark))] disabled:opacity-60"
           >
             {criandoObra
               ? "Criando obra..."
@@ -1334,7 +1334,7 @@ export default function EngineSolicitarObra() {
                       definirTodasEtapas(true);
                       setDecisaoObraExistente("redo");
                     }}
-                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400"
+                    className="rounded-xl bg-[rgb(var(--color-accent-primary))] px-4 py-2 text-sm font-semibold text-white hover:bg-[rgb(var(--color-accent-dark))]"
                   >
                     Sim, pesquisar tudo novamente e substituir
                   </button>
@@ -1344,7 +1344,7 @@ export default function EngineSolicitarObra() {
                       definirTodasEtapas(false);
                       setDecisaoObraExistente("manual");
                     }}
-                    className="rounded-xl border border-amber-500/60 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/10"
+                    className="rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)]"
                   >
                     Não, quero escolher manualmente
                   </button>
@@ -1370,7 +1370,7 @@ export default function EngineSolicitarObra() {
                   type="button"
                   disabled={loading}
                   onClick={() => atualizarDadosAusentes()}
-                  className="rounded-xl border border-emerald-500/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-60"
+                  className="rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)] disabled:opacity-60"
                 >
                   Salvar / Atualizar dados da obra
                 </button>
@@ -1698,7 +1698,7 @@ export default function EngineSolicitarObra() {
                       href={resultado.pdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-xl border border-purple-500/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-500/10"
+                      className="inline-flex items-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)]"
                     >
                       Abrir Guia Editorial
                     </a>

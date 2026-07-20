@@ -243,7 +243,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#b98232] via-[#d5a04c] to-[#9c671f] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-900/25 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgba(var(--color-accent-primary),0.28)] transition hover:bg-[rgb(var(--color-accent-dark))] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Conectando..." : "Entrar ou Criar conta"}
               </button>
