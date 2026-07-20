@@ -573,7 +573,7 @@ export default function DashboardPage() {
           </header>
           <div className="mt-7 grid auto-rows-[105px] gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {genres.map(([genre, book], index) => (
-              <Link key={genre} to="/mural" className={`group relative overflow-hidden rounded-[24px] border border-white/10 ${index === 0 ? "row-span-3 sm:col-span-2 lg:col-span-2" : index === 3 || index === 6 ? "row-span-3" : "row-span-2"}`}>
+              <Link key={genre} to={`/mural?genero=${encodeURIComponent(book.genero?.id || genre)}`} className={`group relative overflow-hidden rounded-[24px] border border-white/10 ${index === 0 ? "row-span-3 sm:col-span-2 lg:col-span-2" : index === 3 || index === 6 ? "row-span-3" : "row-span-2"}`}>
                 <img src={coverOf(book)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <span className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" />
                 <span className="absolute inset-x-5 bottom-5 font-display text-2xl font-semibold text-white">{genre}</span>
@@ -590,7 +590,7 @@ export default function DashboardPage() {
             eyebrow={index === 0 ? "Continue explorando" : "Acervos por afinidade"}
             title={genre}
             description={`Obras de ${genre.toLocaleLowerCase("pt-BR")} reunidas para você escolher a história antes do formato.`}
-            to="/mural"
+            to={`/mural?genero=${encodeURIComponent(genreBooks[0]?.genero?.id || genre)}`}
             books={genreBooks.slice(0, 10)}
             badge={index === 0 ? "Em destaque" : genre}
           />

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, X, LayoutGrid } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { listBooks } from "../services/books.js";
 import { ensureCoverSrc, resolvePlayerHeroSrc } from "../utils/covers.js";
 import BookCard from "../components/BookCard.jsx";
@@ -32,11 +33,12 @@ function toCard(book) {
 }
 
 export default function MuralPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [query, setQuery] = useState("");
-  const [genreId, setGenreId] = useState(null);
+  const query = searchParams.get("busca") ?? "";
+  const genreParam = searchParams.get("genero");
 
   useEffect(() => {
     let active = true;
@@ -65,6 +67,29 @@ export default function MuralPage() {
     });
     return Array.from(map.entries()).map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome));
   }, [books]);
+
+  const genreId = useMemo(() => {
+    if (!genreParam) return null;
+    const normalizedGenre = genreParam.trim().toLocaleLowerCase("pt-BR");
+    return genresInUse.find(
+      (genre) => genre.id === genreParam || genre.nome.toLocaleLowerCase("pt-BR") === normalizedGenre,
+    )?.id ?? genreParam;
+  }, [genreParam, genresInUse]);
+
+  function updateSearch(value) {
+    const next = new URLSearchParams(searchParams);
+    const normalizedValue = value.trimStart();
+    if (normalizedValue) next.set("busca", normalizedValue);
+    else next.delete("busca");
+    setSearchParams(next, { replace: true });
+  }
+
+  function updateGenre(value) {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set("genero", value);
+    else next.delete("genero");
+    setSearchParams(next, { replace: true });
+  }
 
   const normalized = query.trim().toLowerCase();
 
@@ -114,12 +139,12 @@ export default function MuralPage() {
           <input
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => updateSearch(e.target.value)}
             placeholder="Buscar por título ou autor…"
             className="flex-1 bg-transparent text-sm text-[rgb(var(--text-primary))] placeholder:text-[rgb(var(--text-subtle))] focus:outline-none"
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} aria-label="Limpar busca" className="text-[rgb(var(--text-subtle))] transition hover:text-[rgb(var(--text-primary))]">
+            <button type="button" onClick={() => updateSearch("")} aria-label="Limpar busca" className="text-[rgb(var(--text-subtle))] transition hover:text-[rgb(var(--text-primary))]">
               <X className="h-4 w-4" />
             </button>
           )}
@@ -128,11 +153,11 @@ export default function MuralPage() {
         {/* Filtro por gênero */}
         {genresInUse.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <FilterChip active={genreId === null} onClick={() => setGenreId(null)}>
+            <FilterChip active={genreId === null} onClick={() => updateGenre(null)}>
               Todos
             </FilterChip>
             {genresInUse.map((g) => (
-              <FilterChip key={g.id} active={genreId === g.id} onClick={() => setGenreId(g.id)}>
+              <FilterChip key={g.id} active={genreId === g.id} onClick={() => updateGenre(g.id)}>
                 {g.nome}
               </FilterChip>
             ))}
