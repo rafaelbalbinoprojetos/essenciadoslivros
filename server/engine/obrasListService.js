@@ -8,9 +8,11 @@ const CAMPOS_LIVRO = [
   "capa_url",
   "capa_cinematica_url",
   "player_hero_url",
+  "pdf_url",
   "pdf_cinematica_url",
   "pdf_enciclopedico_url",
   "pdf_guia_editorial_url",
+  "audio_url",
   "sinopse",
   "autor_id",
   "genero_id",
@@ -46,6 +48,28 @@ const ETAPAS_RASTREADAS = [
   "enciclopedia_parte5",
   "enciclopedia_pdf",
 ];
+
+// Algumas obras foram preenchidas manualmente ou por versoes antigas da
+// Engine, antes de ai_pipeline_etapas registrar a conclusao de forma
+// consistente. Nesses casos, o artefato salvo em livros e a fonte mais
+// confiavel para dizer que a etapa final realmente existe.
+const CAMPO_DE_SAIDA_POR_ETAPA = {
+  capa_cinematica_image: "capa_cinematica_url",
+  player_hero_image: "player_hero_url",
+  pdf_cinematica: "pdf_cinematica_url",
+  guia_editorial_pdf: "pdf_guia_editorial_url",
+  enciclopedia_pdf: "pdf_enciclopedico_url",
+};
+
+function temValor(valor) {
+  return typeof valor === "string" ? valor.trim().length > 0 : Boolean(valor);
+}
+
+function etapasComSaidaCadastrada(livro) {
+  return Object.entries(CAMPO_DE_SAIDA_POR_ETAPA)
+    .filter(([, campo]) => temValor(livro[campo]))
+    .map(([etapa]) => etapa);
+}
 
 export async function listarObrasParaEngine() {
   const { data: livros, error: erroLivros } = await supabaseAdmin
@@ -87,9 +111,12 @@ export async function listarObrasParaEngine() {
 
   return (livros || []).map((livro) => {
     const custo = custosPorObra.get(livro.id);
+    const etapasConcluidas = new Set(etapasConcluidasPorObra.get(livro.id) || []);
+    etapasComSaidaCadastrada(livro).forEach((etapa) => etapasConcluidas.add(etapa));
+
     return {
       ...livro,
-      etapas_concluidas: [...(etapasConcluidasPorObra.get(livro.id) || [])],
+      etapas_concluidas: [...etapasConcluidas],
       tokens_input_total: custo?.tokensInput ?? 0,
       tokens_output_total: custo?.tokensOutput ?? 0,
       custo_total_usd: custo ? Number(custo.custoUsd.toFixed(6)) : 0,

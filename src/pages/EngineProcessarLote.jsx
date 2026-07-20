@@ -121,6 +121,39 @@ function criarSelecaoDeEtapas(valor) {
   return Object.fromEntries(ETAPAS_SELECIONAVEIS.map((etapa) => [etapa, valor]));
 }
 
+const CAMPOS_CADASTRO = [
+  {
+    key: "capa_cadastrada",
+    label: "Capa",
+    campos: ["capa_url", "capa_cinematica_url", "player_hero_url"],
+  },
+  {
+    key: "pdf_cadastrado",
+    label: "PDF",
+    campos: ["pdf_url", "pdf_cinematica_url", "pdf_enciclopedico_url", "pdf_guia_editorial_url"],
+  },
+  { key: "audio_cadastrado", label: "Áudio", campos: ["audio_url"] },
+  {
+    key: "dados_cadastrados",
+    label: "Dados",
+    campos: ["sinopse", "autor_id", "genero_id", "data_lancamento"],
+    exigeTodos: true,
+  },
+];
+
+function campoPreenchido(valor) {
+  return typeof valor === "string" ? valor.trim().length > 0 : valor !== null && valor !== undefined && valor !== false;
+}
+
+function statusCadastro(obra, definicao) {
+  const preenchidos = definicao.campos.filter((campo) => campoPreenchido(obra[campo]));
+  return {
+    preenchido: definicao.exigeTodos ? preenchidos.length === definicao.campos.length : preenchidos.length > 0,
+    quantidade: preenchidos.length,
+    detalhe: `${preenchidos.length}/${definicao.campos.length} campo${definicao.campos.length === 1 ? "" : "s"}`,
+  };
+}
+
 // Cada obra só é comparada contra a trilha relevante ao seu próprio
 // tipo_obra (narrativa ou técnica) — senão o "total" nunca bateria 100%,
 // já que uma obra nunca roda as duas trilhas ao mesmo tempo.
@@ -139,6 +172,8 @@ function valorOrdenavel(obra, coluna) {
   if (coluna === "status") return (obra.status || "").toLowerCase();
   if (coluna === "total") return contarEtapasConcluidas(obra);
   if (coluna === "custo_total_usd") return Number(obra.custo_total_usd) || 0;
+  const campoCadastro = CAMPOS_CADASTRO.find((campo) => campo.key === coluna);
+  if (campoCadastro) return statusCadastro(obra, campoCadastro).quantidade;
   if (ETAPAS_PIPELINE.includes(coluna)) {
     return new Set(obra.etapas_concluidas || []).has(coluna) ? 1 : 0;
   }
@@ -503,6 +538,14 @@ export default function EngineProcessarLote() {
                       <IndicadorOrdenacao coluna="status" ordenacao={ordenacao} />
                     </button>
                   </th>
+                  {CAMPOS_CADASTRO.map((campo) => (
+                    <th key={campo.key} className="whitespace-nowrap px-2 py-2 text-center">
+                      <button type="button" onClick={() => alternarOrdenacao(campo.key)} className="mx-auto flex items-center hover:text-zinc-200">
+                        {campo.label}
+                        <IndicadorOrdenacao coluna={campo.key} ordenacao={ordenacao} />
+                      </button>
+                    </th>
+                  ))}
                   {ETAPAS_PIPELINE.map((etapa) => (
                     <th key={etapa} className="whitespace-nowrap px-2 py-2 text-center" title={ETAPA_LABELS[etapa]}>
                       <button type="button" onClick={() => alternarOrdenacao(etapa)} className="mx-auto flex items-center hover:text-zinc-200">
@@ -562,6 +605,17 @@ export default function EngineProcessarLote() {
                           {obra.status || "—"}
                         </span>
                       </td>
+                      {CAMPOS_CADASTRO.map((campo) => {
+                        const statusCampo = statusCadastro(obra, campo);
+                        const parcial = campo.exigeTodos && statusCampo.quantidade > 0 && !statusCampo.preenchido;
+                        return (
+                          <td key={campo.key} className="px-2 py-2 text-center" title={`${campo.label}: ${statusCampo.detalhe}`}>
+                            <span className={statusCampo.preenchido ? "font-semibold text-emerald-400" : parcial ? "font-semibold text-amber-400" : "text-zinc-700"}>
+                              {statusCampo.preenchido ? "✓" : parcial ? `${statusCampo.quantidade}/${campo.campos.length}` : "—"}
+                            </span>
+                          </td>
+                        );
+                      })}
                       {ETAPAS_PIPELINE.map((etapa) => {
                         const feita = concluidasSet.has(etapa);
                         return (
@@ -581,7 +635,7 @@ export default function EngineProcessarLote() {
                 })}
                 {!carregando && obrasFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan={6 + ETAPAS_PIPELINE.length} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={6 + CAMPOS_CADASTRO.length + ETAPAS_PIPELINE.length} className="px-3 py-6 text-center text-zinc-500">
                       Nenhuma obra encontrada com esses filtros.
                     </td>
                   </tr>
