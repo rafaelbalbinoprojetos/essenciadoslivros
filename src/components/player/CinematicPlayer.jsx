@@ -256,7 +256,7 @@ export default function CinematicPlayer() {
           <Motion.img
             src={heroSrc}
             alt={currentTrack.title}
-            className="relative z-[1] h-full max-h-[100dvh] w-full max-w-[100vw] object-contain object-center"
+            className="relative z-[1] h-[100dvh] w-full object-cover object-center"
             initial={{ opacity: 0, scale: 1.03 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
