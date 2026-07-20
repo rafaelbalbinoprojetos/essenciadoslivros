@@ -271,10 +271,10 @@ export default function BookDetailsPage() {
 
   return (
     <article className="-mx-4 -mt-6 overflow-hidden bg-[#090907] text-[#f5ead7] md:-mx-8">
-      <section className="relative flex min-h-[760px] items-end overflow-hidden px-5 pb-8 pt-28 sm:px-10 lg:min-h-[calc(100vh-2rem)] lg:px-16 lg:pb-12">
-        <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,4,0.98)_0%,rgba(5,5,4,0.84)_36%,rgba(5,5,4,0.24)_72%,rgba(5,5,4,0.5)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#090907_0%,transparent_52%,rgba(0,0,0,0.5)_100%)]" />
+      <section className="relative flex min-h-[620px] items-end overflow-hidden bg-[#090907] px-5 pb-8 pt-28 sm:min-h-[660px] sm:px-10 lg:min-h-[680px] lg:px-16 lg:pb-12">
+        <img src={heroSrc} alt="" className="absolute inset-y-0 right-0 h-full w-full object-cover object-center opacity-80 lg:w-[74%]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,4,1)_0%,rgba(5,5,4,0.96)_30%,rgba(5,5,4,0.45)_58%,rgba(5,5,4,0.18)_82%,rgba(5,5,4,0.42)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#090907_0%,transparent_44%,rgba(0,0,0,0.42)_100%)]" />
 
         <div className="absolute left-5 top-6 z-20 sm:left-10 lg:left-16">
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-black/35 text-[#f5ead7] backdrop-blur-md transition hover:border-[rgb(var(--color-accent-primary))]">
