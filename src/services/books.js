@@ -10,6 +10,7 @@ const BOOK_SELECT_FIELDS = `
   slug,
   titulo,
   subtitulo,
+  tipo_obra,
   sinopse,
   capa_url,
   capa_cinematica_url,

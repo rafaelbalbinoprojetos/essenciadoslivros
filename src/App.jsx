@@ -13,6 +13,7 @@ import BookImportLotePage from "./pages/BookImportLote.jsx";
 import JourneysPage from "./pages/Journeys.jsx";
 import JourneyDetailPage from "./pages/JourneyDetail.jsx";
 import MuralPage from "./pages/Mural.jsx";
+import AcervoPage from "./pages/Acervo.jsx";
 import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
 import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
@@ -36,6 +37,7 @@ function AppRoutes() {
             <Route path="jornadas" element={<JourneysPage />} />
             <Route path="jornadas/:slug" element={<JourneyDetailPage />} />
             <Route path="mural" element={<MuralPage />} />
+            <Route path="acervo" element={<AcervoPage />} />
             <Route path="memorias-cinematicas" element={<CinematicMemoriesPage />} />
             <Route path="encontro-inesperado" element={<UnexpectedEncounterPage />} />
             <Route path="biblioteca" element={<LibraryPage />} />

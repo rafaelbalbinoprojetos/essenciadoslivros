@@ -35,6 +35,13 @@ export const NAV_LINKS = [
     description: "Todo o acervo com busca e filtro",
   },
   {
+    id: "archive",
+    to: "/acervo",
+    label: "Acervo de Obras",
+    shortLabel: "Acervo",
+    description: "Galeria completa de todas as obras",
+  },
+  {
     id: "unexpected-encounter",
     to: "/encontro-inesperado",
     label: "Encontro",
