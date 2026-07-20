@@ -23,12 +23,6 @@ const BOOK_SELECT_FIELDS = `
   tem_experiencia_cinematica,
   titulo_cinematico,
   descricao_cinematica,
-  curadoria_editorial,
-  voce_sabia,
-  legado,
-  linha_tempo,
-  galeria_exposicao,
-  trilha_sonora,
   status,
   destaque,
   duracao_audio,
@@ -148,7 +142,21 @@ export async function getBookById(bookId) {
   if (!bookId) throw new Error("Informe o identificador do livro.");
   const { data, error } = await baseBookQuery().eq("id", bookId).single();
   if (error) throw error;
-  return data;
+
+  // Os campos da exposição são carregados separadamente para que a página
+  // continue funcionando durante a janela entre o deploy e a migração SQL.
+  const { data: exhibitionData, error: exhibitionError } = await supabase
+    .from(BOOKS_TABLE)
+    .select("curadoria_editorial, voce_sabia, legado, linha_tempo, galeria_exposicao, trilha_sonora")
+    .eq("id", bookId)
+    .maybeSingle();
+
+  if (exhibitionError) {
+    console.warn("[books] campos da exposição ainda não disponíveis:", exhibitionError.message);
+    return data;
+  }
+
+  return { ...data, ...exhibitionData };
 }
 
 /** Busca um livro pelo slug (com fallback para id, útil para links antigos). */
