@@ -52,42 +52,58 @@ Never change the artistic direction.
 Expand it.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PRIMARY QUESTION
+ENVIRONMENTAL STORYTELLING (MANDATORY)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Before creating anything, answer internally:
+Before creating any visual composition, internally answer the following question:
 
-"If this physical cover truly existed inside this fictional universe...
+**"If this physical book had remained untouched inside its original universe for many years... how would the environment itself have naturally grown around it?"**
 
-Where would it naturally be found?"
+Do not imagine that the book was merely placed inside a location.
 
-Examples:
+Instead, imagine that the location slowly adapted around the book over time.
 
-God of War
-→ ancient Nordic shrine
+The environment must physically embrace, protect, invade, support or partially consume the book in believable ways.
 
-The Last of Us
-→ abandoned museum reclaimed by nature
+Architecture, vegetation, terrain, weathering, roots, ruins, stone, dust, snow, fungi, water, sand, debris, lighting and atmosphere should all reinforce the illusion that the book genuinely belongs to that place.
 
-Fallout
-→ ruined Vault archive
+The surrounding world must tell part of the story even before the player notices the cover.
 
-Harry Potter
-→ forgotten Hogwarts library
+The environment itself becomes a silent narrator.
 
-Shadow of the Colossus
-→ abandoned temple altar
+Every visual decision must strengthen the sensation that the book has always existed there.
 
-The Lord of the Rings
-→ ancient archive of Minas Tirith
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENVIRONMENTAL FRAMING (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Resident Evil
-→ Umbrella laboratory
+The environment must naturally frame the book using foreground architecture and environmental elements.
 
-Silent Hill
-→ abandoned hospital archive
+Use surrounding structures such as walls, pillars, cliffs, roots, tree trunks, windows, broken arches, ruins, cave entrances, hanging vegetation, rock formations or similar canonical elements to create a natural visual frame around the cover.
 
-The environment must emerge naturally from the universe.
+These foreground elements should partially enter the image from the left, right or top edges, producing a strong sense of depth and making the viewer feel physically inside the environment rather than observing it from outside.
+
+Avoid placing the book isolated in an open landscape.
+
+Instead, compose the scene as if the viewer has discovered the book while standing inside the world itself.
+
+Foreground framing must remain subtle and never obscure the title or important information on the cover.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CAMERA IMMERSION (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The camera must never behave like a promotional product shot.
+
+Compose the scene as if the viewer is physically standing inside the environment, discovering the book naturally.
+
+Prefer partially obstructed viewpoints created by nearby walls, vegetation, ruins, rocks, architecture or environmental objects.
+
+Avoid large empty open spaces surrounding the cover.
+
+The viewer should feel enclosed by the environment, increasing immersion and cinematic depth.
+
+The book should appear as part of a larger world rather than the isolated subject of a studio composition.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SECOND QUESTION
