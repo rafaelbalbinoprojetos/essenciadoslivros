@@ -30,6 +30,7 @@ const INITIAL_STATE = {
   capa_url: "",
   capa_cinematica_url: "",
   pdf_url: "",
+  pdf_cinematica_url: "",
   audio_url: "",
   tem_experiencia_cinematica: false,
   titulo_cinematico: "",
@@ -56,7 +57,13 @@ export default function BookCreatePage() {
   const [collectionForm, setCollectionForm] = useState({ nome: "", descricao: "", capa_url: "" });
   const [creatingAuthor, setCreatingAuthor] = useState(false);
   const [creatingCollection, setCreatingCollection] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState({ capa: null, capaCinematica: null, pdf: null, audio: null });
+  const [mediaFiles, setMediaFiles] = useState({
+    capa: null,
+    capaCinematica: null,
+    pdf: null,
+    pdfCinematico: null,
+    audio: null,
+  });
   const [uploading, setUploading] = useState(false);
   const [narrativeForm, setNarrativeForm] = useState({ titulo: "", descricao: "" });
   const [narrativeTracks, setNarrativeTracks] = useState([]);
@@ -173,6 +180,7 @@ export default function BookCreatePage() {
           capa_url: book.capa_url ?? "",
           capa_cinematica_url: book.capa_cinematica_url ?? "",
           pdf_url: book.pdf_url ?? "",
+          pdf_cinematica_url: book.pdf_cinematica_url ?? "",
           audio_url: book.audio_url ?? "",
           tem_experiencia_cinematica: Boolean(book.tem_experiencia_cinematica),
           titulo_cinematico: book.titulo_cinematico ?? "",
@@ -320,9 +328,10 @@ export default function BookCreatePage() {
       let capaUrl = formData.capa_url?.trim() || null;
       let capaCinematicaUrl = formData.capa_cinematica_url?.trim() || null;
       let pdfPath = formData.pdf_url?.trim() || null;
+      let pdfCinematicoPath = formData.pdf_cinematica_url?.trim() || null;
       let audioPath = formData.audio_url?.trim() || null;
 
-      if (mediaFiles.capa || mediaFiles.capaCinematica || mediaFiles.pdf || mediaFiles.audio) {
+      if (mediaFiles.capa || mediaFiles.capaCinematica || mediaFiles.pdf || mediaFiles.pdfCinematico || mediaFiles.audio) {
         setUploading(true);
         try {
           if (mediaFiles.capa) {
@@ -338,6 +347,13 @@ export default function BookCreatePage() {
           if (mediaFiles.pdf) {
             // PDF é privado: guardamos o caminho; a leitura usa link assinado.
             pdfPath = await uploadToBucket(BUCKETS.pdfs, mediaFiles.pdf);
+          }
+          if (mediaFiles.pdfCinematico) {
+            // Guardamos o caminho cru: a leitura gera um link assinado apenas
+            // quando necessario, sem persistir uma URL que pode expirar.
+            pdfCinematicoPath = await uploadToBucket(BUCKETS.pdfs, mediaFiles.pdfCinematico, {
+              prefix: bookId ? `engine/pdf_cinematica/${bookId}/` : "engine/pdf_cinematica/manual/",
+            });
           }
           if (mediaFiles.audio) {
             audioPath = await uploadToBucket(BUCKETS.audios, mediaFiles.audio);
@@ -357,6 +373,7 @@ export default function BookCreatePage() {
         capa_url: capaUrl,
         capa_cinematica_url: capaCinematicaUrl,
         pdf_url: pdfPath,
+        pdf_cinematica_url: pdfCinematicoPath,
         audio_url: audioPath,
         tem_experiencia_cinematica: Boolean(
           formData.tem_experiencia_cinematica
@@ -741,7 +758,7 @@ export default function BookCreatePage() {
               Ativar Memória Cinematográfica
             </label>
 
-            <div className="mb-4 grid gap-4 md:grid-cols-2">
+            <div className="mb-4 grid gap-4 md:grid-cols-3">
               <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
                 Capa da Memória Cinematográfica
                 <input
@@ -762,6 +779,22 @@ export default function BookCreatePage() {
                   placeholder="https://... ou caminho existente"
                   className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-2 text-[rgb(var(--text-primary))]"
                 />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                PDF cinematográfico
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={handleFileChange("pdfCinematico")}
+                  className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[rgba(var(--color-accent-primary),0.15)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+                />
+                {mediaFiles.pdfCinematico ? (
+                  <span className="truncate text-xs text-[rgb(var(--text-subtle))]">✓ {mediaFiles.pdfCinematico.name}</span>
+                ) : isEdit && formData.pdf_cinematica_url ? (
+                  <span className="truncate text-xs text-[rgb(var(--text-subtle))]">PDF cinematográfico atual mantido — escolha para trocar</span>
+                ) : (
+                  <span className="text-xs text-[rgb(var(--text-subtle))]">Envie o PDF final da narrativa cinematográfica.</span>
+                )}
               </label>
             </div>
 

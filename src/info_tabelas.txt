@@ -54,6 +54,7 @@ create table if not exists livros (
   sinopse text,
   capa_url text,
   pdf_url text,
+  pdf_cinematica_url text,
   audio_url text,
   duracao_audio numeric,
   data_lancamento date,

@@ -63,6 +63,7 @@ create table if not exists livros (
   capa_cinematica_prompt text,
   player_hero_prompt text,
   pdf_url text,
+  pdf_cinematica_url text,
   audio_url text,
   tem_experiencia_cinematica boolean not null default false,
   titulo_cinematico text,
