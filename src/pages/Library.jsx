@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion as Motion } from "framer-motion";
 import { Swords, Compass, Heart, Drama, Lightbulb, Scroll, Cpu, Sparkles } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -256,6 +257,24 @@ export default function LibraryPage() {
   const canGoNextPage = currentPage < totalPages;
   const [flowIndex, setFlowIndex] = useState(0);
   const [selectedFlow, setSelectedFlow] = useState(null);
+  const modalPortalTarget = typeof document !== "undefined" ? document.body : null;
+
+  useEffect(() => {
+    if (!selectedFlow || !modalPortalTarget) return undefined;
+
+    const previousOverflow = modalPortalTarget.style.overflow;
+    modalPortalTarget.style.overflow = "hidden";
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setSelectedFlow(null);
+    };
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      modalPortalTarget.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [selectedFlow, modalPortalTarget]);
   const [manualSelection, setManualSelection] = useState([]);
 
   const flowBooks = useMemo(() => {
@@ -1163,16 +1182,19 @@ export default function LibraryPage() {
         )}
       </aside>
 
-      {selectedFlow && (
+      {selectedFlow && modalPortalTarget && createPortal((
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           onClick={() => setSelectedFlow(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Detalhes de ${selectedFlow.title}`}
         >
           <div
-            className="max-w-lg rounded-[32px] border border-white/10 bg-[rgba(10,9,20,0.95)] p-6 text-white shadow-2xl"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[32px] border border-white/10 bg-[rgba(10,9,20,0.95)] p-6 text-white shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex gap-6">
+            <div className="flex flex-col gap-6 sm:flex-row">
               <BookLink bookId={selectedFlow.detailsId} className="block">
                 <img
                   src={selectedFlow.cover}
@@ -1222,7 +1244,7 @@ export default function LibraryPage() {
             </div>
           </div>
         </div>
-      )}
+      ), modalPortalTarget)}
     </div>
   );
 }
