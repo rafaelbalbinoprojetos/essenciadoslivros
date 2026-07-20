@@ -20,6 +20,21 @@ const STATUS_OPTIONS = [
   { value: "oculto", label: "Oculto" },
 ];
 
+function parseJsonArray(value, label) {
+  const source = value?.trim();
+  if (!source) return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(source);
+  } catch {
+    throw new Error(`${label}: o conteúdo precisa ser um JSON válido.`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${label}: informe uma lista JSON iniciada por [ e finalizada por ].`);
+  }
+  return parsed;
+}
+
 const INITIAL_STATE = {
   titulo: "",
   subtitulo: "",
@@ -29,12 +44,19 @@ const INITIAL_STATE = {
   sinopse: "",
   capa_url: "",
   capa_cinematica_url: "",
+  player_hero_url: "",
   pdf_url: "",
   pdf_cinematica_url: "",
   audio_url: "",
   tem_experiencia_cinematica: false,
   titulo_cinematico: "",
   descricao_cinematica: "",
+  curadoria_editorial: "",
+  voce_sabia: "",
+  legado: "",
+  linha_tempo_json: "",
+  galeria_exposicao_json: "",
+  trilha_sonora_json: "",
   duracao_audio: "",
   data_lancamento: "",
   status: "ativo",
@@ -179,12 +201,19 @@ export default function BookCreatePage() {
           sinopse: book.sinopse ?? "",
           capa_url: book.capa_url ?? "",
           capa_cinematica_url: book.capa_cinematica_url ?? "",
+          player_hero_url: book.player_hero_url ?? "",
           pdf_url: book.pdf_url ?? "",
           pdf_cinematica_url: book.pdf_cinematica_url ?? "",
           audio_url: book.audio_url ?? "",
           tem_experiencia_cinematica: Boolean(book.tem_experiencia_cinematica),
           titulo_cinematico: book.titulo_cinematico ?? "",
           descricao_cinematica: book.descricao_cinematica ?? "",
+          curadoria_editorial: book.curadoria_editorial ?? "",
+          voce_sabia: book.voce_sabia ?? "",
+          legado: book.legado ?? "",
+          linha_tempo_json: book.linha_tempo?.length ? JSON.stringify(book.linha_tempo, null, 2) : "",
+          galeria_exposicao_json: book.galeria_exposicao?.length ? JSON.stringify(book.galeria_exposicao, null, 2) : "",
+          trilha_sonora_json: book.trilha_sonora?.length ? JSON.stringify(book.trilha_sonora, null, 2) : "",
           duracao_audio: book.duracao_audio != null ? String(book.duracao_audio) : "",
           data_lancamento: book.data_lancamento ?? "",
           status: book.status ?? "ativo",
@@ -372,6 +401,7 @@ export default function BookCreatePage() {
         sinopse: formData.sinopse?.trim() || null,
         capa_url: capaUrl,
         capa_cinematica_url: capaCinematicaUrl,
+        player_hero_url: formData.player_hero_url?.trim() || null,
         pdf_url: pdfPath,
         pdf_cinematica_url: pdfCinematicoPath,
         audio_url: audioPath,
@@ -382,6 +412,12 @@ export default function BookCreatePage() {
         ),
         titulo_cinematico: formData.titulo_cinematico?.trim() || null,
         descricao_cinematica: formData.descricao_cinematica?.trim() || null,
+        curadoria_editorial: formData.curadoria_editorial?.trim() || null,
+        voce_sabia: formData.voce_sabia?.trim() || null,
+        legado: formData.legado?.trim() || null,
+        linha_tempo: parseJsonArray(formData.linha_tempo_json, "Linha do tempo"),
+        galeria_exposicao: parseJsonArray(formData.galeria_exposicao_json, "Galeria da exposição"),
+        trilha_sonora: parseJsonArray(formData.trilha_sonora_json, "Trilha sonora"),
         duracao_audio: formData.duracao_audio ? Number(formData.duracao_audio) : null,
         data_lancamento: formData.data_lancamento || null,
         status: formData.status || "ativo",
@@ -737,6 +773,59 @@ export default function BookCreatePage() {
           <p className="text-xs text-[rgb(var(--text-subtle))]">
             A capa fica pública. PDF e áudio são privados — abrem por link temporário assinado.
           </p>
+
+          <section className="rounded-[24px] border border-[rgba(var(--color-accent-primary),0.18)] bg-[rgba(var(--surface-card),0.62)] p-5 shadow-sm">
+            <header className="mb-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-[rgb(var(--color-accent-dark))]">Sala da obra</p>
+              <h3 className="mt-1 text-lg font-semibold text-[rgb(var(--text-primary))]">Conteúdo da exposição</h3>
+              <p className="mt-1 text-sm text-[rgb(var(--text-secondary))]">
+                Estes campos alimentam os blocos editoriais da nova página. Blocos vazios não serão exibidos.
+              </p>
+            </header>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Curadoria editorial
+                <textarea name="curadoria_editorial" rows={5} value={formData.curadoria_editorial} onChange={handleChange} placeholder="Uma carta curta que apresenta a essência desta obra..." className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Você sabia?
+                <textarea name="voce_sabia" rows={5} value={formData.voce_sabia} onChange={handleChange} placeholder="Uma curiosidade marcante sobre a obra ou seu autor." className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Legado
+                <textarea name="legado" rows={5} value={formData.legado} onChange={handleChange} placeholder="O impacto cultural, histórico ou editorial desta obra." className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+            </div>
+
+            <label className="mt-5 flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+              Imagem horizontal do hero (URL)
+              <input
+                name="player_hero_url"
+                type="text"
+                value={formData.player_hero_url}
+                onChange={handleChange}
+                placeholder="https://... ou caminho da imagem gerada para o topo da exposição"
+                className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]"
+              />
+              <span className="text-xs font-normal text-[rgb(var(--text-subtle))]">Na ausência desta imagem, a capa cinematográfica ou a capa editorial será usada.</span>
+            </label>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Linha do tempo (JSON)
+                <textarea name="linha_tempo_json" rows={9} value={formData.linha_tempo_json} onChange={handleChange} spellCheck={false} placeholder={'[{"ano":"1997","titulo":"Publicação","descricao":"Primeira edição"}]'} className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 font-mono text-xs text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Galeria da exposição (JSON)
+                <textarea name="galeria_exposicao_json" rows={9} value={formData.galeria_exposicao_json} onChange={handleChange} spellCheck={false} placeholder={'[{"titulo":"Manuscrito","imagem_url":"https://...","descricao":"Peça original"}]'} className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 font-mono text-xs text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-[rgb(var(--text-secondary))]">
+                Trilha sonora (JSON)
+                <textarea name="trilha_sonora_json" rows={9} value={formData.trilha_sonora_json} onChange={handleChange} spellCheck={false} placeholder={'[{"titulo":"Tema principal","artista":"Artista","audio_url":"https://..."}]'} className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white/80 px-4 py-3 font-mono text-xs text-[rgb(var(--text-primary))] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-accent-primary),0.25)]" />
+              </label>
+            </div>
+          </section>
 
           <div className="rounded-[24px] border border-[rgba(var(--color-accent-primary),0.18)] bg-[rgba(var(--surface-card),0.62)] p-5 shadow-sm">
             <header className="mb-4">

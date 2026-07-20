@@ -23,6 +23,12 @@ const BOOK_SELECT_FIELDS = `
   tem_experiencia_cinematica,
   titulo_cinematico,
   descricao_cinematica,
+  curadoria_editorial,
+  voce_sabia,
+  legado,
+  linha_tempo,
+  galeria_exposicao,
+  trilha_sonora,
   status,
   destaque,
   duracao_audio,
@@ -30,7 +36,9 @@ const BOOK_SELECT_FIELDS = `
   data_adicao,
   autor:autor_id (
     id,
-    nome
+    nome,
+    bio,
+    foto_url
   ),
   genero:genero_id (
     id,
