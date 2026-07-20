@@ -1,19 +1,19 @@
 import { supabase } from "../lib/supabase.js";
 
 export function hasActiveNarrative(book) {
-  const relation = Array.isArray(book?.narrativa) ? book.narrativa[0] : book?.narrativa;
-  return Boolean(
-    relation?.status === "ativo"
-    && relation?.faixas?.some((track) => track.status === "ativo"),
+  const relations = Array.isArray(book?.narrativa) ? book.narrativa : [book?.narrativa];
+  return relations.some(
+    (relation) => relation?.status === "ativo"
+      && relation?.faixas?.some((track) => track.status === "ativo"),
   );
 }
 
+// Uma capa cinematografica ou o sinalizador do cadastro, isoladamente, nao
+// formam uma narrativa. A experiencia so existe quando ha pelo menos uma
+// cena (narrativa_faixas) efetivamente cadastrada para a obra.
 export function hasCinematicExperience(book) {
-  return Boolean(
-    book?.tem_experiencia_cinematica
-    || book?.capa_cinematica_url
-    || hasActiveNarrative(book),
-  );
+  const relations = Array.isArray(book?.narrativa) ? book.narrativa : [book?.narrativa];
+  return relations.some((relation) => Array.isArray(relation?.faixas) && relation.faixas.length > 0);
 }
 
 export async function getNarrativeByBook(bookId) {

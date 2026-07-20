@@ -214,9 +214,7 @@ export default function BookDetailsPage() {
   };
 
   const narrativeTracks = useMemo(() => narrative?.faixas ?? [], [narrative?.faixas]);
-  const hasCinematicExperience = Boolean(
-    book?.tem_experiencia_cinematica || book?.capa_cinematica_url || narrativeTracks.length,
-  );
+  const hasCinematicExperience = narrativeTracks.length > 0;
   const displayedCover = experience === "cinematic" ? cinematicCoverSrc : coverSrc;
   useEffect(() => {
     if (window.location.hash === "#narrativa" && hasCinematicExperience) setExperience("cinematic");
