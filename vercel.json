@@ -1,7 +1,8 @@
 {
   "functions": {
-    "api/engine/executar-etapa.js": {
-      "maxDuration": 300
+    "api/**/*.js": {
+      "maxDuration": 300,
+      "excludeFiles": "{.vercel/**,dist/**}"
     }
   },
   "rewrites": [
