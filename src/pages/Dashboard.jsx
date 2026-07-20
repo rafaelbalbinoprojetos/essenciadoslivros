@@ -254,7 +254,7 @@ export default function DashboardPage() {
       )}
 
       {heroBook && (
-        <section className="relative overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] py-6 text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)] md:py-9">
+        <section className="relative overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] pb-4 pt-6 text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)] md:pb-3 md:pt-6">
           <div className="pointer-events-none absolute inset-0">
             <AnimatePresence mode="sync">
               <Motion.img
@@ -272,14 +272,25 @@ export default function DashboardPage() {
             <div className="absolute inset-x-[8%] top-0 h-px bg-gradient-to-r from-transparent via-[#d5b06a]/40 to-transparent" />
           </div>
 
-          <div className="relative z-[1] px-5 pb-5 sm:px-8">
+          <div className="relative z-[1] px-5 pb-2 sm:px-8 md:pb-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.38em] text-white/45">Bem-vindo de volta, {firstName}</p>
           </div>
 
           <div
-            className="relative z-[1] mx-auto h-[calc(30dvh+2rem)] w-full max-w-[900px] overflow-hidden px-5 pb-4 pt-1 [touch-action:pan-y]"
-            style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}
+            className="relative z-[1] mx-auto h-[min(62dvh,500px)] min-h-[390px] w-full max-w-[1100px] overflow-hidden px-3 [touch-action:pan-y] md:h-[clamp(390px,44dvh,460px)] md:min-h-0"
+            style={{ perspective: "1250px", perspectiveOrigin: "50% 45%" }}
             aria-label="Obras em destaque"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                moveHero(-1);
+              }
+              if (event.key === "ArrowRight") {
+                event.preventDefault();
+                moveHero(1);
+              }
+            }}
             onPointerDown={(event) => {
               heroSwipeStartXRef.current = event.clientX;
               setHeroTouched(true);
@@ -295,16 +306,17 @@ export default function DashboardPage() {
               heroSwipeStartXRef.current = null;
             }}
           >
-            <div className="pointer-events-none absolute inset-x-8 bottom-1 h-20 rounded-[50%] bg-black/50 blur-2xl" />
+            <div className="pointer-events-none absolute left-1/2 top-[45%] h-[78%] w-[min(46vw,520px)] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-[radial-gradient(ellipse,rgba(213,176,106,0.2)_0%,rgba(143,91,29,0.1)_38%,transparent_72%)] blur-2xl" />
+            <div className="pointer-events-none absolute bottom-[5%] left-1/2 h-16 w-[min(58vw,620px)] -translate-x-1/2 rounded-[50%] bg-black/65 blur-2xl" />
             {heroDeck.map(({ book, index, relative }) => {
               const active = relative === 0;
               const distance = Math.abs(relative);
               if (distance > 2) return null;
 
-              const translateZ = active ? 150 : 70 - distance * 35;
-              const rotateY = relative * -14;
-              const scale = active ? 1 : 0.88;
-              const opacity = distance > 2 ? 0 : Math.max(0, 1 - distance * 0.28);
+              const translateZ = active ? 130 : distance === 1 ? 35 : -55;
+              const rotateY = active ? 0 : relative * -12 * (distance === 1 ? 1 : 1.45);
+              const scale = active ? 1 : distance === 1 ? 0.86 : 0.73;
+              const opacity = active ? 1 : distance === 1 ? 0.8 : 0.48;
               const cinematic = hasCinematicExperience(book);
 
               return (
@@ -325,33 +337,33 @@ export default function DashboardPage() {
                       setHeroIndex(index);
                     }
                   }}
-                  className={`group absolute left-1/2 top-1/2 aspect-[5/6] h-[60%] w-auto overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.72] hover:brightness-90"}`}
+                  className={`group absolute left-1/2 top-[45%] aspect-[4/5] h-[78%] max-w-[340px] overflow-hidden rounded-[24px] border bg-black/58 shadow-[0_35px_80px_-42px_rgba(0,0,0,0.95)] transition-[filter,border-color] duration-500 ${active ? "border-[#d5b06a]/80 brightness-100" : "cursor-pointer border-[#d5b06a]/28 brightness-[0.74] hover:brightness-90"}`}
                   style={{
                     opacity,
                     zIndex: 30 - distance,
-                    transform: `translate(-50%, -50%) translateX(calc(${relative} * clamp(150px, 22vw, 215px))) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                    transform: `translate(-50%, -50%) translateX(calc(${relative} * clamp(142px, 22vw, 238px))) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                     transformStyle: "preserve-3d",
                     transition: "transform 760ms cubic-bezier(0.18,0.82,0.2,1), opacity 420ms ease, filter 420ms ease, border-color 420ms ease",
                   }}
                 >
                   <img src={coverOf(book, cinematic)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
                   <div className={`absolute inset-0 ${active ? "bg-[linear-gradient(to_top,rgba(7,5,3,0.98)_0%,rgba(7,5,3,0.78)_30%,rgba(7,5,3,0.12)_68%,transparent_100%)]" : "bg-[linear-gradient(to_top,rgba(7,5,3,0.96)_0%,rgba(7,5,3,0.55)_48%,rgba(7,5,3,0.2)_100%)]"}`} />
-                  <span className="absolute inset-x-10 top-4 z-[2] truncate text-center text-[9px] font-bold uppercase tracking-[0.24em] text-[#d5b06a]/85">
+                  <span className={`absolute inset-x-10 top-4 z-[2] truncate text-center font-bold uppercase tracking-[0.24em] text-[#d5b06a]/85 ${active ? "text-[10px]" : "text-[9px]"}`}>
                     Curadoria Essência
                   </span>
                   <div className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full border border-[#d5b06a]/25 bg-black/28 text-[#d5b06a]/80 backdrop-blur-md">
                     <ArrowRight className="h-3.5 w-3.5" />
                   </div>
-                  <div className="absolute inset-x-3 bottom-3 top-1/2 z-[2] flex flex-col justify-end">
-                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.04] text-[#f4d088] ${active ? "text-[clamp(1rem,2vw,1.35rem)]" : "text-[clamp(0.9rem,1.7vw,1.1rem)]"}`}>{book.titulo}</h1>
-                    <p className="mt-1 line-clamp-1 text-[9px] leading-4 text-white/78">{shortText(book.sinopse, active ? 90 : 68)}</p>
+                  <div className="absolute inset-x-4 bottom-4 top-[48%] z-[2] flex flex-col justify-end">
+                    <h1 className={`line-clamp-2 break-words font-display font-semibold leading-[1.02] text-[#f4d088] ${active ? "text-[clamp(1.35rem,2.15vw,1.85rem)]" : "text-[clamp(1rem,1.6vw,1.3rem)]"}`}>{book.titulo}</h1>
+                    <p className={`${active ? "mt-2 line-clamp-2 text-[11px] leading-[1.45] text-white/80" : "mt-1 line-clamp-1 text-[10px] leading-4 text-white/58"}`}>{shortText(book.sinopse, active ? 120 : 68)}</p>
                     {active ? (
-                      <div className="mt-1 flex flex-nowrap items-center gap-1">
-                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-7 items-center gap-0.5 whitespace-nowrap rounded-full bg-[rgb(var(--color-accent-primary))] px-1.5 py-1 text-[9px] font-semibold text-white shadow-[0_0_22px_rgba(124,83,255,0.28)] transition hover:bg-[rgb(var(--color-accent-dark))]">
-                          <Play className="h-2.5 w-2.5" fill="currentColor" /> Continuar
+                      <div className="mt-3 flex flex-nowrap items-center gap-1.5">
+                        <Link to={`/biblioteca/${book.id}${cinematic ? "#narrativa" : ""}`} className="inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgb(var(--color-accent-primary))] px-3 py-2 text-[10px] font-semibold text-white shadow-[0_0_22px_rgba(124,83,255,0.28)] transition hover:bg-[rgb(var(--color-accent-dark))]">
+                          <Play className="h-3 w-3" fill="currentColor" /> Continuar
                         </Link>
-                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-7 items-center gap-0.5 whitespace-nowrap rounded-full px-1.5 py-1 text-[9px] font-semibold text-white transition hover:bg-white/10">
-                          Explorar <ArrowRight className="h-2.5 w-2.5" />
+                        <Link to={`/biblioteca/${book.id}`} className="inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-full px-2 py-2 text-[10px] font-semibold text-white transition hover:bg-white/10">
+                          Explorar <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>
                     ) : (
@@ -365,8 +377,8 @@ export default function DashboardPage() {
             })}
             {heroBooks.length > 1 && (
               <>
-                <button type="button" onClick={() => moveHero(-1)} aria-label="Obra anterior" className="absolute left-2 top-1/2 z-40 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/36 text-white shadow-lg backdrop-blur-md transition hover:bg-white/12 sm:left-6"><ChevronLeft className="h-4 w-4" /></button>
-                <button type="button" onClick={() => moveHero(1)} aria-label="Proxima obra" className="absolute right-2 top-1/2 z-40 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/36 text-white shadow-lg backdrop-blur-md transition hover:bg-white/12 sm:right-6"><ChevronRight className="h-4 w-4" /></button>
+                <button type="button" onClick={() => moveHero(-1)} aria-label="Obra anterior" className="absolute left-2 top-[45%] z-40 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/18 bg-black/48 text-white shadow-xl backdrop-blur-md transition hover:border-[#d5b06a]/45 hover:bg-white/12 sm:left-6 lg:left-[5%]"><ChevronLeft className="h-5 w-5" /></button>
+                <button type="button" onClick={() => moveHero(1)} aria-label="Proxima obra" className="absolute right-2 top-[45%] z-40 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/18 bg-black/48 text-white shadow-xl backdrop-blur-md transition hover:border-[#d5b06a]/45 hover:bg-white/12 sm:right-6 lg:right-[5%]"><ChevronRight className="h-5 w-5" /></button>
               </>
             )}
           </div>
@@ -411,7 +423,7 @@ export default function DashboardPage() {
           )}
 
           {heroBooks.length > 1 && (
-            <div className="relative z-[2] mt-3 flex items-center justify-center gap-5 px-5 sm:px-8">
+            <div className="relative z-[2] -mt-3 flex items-center justify-center gap-5 px-5 pb-1 sm:px-8">
               <div className="flex items-center gap-2" aria-label="Selecionar obra em destaque">
                 {heroBooks.map((book, index) => (
                   <button
