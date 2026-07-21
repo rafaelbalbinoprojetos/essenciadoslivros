@@ -461,7 +461,7 @@ async function gerarComResponsesImageGeneration({
         model: modeloImagem,
         size: "1024x1536",
         quality: "high",
-        output_format: "png",
+        output_format: "jpeg",
         moderation: "auto",
       },
     ],
