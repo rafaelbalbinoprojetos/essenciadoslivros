@@ -25,8 +25,8 @@ const STATUS_CONFIG = {
   },
   manual: {
     label: "manual",
-    textClass: "text-purple-300",
-    dotClass: "border-purple-400 bg-purple-400/10 text-purple-200",
+    textClass: "text-[rgb(var(--color-accent-light))]",
+    dotClass: "border-[rgb(var(--color-accent-primary))] bg-[rgba(var(--color-accent-primary),0.1)] text-[rgb(var(--color-accent-light))]",
     icon: "•",
   },
   waiting: {
@@ -78,21 +78,21 @@ const EXPECTED_STEP_DURATIONS_SECONDS = {
 const PIPELINE_STEP_DEFS_NARRATIVA = [
   { key: "curador_beu", label: "Curador (dados factuais)", colorClass: "text-amber-500 focus:ring-amber-500" },
   { key: "editor_beu", label: "Editor (interpretação emocional)", colorClass: "text-amber-500 focus:ring-amber-500" },
-  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-sky-500 focus:ring-sky-500" },
-  { key: "narrativa_cinematica", label: "Narrativa Cinematográfica", colorClass: "text-purple-500 focus:ring-purple-500" },
+  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "narrativa_cinematica", label: "Narrativa Cinematográfica", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
   { key: "heritage_prompt", label: "Prompt Heritage", colorClass: "text-orange-500 focus:ring-orange-500" },
   { key: "heritage_image", label: "Imagem Heritage", colorClass: "text-yellow-500 focus:ring-yellow-500" },
   { key: "capa_cinematica_prompt", label: "Prompt Capa Cinemática", colorClass: "text-fuchsia-500 focus:ring-fuchsia-500" },
   { key: "capa_cinematica_image", label: "Imagem Cinemática", colorClass: "text-rose-500 focus:ring-rose-500" },
-  { key: "player_hero_prompt", label: "Prompt Player Hero", colorClass: "text-indigo-500 focus:ring-indigo-500" },
-  { key: "player_hero_image", label: "Player Hero (usa a capa cinematográfica)", colorClass: "text-violet-500 focus:ring-violet-500" },
-  { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-cyan-500 focus:ring-cyan-500" },
-  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "player_hero_prompt", label: "Prompt Player Hero", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "player_hero_image", label: "Player Hero (usa a capa cinematográfica)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "pdf_cinematica", label: "PDF Cinemático", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
   { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
 ];
 
@@ -103,17 +103,17 @@ const PIPELINE_STEP_DEFS_NARRATIVA = [
 const PIPELINE_STEP_DEFS_TECNICO = [
   { key: "curador_beu", label: "Curador (dados factuais)", colorClass: "text-amber-500 focus:ring-amber-500" },
   { key: "editor_beu", label: "Editor (interpretação emocional)", colorClass: "text-amber-500 focus:ring-amber-500" },
-  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-sky-500 focus:ring-sky-500" },
-  { key: "guia_editorial_parte1", label: "Guia Editorial — Parte 1 (Apresentação, Panorama Histórico, Grande Questão, Grandes Princípios)", colorClass: "text-purple-500 focus:ring-purple-500" },
-  { key: "guia_editorial_parte2", label: "Guia Editorial — Parte 2 (Conexões, Além da Obra, Aplicações, Estudos de Caso)", colorClass: "text-purple-500 focus:ring-purple-500" },
-  { key: "guia_editorial_parte3", label: "Guia Editorial — Parte 3 (Laboratório Essência, Comparando Ideias, Leituras Cruzadas, Modelo Mental, Conclusão)", colorClass: "text-purple-500 focus:ring-purple-500" },
-  { key: "guia_editorial_pdf", label: "Guia Editorial — Montar PDF final", colorClass: "text-purple-500 focus:ring-purple-500" },
-  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-teal-500 focus:ring-teal-500" },
-  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-teal-500 focus:ring-teal-500" },
+  { key: "diretor_criativo", label: "Diretor Criativo (sensorial, visual, sonoro)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "guia_editorial_parte1", label: "Guia Editorial — Parte 1 (Apresentação, Panorama Histórico, Grande Questão, Grandes Princípios)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "guia_editorial_parte2", label: "Guia Editorial — Parte 2 (Conexões, Além da Obra, Aplicações, Estudos de Caso)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "guia_editorial_parte3", label: "Guia Editorial — Parte 3 (Laboratório Essência, Comparando Ideias, Leituras Cruzadas, Modelo Mental, Conclusão)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "guia_editorial_pdf", label: "Guia Editorial — Montar PDF final", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte1", label: "Enciclopédia — Parte 1 (Ficha Técnica, Apresentação, Visão Geral)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte2", label: "Enciclopédia — Parte 2 (Narrativa Completa, Personagens, Universo)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte3", label: "Enciclopédia — Parte 3 (Criação, Equipe, Direção Artística, Trilha Sonora, Módulo Específico)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte4", label: "Enciclopédia — Parte 4 (Curiosidades, Easter Eggs, Impacto, Recepção, Premiações, Dados Comerciais)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_parte5", label: "Enciclopédia — Parte 5 (Por que Entrou para a História, Essência da Obra, Fontes)", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
+  { key: "enciclopedia_pdf", label: "Enciclopédia — Montar PDF final", colorClass: "text-[rgb(var(--color-accent-primary))] focus:ring-[rgb(var(--color-accent-primary))]" },
   { key: "atualizar_dados", label: "Salvar/Atualizar dados da obra (sinopse, autor, gênero, ano...)", colorClass: "text-emerald-500 focus:ring-emerald-500" },
 ];
 
@@ -1022,10 +1022,10 @@ export default function EngineSolicitarObra() {
           Solicite uma nova obra para iniciar a criação da Base Editorial Universal.
         </p>
 
-        <section className="mb-6 rounded-2xl border border-purple-900/50 bg-purple-950/10 p-5">
+        <section className="mb-6 rounded-2xl border border-[rgba(var(--color-accent-primary),0.35)] bg-[rgba(var(--color-accent-primary),0.08)] p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-purple-300">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[rgb(var(--color-accent-light))]">
                 Modo Testes
               </p>
               <h2 className="mt-1 text-base font-semibold text-white">
@@ -1049,7 +1049,7 @@ export default function EngineSolicitarObra() {
                 onChange={(event) => handleToggleTestes(event.target.checked)}
                 className="peer sr-only"
               />
-              <div className="h-7 w-12 rounded-full bg-zinc-700 transition-colors peer-checked:bg-purple-500 peer-disabled:opacity-50" />
+              <div className="h-7 w-12 rounded-full bg-zinc-700 transition-colors peer-checked:bg-[rgb(var(--color-accent-primary))] peer-disabled:opacity-50" />
               <div className="absolute left-1 h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
             </label>
           </div>
@@ -1127,9 +1127,9 @@ export default function EngineSolicitarObra() {
         </form>
 
         {(executandoNarrativa || resultadoNarrativa) && narrativaPreview && (narrativaPreview.icn || narrativaPreview.cenas) && (
-          <div className="mt-4 rounded-xl border border-purple-900 bg-purple-950/20 px-4 py-3 text-sm text-purple-100">
-            <p className="font-semibold text-purple-200">Narrativa cinematográfica — previsão de escala</p>
-            <p className="mt-1 text-purple-100/80">
+          <div className="mt-4 rounded-xl border border-[rgba(var(--color-accent-primary),0.35)] bg-[rgba(var(--color-accent-primary),0.08)] px-4 py-3 text-sm text-[rgb(var(--color-accent-light))]">
+            <p className="font-semibold text-[rgb(var(--color-accent-light))]">Narrativa cinematográfica — previsão de escala</p>
+            <p className="mt-1 text-[rgb(var(--text-secondary))]">
               {narrativaPreview.icn
                 ? `ICN ${narrativaPreview.icn}${narrativaPreview.icn_faixa ? ` — ${narrativaPreview.icn_faixa}` : ""}`
                 : "Calculando complexidade (ICN)..."}
@@ -1432,7 +1432,7 @@ export default function EngineSolicitarObra() {
               <textarea
                 readOnly
                 value={resultadoNarrativa.saida}
-                className="min-h-[520px] w-full rounded-2xl border border-purple-900 bg-black p-5 text-sm leading-7 text-purple-100 outline-none"
+                className="min-h-[520px] w-full rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5 text-sm leading-7 text-[rgb(var(--color-accent-light))] outline-none"
               />
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
@@ -1553,7 +1553,7 @@ export default function EngineSolicitarObra() {
               <textarea
                 readOnly
                 value={resultadoPlayerHeroPrompt.saida}
-                className="min-h-[520px] w-full rounded-2xl border border-indigo-900 bg-black p-5 text-sm leading-7 text-indigo-100 outline-none"
+                className="min-h-[520px] w-full rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5 text-sm leading-7 text-[rgb(var(--color-accent-light))] outline-none"
               />
             ) : (
               <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
@@ -1569,7 +1569,7 @@ export default function EngineSolicitarObra() {
               Resultado do player_hero_image
             </h2>
             {resultadoPlayerHero.ok && resultadoPlayerHero.imagemUrl ? (
-              <div className="rounded-2xl border border-violet-900 bg-black p-5">
+              <div className="rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5">
                 <img
                   src={resultadoPlayerHero.imagemUrl}
                   alt="Player Hero gerado"
@@ -1579,11 +1579,11 @@ export default function EngineSolicitarObra() {
                   href={resultadoPlayerHero.imagemUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 block truncate text-sm font-semibold text-violet-200 hover:text-violet-100"
+                  className="mt-4 block truncate text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:text-white"
                 >
                   {resultadoPlayerHero.imagemUrl}
                 </a>
-                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-violet-100">
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-[rgb(var(--color-accent-light))]">
                   {JSON.stringify(resultadoPlayerHero, null, 2)}
                 </pre>
               </div>
@@ -1601,12 +1601,12 @@ export default function EngineSolicitarObra() {
               Resultado do pdf_cinematica
             </h2>
             {resultadoPdfCinematica.ok && resultadoPdfCinematica.pdfUrl ? (
-              <div className="rounded-2xl border border-cyan-900 bg-black p-5">
+              <div className="rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5">
                 <a
                   href={resultadoPdfCinematica.pdfUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/60 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)]"
                 >
                   Abrir PDF cinemático
                 </a>
@@ -1614,11 +1614,11 @@ export default function EngineSolicitarObra() {
                   href={resultadoPdfCinematica.pdfUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 block truncate text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+                  className="mt-4 block truncate text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:text-white"
                 >
                   {resultadoPdfCinematica.pdfUrl}
                 </a>
-                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-cyan-100">
+                <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-[rgb(var(--color-accent-light))]">
                   {JSON.stringify(resultadoPdfCinematica, null, 2)}
                 </pre>
               </div>
@@ -1641,12 +1641,12 @@ export default function EngineSolicitarObra() {
               </h2>
               {isPdfFinal ? (
                 resultado.ok && resultado.pdfUrl ? (
-                  <div className="rounded-2xl border border-teal-900 bg-black p-5">
+                  <div className="rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5">
                     <a
                       href={resultado.pdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-xl border border-teal-500/60 px-4 py-2 text-sm font-semibold text-teal-100 hover:bg-teal-500/10"
+                      className="inline-flex items-center gap-2 rounded-xl border border-[rgba(var(--color-accent-primary),0.6)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:bg-[rgba(var(--color-accent-primary),0.1)]"
                     >
                       Abrir documento enciclopédico
                     </a>
@@ -1654,11 +1654,11 @@ export default function EngineSolicitarObra() {
                       href={resultado.pdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-4 block truncate text-sm font-semibold text-teal-200 hover:text-teal-100"
+                      className="mt-4 block truncate text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:text-white"
                     >
                       {resultado.pdfUrl}
                     </a>
-                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-teal-100">
+                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-[rgb(var(--color-accent-light))]">
                       {JSON.stringify(resultado, null, 2)}
                     </pre>
                   </div>
@@ -1671,7 +1671,7 @@ export default function EngineSolicitarObra() {
                 <textarea
                   readOnly
                   value={resultado.saida}
-                  className="min-h-[420px] w-full rounded-2xl border border-teal-900 bg-black p-5 text-sm leading-7 text-teal-100 outline-none"
+                  className="min-h-[420px] w-full rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5 text-sm leading-7 text-[rgb(var(--color-accent-light))] outline-none"
                 />
               ) : (
                 <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">
@@ -1693,7 +1693,7 @@ export default function EngineSolicitarObra() {
               </h2>
               {isPdfFinal ? (
                 resultado.ok && resultado.pdfUrl ? (
-                  <div className="rounded-2xl border border-purple-900 bg-black p-5">
+                  <div className="rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5">
                     <a
                       href={resultado.pdfUrl}
                       target="_blank"
@@ -1706,11 +1706,11 @@ export default function EngineSolicitarObra() {
                       href={resultado.pdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-4 block truncate text-sm font-semibold text-purple-200 hover:text-purple-100"
+                      className="mt-4 block truncate text-sm font-semibold text-[rgb(var(--color-accent-light))] hover:text-white"
                     >
                       {resultado.pdfUrl}
                     </a>
-                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-purple-100">
+                    <pre className="mt-4 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-[rgb(var(--color-accent-light))]">
                       {JSON.stringify(resultado, null, 2)}
                     </pre>
                   </div>
@@ -1723,7 +1723,7 @@ export default function EngineSolicitarObra() {
                 <textarea
                   readOnly
                   value={resultado.saida}
-                  className="min-h-[420px] w-full rounded-2xl border border-purple-900 bg-black p-5 text-sm leading-7 text-purple-100 outline-none"
+                  className="min-h-[420px] w-full rounded-2xl border border-[rgba(var(--color-accent-primary),0.4)] bg-black p-5 text-sm leading-7 text-[rgb(var(--color-accent-light))] outline-none"
                 />
               ) : (
                 <pre className="bg-black border border-red-900 rounded-2xl p-5 overflow-auto text-sm text-red-300">

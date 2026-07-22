@@ -83,7 +83,7 @@ const NotificationPanel = React.forwardRef(function NotificationPanel(
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-[rgb(var(--text-primary))]">{notification.titulo}</p>
-                <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-accent-primary),0.14)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-accent-dark))] dark:bg-white/10 dark:text-[#cfc2ff]">
+                <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-accent-primary),0.14)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-accent-dark))] dark:bg-white/10 dark:text-[rgb(var(--color-accent-light))]">
                   {notification.tipoObraLabel}
                 </span>
                 <p className="mt-1 text-[11px] text-[rgb(var(--text-subtle))]">{notification.addedAgoLabel}</p>
@@ -101,7 +101,7 @@ const NotificationPanel = React.forwardRef(function NotificationPanel(
         <Link
           to="/biblioteca"
           onClick={onClose}
-          className="mt-3 block rounded-xl px-2 py-1.5 text-center text-xs font-semibold text-[rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.1)] dark:text-[#cfc2ff]"
+          className="mt-3 block rounded-xl px-2 py-1.5 text-center text-xs font-semibold text-[rgb(var(--color-accent-dark))] transition hover:bg-[rgba(var(--color-accent-primary),0.1)] dark:text-[rgb(var(--color-accent-light))]"
         >
           Ver biblioteca completa
         </Link>

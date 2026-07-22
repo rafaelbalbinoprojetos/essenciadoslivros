@@ -336,7 +336,7 @@ export default function ChatbotPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr),minmax(0,1fr)]">
           <section className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-emerald-50 p-8 text-emerald-700 shadow-sm dark:border-emerald-700/40 dark:bg-emerald-900/20 dark:text-emerald-100">
             <div className="absolute -right-24 -top-24 h-48 w-48 rounded-full bg-emerald-400/20 blur-3xl" aria-hidden="true" />
-            <div className="absolute -left-16 bottom-0 h-40 w-40 rounded-full bg-sky-400/15 blur-3xl" aria-hidden="true" />
+            <div className="absolute -left-16 bottom-0 h-40 w-40 rounded-full bg-[rgba(var(--color-accent-primary),0.15)] blur-3xl" aria-hidden="true" />
             <div className="relative space-y-5">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
                 🔒 Premium

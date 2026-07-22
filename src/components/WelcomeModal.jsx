@@ -43,10 +43,10 @@ export default function WelcomeModal({ open, onStart, onSeePlans, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-modal-title"
-        className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1530] via-[#2b1f44] to-[#46356d] text-white shadow-2xl shadow-[#6c63ff]/25"
+        className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-[rgba(var(--color-accent-primary),0.2)] bg-[linear-gradient(135deg,rgb(var(--surface-card)),rgb(var(--color-secondary-dark)))] text-white shadow-2xl shadow-[rgba(var(--color-accent-primary),0.25)]"
         onClick={handleDialogClick}
       >
-        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#6c63ff]/25 blur-3xl" aria-hidden="true" />
+        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[rgba(var(--color-accent-primary),0.25)] blur-3xl" aria-hidden="true" />
         <div className="absolute -bottom-24 left-10 h-48 w-48 rounded-full bg-[#b38b59]/25 blur-3xl" aria-hidden="true" />
 
         <button

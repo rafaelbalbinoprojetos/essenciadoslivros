@@ -59,7 +59,7 @@ export default function PremiumPlansModal({
         <div className="relative max-h-[min(90vh,720px)] overflow-y-auto px-8 py-12">
           <div className="grid gap-10 md:grid-cols-[1fr,1.2fr]">
             <div className="space-y-5">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#6c63ff]/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#4c3f8f] dark:bg-[#cfc2ff]/15 dark:text-[#cfc2ff]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(var(--color-accent-primary),0.15)] px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--color-accent-dark))] dark:text-[rgb(var(--color-accent-light))]">
                 Planos Essência
               </span>
 
@@ -72,10 +72,10 @@ export default function PremiumPlansModal({
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[#b38b59]/30 bg-[#f2ede4]/70 p-4 text-xs text-[#4b3f35] dark:border-[#cfc2ff]/20 dark:bg-white/5 dark:text-[#cfc2ff]">
-                <p className="font-semibold text-[#4c3f8f] dark:text-white">Teste gratuito de 7 dias</p>
+              <div className="rounded-2xl border border-[rgba(var(--color-accent-primary),0.3)] bg-[rgba(var(--surface-muted),0.7)] p-4 text-xs text-[rgb(var(--text-secondary))] dark:bg-white/5 dark:text-[rgb(var(--text-secondary))]">
+                <p className="font-semibold text-[rgb(var(--color-accent-dark))] dark:text-[rgb(var(--color-accent-light))]">Teste gratuito de 7 dias</p>
                 <p className="mt-2 leading-relaxed">{trialLabel}</p>
-                <p className="mt-3 text-[11px] text-[#7a6c5e]/80 dark:text-[#cfc2ff]/80">
+                <p className="mt-3 text-[11px] text-[rgb(var(--text-subtle))]">
                   Sem cartão até o fim do período de teste. Você só continua se a Essência combinar com seu ritmo de leitura.
                 </p>
               </div>
@@ -98,12 +98,12 @@ export default function PremiumPlansModal({
                   key={plan.id}
                   className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition ${
                     plan.highlight
-                      ? "border-[#6c63ff]/40 bg-gradient-to-br from-[#f9f5ef] via-white to-[#cfc2ff]/30 dark:border-[#cfc2ff]/40 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"
+                      ? "border-[rgba(var(--color-accent-primary),0.4)] bg-[rgba(var(--color-accent-primary),0.1)] dark:border-[rgba(var(--color-accent-light),0.4)]"
                       : "border-[#e2d8cb] bg-white dark:border-slate-800 dark:bg-slate-900"
                   }`}
                 >
                   {plan.highlight && (
-                    <span className="absolute -right-5 top-4 rotate-45 bg-[#6c63ff] px-8 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-white shadow-lg">
+                    <span className="absolute -right-5 top-4 rotate-45 bg-[rgb(var(--color-accent-primary))] px-8 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-white shadow-lg">
                       Mais popular
                     </span>
                   )}
@@ -113,11 +113,11 @@ export default function PremiumPlansModal({
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{plan.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{plan.description}</p>
                     </div>
-                    <p className="text-2xl font-semibold text-[#4c3f8f] dark:text-[#cfc2ff]">{priceLabel}</p>
+                    <p className="text-2xl font-semibold text-[rgb(var(--color-accent-dark))] dark:text-[rgb(var(--color-accent-light))]">{priceLabel}</p>
                     <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2">
-                          <span className="mt-0.5 text-base leading-none text-[#6c63ff] dark:text-[#cfc2ff]">-</span>
+                          <span className="mt-0.5 text-base leading-none text-[rgb(var(--color-accent-primary))] dark:text-[rgb(var(--color-accent-light))]">-</span>
                           <span>{feature}</span>
                         </li>
                       ))}

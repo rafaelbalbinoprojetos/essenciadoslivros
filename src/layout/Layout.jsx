@@ -415,7 +415,7 @@ export default function Layout() {
             </button>
           )}
           <div className={`min-w-0 ${collapsed ? "md:hidden" : ""}`}>
-            <span className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/60">
+            <span className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[rgb(var(--text-subtle))]">
               Plataforma de Leitura
             </span>
             <h1 className="mt-2 text-xl font-semibold text-[#1f2933] dark:text-[#f8f6ff]">{BRAND_NAME}</h1>
@@ -456,8 +456,8 @@ export default function Layout() {
                   "sidebar-link group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition duration-200",
                   collapsed ? "md:justify-center md:gap-0 md:px-0" : "",
                   isActive
-                    ? "sidebar-link--active text-[rgb(var(--color-accent-dark))] shadow-sm dark:text-[#cfc2ff]"
-                    : "text-[#4b3f35]/80 hover:bg-[#f2ede4] hover:text-[rgb(var(--color-accent-dark))] dark:text-[#a89fc1] dark:hover:bg-white/5 dark:hover:text-white",
+                    ? "sidebar-link--active text-[rgb(var(--color-accent-dark))] shadow-sm dark:text-[rgb(var(--color-accent-light))]"
+                    : "text-[#4b3f35]/80 hover:bg-[#f2ede4] hover:text-[rgb(var(--color-accent-dark))] dark:text-[rgb(var(--text-secondary))] dark:hover:bg-white/5 dark:hover:text-[rgb(var(--color-accent-light))]",
                 ]
                   .filter(Boolean)
                   .join(" ")
@@ -470,7 +470,7 @@ export default function Layout() {
               <div className={`flex flex-1 flex-col ${collapsed ? "md:hidden" : ""}`}>
                 <span className="text-sm font-semibold">{item.label}</span>
                 {item.description ? (
-                  <span className="text-xs text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">{item.description}</span>
+                  <span className="text-xs text-[#7a6c5e]/70 dark:text-[rgb(var(--text-subtle))]">{item.description}</span>
                 ) : null}
               </div>
             </NavLink>
@@ -508,7 +508,7 @@ export default function Layout() {
                 >
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#b38b59]">Tocando agora</p>
                   <p className="truncate text-sm font-semibold text-[#4b3f35] dark:text-white">{currentTrack.title}</p>
-                  <p className="truncate text-xs text-[#7a6c5e]/80 dark:text-[#cfc2ff]/70">{currentTrack.author}</p>
+                  <p className="truncate text-xs text-[#7a6c5e]/80 dark:text-[rgb(var(--text-subtle))]">{currentTrack.author}</p>
                 </button>
                 <button
                   type="button"
@@ -536,12 +536,12 @@ export default function Layout() {
               collapsed ? "md:hidden" : ""
             }`}
           >
-            <span className="text-xs uppercase tracking-[0.28em] text-[#b38b59] dark:text-[#cfc2ff]">Plano</span>
+            <span className="text-xs uppercase tracking-[0.28em] text-[#b38b59] dark:text-[rgb(var(--color-accent-light))]">Plano</span>
             <p className="mt-2 text-base font-semibold text-[#4b3f35] dark:text-white">
               {subscriptionTier === "premium" ? "Essência Premium" : "Essência Free"}
             </p>
             {trialActive && trialEndsAt ? (
-              <p className="mt-1 text-xs text-[#7a6c5e]/80 dark:text-[#cfc2ff]/80">
+              <p className="mt-1 text-xs text-[#7a6c5e]/80 dark:text-[rgb(var(--text-subtle))]">
                 Teste termina em {formatTrialCountdown(trialEndsAt)}
               </p>
             ) : null}
@@ -591,7 +591,7 @@ export default function Layout() {
                   <Menu className="h-5 w-5" />
                 </button>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70">Bem-vindo</p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-[#7a6c5e]/70 dark:text-[rgb(var(--text-subtle))]">Bem-vindo</p>
                   <h2 className="text-base font-semibold text-[#1f2933] leading-tight dark:text-white md:text-lg">
                     {location.pathname === "/"
                       ? "Painel pessoal"
@@ -619,7 +619,7 @@ export default function Layout() {
                     ref={mobileSearchButtonRef}
                     type="button"
                     onClick={() => setMobileSearchOpen((prev) => !prev)}
-                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[rgb(var(--color-accent-primary))] hover:text-[rgb(var(--color-accent-dark))] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] md:hidden ${
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[rgb(var(--color-accent-primary))] hover:text-[rgb(var(--color-accent-dark))] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[rgb(var(--color-accent-light))] md:hidden ${
                       mobileSearchOpen ? "ring-2 ring-[rgba(var(--color-accent-primary),0.3)] dark:ring-white/20" : ""
                     }`}
                     aria-label="Abrir busca"
@@ -677,7 +677,7 @@ export default function Layout() {
                     onSubmit={handleSearchSubmit}
                     className="flex items-center gap-2 rounded-2xl border border-white/40 bg-white/95 px-3 py-2 text-sm text-[#1f2933] shadow-2xl dark:border-white/10 dark:bg-slate-900/95 dark:text-white"
                   >
-                    <Search className="h-4 w-4 text-[#7a6c5e]/70 dark:text-[#cfc2ff]/70" />
+                    <Search className="h-4 w-4 text-[#7a6c5e]/70 dark:text-[rgb(var(--text-subtle))]" />
                     <input
                       ref={mobileSearchInputRef}
                       type="search"

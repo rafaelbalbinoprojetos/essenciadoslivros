@@ -203,7 +203,7 @@ export default function SettingsPage() {
               Receba destaques e citações da curadoria Essência direto no seu painel.
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-violet-500" aria-hidden="true" />
+              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-[rgb(var(--color-accent-primary))]" aria-hidden="true" />
               O assistente literário sugere leituras com base no seu histórico e coleções.
             </li>
             <li className="flex items-start gap-3">

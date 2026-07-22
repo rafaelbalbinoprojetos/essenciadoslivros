@@ -46,7 +46,7 @@ export default function ThemeMenu({ variant = "header" }) {
           onClick={() => setOpen((prev) => !prev)}
           aria-expanded={open}
           aria-controls="theme-menu-sidebar"
-          className="sidebar-link group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-[#4b3f35]/80 transition duration-200 hover:bg-[#f2ede4] hover:text-[rgb(var(--color-accent-dark))] dark:text-[#a89fc1] dark:hover:bg-white/5 dark:hover:text-white"
+          className="sidebar-link group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-[#4b3f35]/80 transition duration-200 hover:bg-[#f2ede4] hover:text-[rgb(var(--color-accent-dark))] dark:text-[rgb(var(--text-secondary))] dark:hover:bg-white/5 dark:hover:text-[rgb(var(--color-accent-light))]"
         >
           <Palette className="h-5 w-5 flex-shrink-0" />
           <span className="flex-1 text-left text-sm font-semibold">Temas</span>
@@ -78,7 +78,7 @@ export default function ThemeMenu({ variant = "header" }) {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls="theme-menu"
-        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[rgb(var(--color-accent-primary))] hover:text-[rgb(var(--color-accent-dark))] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[#cfc2ff] ${
+        className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[#cdb18c]/60 bg-white text-[#4b3f35] shadow-sm transition hover:border-[rgb(var(--color-accent-primary))] hover:text-[rgb(var(--color-accent-dark))] dark:border-white/20 dark:bg-slate-900 dark:text-white dark:hover:border-[rgb(var(--color-accent-light))] ${
           open ? "ring-2 ring-[rgba(var(--color-accent-primary),0.3)] dark:ring-white/25" : ""
         }`}
         title="Selecionar tema"
