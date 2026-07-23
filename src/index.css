@@ -552,3 +552,99 @@ a:hover {
 [data-theme] .focus-visible\:ring-2:focus-visible {
   box-shadow: var(--ring-glow);
 }
+
+/* Sala da obra: conserva a atmosfera cinematográfica usando a paleta ativa. */
+.book-exhibition {
+  background-color: rgb(var(--surface-base));
+  color: rgb(var(--text-primary));
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+.book-exhibition-panel {
+  border: 1px solid var(--border-soft);
+  background:
+    linear-gradient(145deg, rgba(var(--surface-card), 0.97), rgba(var(--surface-muted), 0.84));
+  box-shadow: var(--shadow-md);
+}
+
+.book-exhibition-subcard {
+  border: 1px solid var(--border-soft);
+  background-color: rgba(var(--surface-muted), 0.68);
+}
+
+.book-exhibition-hero {
+  background-color: rgb(var(--surface-base));
+}
+
+.book-exhibition-hero__image {
+  opacity: 0.7;
+  filter: saturate(0.9) contrast(0.96);
+}
+
+.book-exhibition-hero__veil-horizontal {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--surface-base), 1) 0%,
+    rgba(var(--surface-base), 0.98) 30%,
+    rgba(var(--surface-base), 0.68) 58%,
+    rgba(var(--surface-base), 0.24) 82%,
+    rgba(var(--surface-base), 0.52) 100%
+  );
+}
+
+.book-exhibition-hero__veil-vertical {
+  background: linear-gradient(
+    0deg,
+    rgb(var(--surface-base)) 0%,
+    rgba(var(--surface-base), 0) 44%,
+    rgba(var(--surface-base), 0.4) 100%
+  );
+}
+
+.book-exhibition-glass-button {
+  border: 1px solid rgba(var(--color-accent-primary), 0.3);
+  background-color: rgba(var(--surface-card), 0.72);
+  color: rgb(var(--text-primary));
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+}
+
+.book-exhibition-glass-button:hover {
+  border-color: rgb(var(--color-accent-primary));
+  background-color: rgba(var(--surface-card), 0.92);
+}
+
+.book-exhibition-divider {
+  border-color: var(--border-soft);
+}
+
+.book-exhibition-interactive:hover,
+.book-exhibition-interactive--active {
+  background-color: rgba(var(--color-accent-primary), 0.08);
+}
+
+[data-color-mode="dark"] .book-exhibition-hero__image {
+  opacity: 0.82;
+  filter: saturate(0.92) contrast(1.02);
+}
+
+[data-color-mode="dark"] .book-exhibition-hero__veil-horizontal {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--surface-base), 1) 0%,
+    rgba(var(--surface-base), 0.97) 30%,
+    rgba(var(--surface-base), 0.48) 58%,
+    rgba(var(--surface-base), 0.16) 82%,
+    rgba(var(--surface-base), 0.44) 100%
+  );
+}
+
+@media (max-width: 767px) {
+  .book-exhibition-hero__veil-horizontal {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--surface-base), 0.92) 0%,
+      rgba(var(--surface-base), 0.66) 100%
+    );
+  }
+}
