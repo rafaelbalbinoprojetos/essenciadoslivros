@@ -94,7 +94,7 @@ export default function JourneysPage() {
   const started = useMemo(() => journeys.filter((j) => j.progresso), [journeys]);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-10">
+    <div className="w-full space-y-10">
       <header className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.75)]">
           Jornadas de aprendizado
@@ -130,7 +130,12 @@ export default function JourneysPage() {
           {started.length > 0 && (
             <section className="space-y-4">
               <h2 className="font-display text-xl font-semibold text-[rgb(var(--text-primary))]">Continue de onde parou</h2>
-              <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-5"
+              >
                 {started.map((j) => (
                   <JourneyCard key={j.id} journey={j} />
                 ))}
@@ -142,7 +147,12 @@ export default function JourneysPage() {
             <h2 className="font-display text-xl font-semibold text-[rgb(var(--text-primary))]">
               {started.length > 0 ? "Todas as jornadas" : "Escolha um objetivo para começar"}
             </h2>
-            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-5"
+            >
               {journeys.map((j) => (
                 <JourneyCard key={j.id} journey={j} />
               ))}

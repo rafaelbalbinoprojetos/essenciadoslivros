@@ -121,7 +121,7 @@ export default function MuralPage() {
   const { likeCounts, liked, saved, toggleLike, toggleSave } = useEngagement(bookIds);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-8">
+    <div className="w-full space-y-8">
       <header className="space-y-4">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--color-accent-primary))] text-white shadow-lg">
@@ -186,7 +186,7 @@ export default function MuralPage() {
                 <h2 className="font-display text-lg font-semibold text-[rgb(var(--text-primary))]">{genreName}</h2>
                 <span className="text-xs font-semibold text-[rgb(var(--text-subtle))]">{items.length} {items.length === 1 ? "título" : "títulos"}</span>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-5">
                 {items.map((book) => (
                   <BookCard
                     key={book.id}
