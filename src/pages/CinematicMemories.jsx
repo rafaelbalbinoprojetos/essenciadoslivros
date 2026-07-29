@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Film, Play, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { listBooks } from "../services/books.js";
-import { hasCinematicExperience } from "../services/narratives.js";
+import { listCinematicMemories } from "../services/narratives.js";
 import { ensureCoverSrc } from "../utils/covers.js";
 
 function getNarrative(book) {
@@ -17,9 +16,9 @@ export default function CinematicMemoriesPage() {
 
   useEffect(() => {
     let active = true;
-    listBooks({ limit: 120, status: "ativo", orderBy: "data_adicao", ascending: false })
-      .then(({ items }) => {
-        if (active) setBooks(items.filter(hasCinematicExperience));
+    listCinematicMemories()
+      .then((items) => {
+        if (active) setBooks(items);
       })
       .catch((requestError) => {
         console.error("[CinematicMemories] erro ao carregar coleção:", requestError);

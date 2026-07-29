@@ -16,6 +16,58 @@ export function hasCinematicExperience(book) {
   return relations.some((relation) => Array.isArray(relation?.faixas) && relation.faixas.length > 0);
 }
 
+export async function listCinematicMemories() {
+  const { data, error } = await supabase
+    .from("narrativas")
+    .select(`
+      id,
+      titulo,
+      descricao,
+      capa_url,
+      status,
+      criado_em,
+      atualizado_em,
+      livro:livro_id!inner (
+        id,
+        titulo,
+        subtitulo,
+        sinopse,
+        capa_url,
+        capa_cinematica_url,
+        tem_experiencia_cinematica,
+        titulo_cinematico,
+        descricao_cinematica,
+        status,
+        data_adicao,
+        genero:genero_id (
+          id,
+          nome
+        )
+      ),
+      faixas:narrativa_faixas!inner (
+        id,
+        status,
+        ordem
+      )
+    `)
+    .eq("status", "ativo")
+    .eq("faixas.status", "ativo")
+    .neq("livro.status", "excluido")
+    .order("ordem", { referencedTable: "narrativa_faixas", ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? [])
+    .map((narrative) => {
+      const { livro, ...narrativeFields } = narrative;
+      return {
+        ...livro,
+        narrativa: narrativeFields,
+      };
+    })
+    .sort((a, b) => new Date(b.data_adicao ?? 0).getTime() - new Date(a.data_adicao ?? 0).getTime());
+}
+
 export async function getNarrativeByBook(bookId) {
   if (!bookId) return null;
   const { data, error } = await supabase
