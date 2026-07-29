@@ -270,11 +270,12 @@ export default function BookDetailsPage() {
   ];
 
   return (
-    <article className="book-exhibition -mx-4 -mt-6 overflow-hidden md:-mx-8">
-      <section className="book-exhibition-hero relative flex min-h-[620px] items-end overflow-hidden px-5 pb-8 pt-28 sm:min-h-[660px] sm:px-10 lg:min-h-[680px] lg:px-16 lg:pb-12">
-        <img src={heroSrc} alt="" className="book-exhibition-hero__image absolute inset-y-0 right-0 h-full w-full object-cover object-center lg:w-[74%]" />
+    <article className="book-exhibition -mx-4 -mt-6 min-h-screen overflow-hidden px-3 py-4 md:-mx-8 lg:px-8">
+      <section className="book-exhibition-hero book-exhibition-hero-card relative mx-auto flex min-h-[620px] max-w-7xl items-end overflow-hidden rounded-[34px] px-5 pb-8 pt-28 sm:min-h-[660px] sm:px-10 lg:min-h-[680px] lg:px-16 lg:pb-12">
+        <img src={heroSrc} alt="" className="book-exhibition-hero__image absolute inset-y-0 right-0 h-full w-full object-cover object-center lg:w-[76%]" />
         <div className="book-exhibition-hero__veil-horizontal absolute inset-0" />
         <div className="book-exhibition-hero__veil-vertical absolute inset-0" />
+        <div className="book-exhibition-hero__grain absolute inset-0" />
 
         <div className="absolute left-5 top-6 z-20 sm:left-10 lg:left-16">
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="book-exhibition-glass-button flex h-12 w-12 items-center justify-center rounded-2xl transition">
@@ -297,14 +298,14 @@ export default function BookDetailsPage() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl">
-          <div className="max-w-2xl">
+          <div className="book-exhibition-hero__content max-w-2xl">
             <p className={eyebrowClass}>✧ Obra Essência</p>
-            <h1 className="mt-5 font-display text-5xl font-semibold leading-[0.95] text-[rgb(var(--text-primary))] sm:text-6xl lg:text-8xl">{book.titulo}</h1>
+            <h1 className="mt-5 font-display text-5xl font-semibold leading-[0.95] text-[rgb(var(--text-primary))] sm:text-6xl lg:text-7xl xl:text-8xl">{book.titulo}</h1>
             <p className="mt-5 text-lg font-medium text-[rgb(var(--color-accent-primary))]">✧ {book.genero?.nome || "Acervo Essência"}</p>
             <p className="mt-3 max-w-xl text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-lg">{book.subtitulo || book.sinopse || `Uma exposição dedicada à essência de ${book.titulo}.`}</p>
             <p className="mt-5 text-sm uppercase tracking-[0.2em] text-[rgb(var(--text-subtle))]">{book.autor?.nome || "Autoria não informada"}</p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-[rgb(var(--text-secondary))]">
+            <div className="book-exhibition-stat-row mt-7 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-[rgb(var(--text-secondary))]">
               {releaseYear && <span className="inline-flex items-center gap-2"><CalendarDays className="h-5 w-5 text-[rgb(var(--color-accent-primary))]" />{releaseYear}</span>}
               {duration && <span className="inline-flex items-center gap-2"><Clock3 className="h-5 w-5 text-[rgb(var(--color-accent-primary))]" />{duration}</span>}
               {book.colecao?.nome && <span className="inline-flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-[rgb(var(--color-accent-primary))]" />{book.colecao.nome}</span>}
@@ -315,7 +316,7 @@ export default function BookDetailsPage() {
                 <div className="flex items-center gap-2 text-xl"><Star className="h-5 w-5 fill-[rgb(var(--color-accent-primary))] text-[rgb(var(--color-accent-primary))]" /><span>{reviews.count ? reviews.average.toFixed(1) : "—"}</span></div>
                 <p className="text-xs text-[rgb(var(--text-subtle))]">{reviews.count.toLocaleString("pt-BR")} avaliações</p>
               </div>
-              <button type="button" onClick={handleEnterJourney} disabled={narrativeStarting} className="inline-flex min-h-16 items-center gap-4 rounded-2xl bg-[rgb(var(--color-accent-primary))] px-7 py-3 font-semibold text-white shadow-[0_15px_45px_-12px_rgba(var(--color-accent-primary),0.65)] transition hover:bg-[rgb(var(--color-accent-dark))] disabled:opacity-60">
+              <button type="button" onClick={handleEnterJourney} disabled={narrativeStarting} className="book-exhibition-journey-button inline-flex min-h-16 items-center gap-4 rounded-2xl px-7 py-3 font-semibold text-white transition disabled:opacity-60">
                 {audioIsPlaying ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 fill-current" />}
                 <span className="text-left"><span className="block text-lg">Entrar na Jornada</span><span className="block text-xs font-normal opacity-80">Iniciar experiência</span></span>
               </button>
@@ -324,8 +325,8 @@ export default function BookDetailsPage() {
         </div>
       </section>
 
-      <div className="mx-auto -mt-3 max-w-7xl space-y-7 px-4 pb-16 sm:px-8 lg:px-12">
-        <nav className={`${panelClass} grid grid-cols-2 overflow-hidden p-2 sm:grid-cols-5`} aria-label="Experiências disponíveis">
+      <div className="relative z-10 mx-auto -mt-7 max-w-7xl space-y-7 px-2 pb-16 sm:px-5 lg:px-8">
+        <nav className={`${panelClass} book-exhibition-experience-nav grid grid-cols-2 overflow-hidden p-2 sm:grid-cols-5`} aria-label="Experiências disponíveis">
           {experiences.map(({ label, caption, icon, available, action }) => (
             <button key={label} type="button" onClick={action} disabled={!available} className="book-exhibition-interactive group flex min-h-28 flex-col items-center justify-center rounded-2xl px-3 py-4 text-center transition disabled:cursor-not-allowed disabled:opacity-30">
               {React.createElement(icon, { className: "h-7 w-7 text-[rgb(var(--color-accent-primary))] transition group-hover:scale-110" })}
@@ -336,13 +337,15 @@ export default function BookDetailsPage() {
         </nav>
 
         <section id="curadoria" className={`${panelClass} scroll-mt-24 overflow-hidden p-7 sm:p-10`}>
-          <div className="grid items-center gap-8 lg:grid-cols-[1fr_280px]">
+          <div className="grid items-center gap-8 lg:grid-cols-[1fr_320px]">
             <div className="max-w-4xl">
               <p className={eyebrowClass}>Curadoria editorial</p>
-              <blockquote className="mt-5 font-display text-2xl italic leading-relaxed text-[rgb(var(--text-primary))] sm:text-3xl">“{book.curadoria_editorial || book.sinopse || `Uma obra escolhida para ser vivida, lembrada e redescoberta.`}”</blockquote>
+              <blockquote className="mt-5 font-display text-2xl italic leading-relaxed text-[rgb(var(--text-primary))] sm:text-3xl lg:text-4xl">“{book.curadoria_editorial || book.sinopse || `Uma obra escolhida para ser vivida, lembrada e redescoberta.`}”</blockquote>
               <p className="mt-5 text-sm text-[rgb(var(--color-accent-primary))]">— Essência dos Livros</p>
             </div>
-            <img src={coverSrc} alt={`Capa de ${book.titulo}`} className="mx-auto aspect-[3/4] w-full max-w-[230px] rotate-2 rounded-xl border border-[var(--border-strong)] object-cover shadow-2xl" />
+            <div className="book-exhibition-curation-art mx-auto w-full max-w-[290px]">
+              <img src={coverSrc} alt={`Capa de ${book.titulo}`} className="aspect-[3/4] w-full rounded-xl object-cover" />
+            </div>
           </div>
         </section>
 
