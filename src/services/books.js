@@ -45,6 +45,10 @@ const BOOK_SELECT_FIELDS = `
   narrativa:narrativas (
     id,
     status,
+    titulo,
+    descricao,
+    criado_em,
+    atualizado_em,
     faixas:narrativa_faixas (
       id,
       status

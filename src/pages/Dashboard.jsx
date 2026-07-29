@@ -44,6 +44,21 @@ function shortText(value, limit = 150) {
   return text.length > limit ? `${text.slice(0, limit - 1).trim()}…` : text;
 }
 
+function cinematicTimestamp(book) {
+  const narrative = getNarrative(book);
+  return new Date(narrative?.atualizado_em || narrative?.criado_em || book?.data_adicao || 0).getTime();
+}
+
+function cinematicTitle(book) {
+  const narrative = getNarrative(book);
+  return book?.titulo_cinematico || narrative?.titulo || `${book?.titulo} — Memória Cinematográfica`;
+}
+
+function cinematicDescription(book, limit = 190) {
+  const narrative = getNarrative(book);
+  return shortText(book?.descricao_cinematica || narrative?.descricao || book?.subtitulo || book?.sinopse, limit);
+}
+
 function RailCard({ book, cinematic = false, badge, featured = false }) {
   return (
     <article className={`group flex-none ${featured ? "w-[250px] sm:w-[286px]" : "w-[205px] sm:w-[228px]"}`}>
@@ -99,11 +114,83 @@ function CollectionRail({ eyebrow, title, description, to, books, cinematic = fa
   );
 }
 
+function CinematicSpotlight({ books }) {
+  if (!books.length) return null;
+
+  const [featured, ...supporting] = books;
+  const featuredScenes = sceneCount(featured);
+
+  return (
+    <section className="relative overflow-hidden rounded-[34px] border border-[#d5b06a]/24 bg-[#070604] text-white shadow-[0_46px_110px_-62px_rgba(0,0,0,0.96)]">
+      <div className="pointer-events-none absolute inset-0">
+        <img src={coverOf(featured, true)} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-20 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(213,176,106,0.2),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(124,83,255,0.18),transparent_32%),linear-gradient(120deg,rgba(7,6,4,0.98),rgba(7,6,4,0.78)_48%,rgba(7,6,4,0.96))]" />
+        <div className="absolute inset-x-[7%] top-0 h-px bg-gradient-to-r from-transparent via-[#f0cc78]/52 to-transparent" />
+      </div>
+
+      <div className="relative grid gap-8 p-5 sm:p-7 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
+        <div className="grid min-w-0 gap-7 md:grid-cols-[260px_1fr] lg:grid-cols-[300px_1fr]">
+          <Link to={`/biblioteca/${featured.id}#narrativa`} className="group relative mx-auto block aspect-[3/4] w-full max-w-[300px] overflow-hidden rounded-[26px] border border-[#d5b06a]/42 bg-black shadow-[0_28px_75px_-38px_rgba(0,0,0,0.96)]">
+            <img src={coverOf(featured, true)} alt={featured.titulo} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]" />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/76 via-transparent to-black/16" />
+            <span className="absolute left-4 top-4 rounded-full border border-[#f0cc78]/40 bg-black/55 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-[#f4d89c] backdrop-blur-md">
+              Última cinemática
+            </span>
+          </Link>
+
+          <div className="flex min-w-0 flex-col justify-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-[#a78bff]">Nova memória cinematográfica</p>
+            <h2 className="mt-4 break-words font-display text-4xl font-semibold leading-[0.98] text-[#fff5df] sm:text-5xl">
+              {featured.titulo}
+            </h2>
+            <p className="mt-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#d5b06a]/72">{cinematicTitle(featured)}</p>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-white/72">{cinematicDescription(featured, 240)}</p>
+            <div className="mt-6 flex flex-wrap gap-3 text-xs text-white/58">
+              <span className="rounded-full border border-white/14 bg-white/5 px-3 py-2">{featured.genero?.nome || "Obra Essência"}</span>
+              <span className="rounded-full border border-white/14 bg-white/5 px-3 py-2">{featuredScenes} {featuredScenes === 1 ? "cena" : "cenas"} em áudio</span>
+              {featured.autor?.nome && <span className="rounded-full border border-white/14 bg-white/5 px-3 py-2">{featured.autor.nome}</span>}
+            </div>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link to={`/biblioteca/${featured.id}#narrativa`} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[rgb(var(--color-accent-primary))] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[rgb(var(--color-accent-dark))]">
+                <Play className="h-4 w-4" fill="currentColor" /> Iniciar cinemática
+              </Link>
+              <Link to="/memorias-cinematicas" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 bg-white/7 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/12">
+                Ver memórias <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {supporting.length > 0 && (
+          <div className="grid content-center gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.34em] text-white/42">Também adicionadas</p>
+            {supporting.slice(0, 3).map((book) => (
+              <Link key={book.id} to={`/biblioteca/${book.id}#narrativa`} className="group grid grid-cols-[74px_1fr_auto] items-center gap-4 rounded-[22px] border border-white/10 bg-white/[0.045] p-3 transition hover:border-[#d5b06a]/38 hover:bg-white/[0.075]">
+                <img src={coverOf(book, true)} alt="" className="aspect-[3/4] rounded-2xl object-cover" />
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-lg font-semibold text-[#fff3d9]">{book.titulo}</span>
+                  <span className="mt-1 block line-clamp-2 text-xs leading-5 text-white/56">{cinematicDescription(book, 110)}</span>
+                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5b06a]/72">{sceneCount(book)} cenas</span>
+                </span>
+                <ArrowRight className="h-4 w-4 text-[#d5b06a]/72 transition group-hover:translate-x-1" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const { items: books, loading, error, reload } = useBooksCatalog({ limit: 60, status: "ativo" });
 
   const cinematicBooks = useMemo(() => books.filter(hasCinematicExperience), [books]);
+  const latestCinematicBooks = useMemo(
+    () => [...cinematicBooks].sort((a, b) => cinematicTimestamp(b) - cinematicTimestamp(a)).slice(0, 4),
+    [cinematicBooks],
+  );
   const audioBooks = useMemo(() => books.filter((book) => book.audio_url), [books]);
   const guideBooks = useMemo(() => books.filter((book) => book.pdf_url), [books]);
   const recentBooks = useMemo(() => [...books].sort((a, b) => new Date(b.data_adicao || 0) - new Date(a.data_adicao || 0)).slice(0, 6), [books]);
@@ -383,7 +470,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {false && (
+          {heroCarouselRef.current?.dataset?.legacyCarousel === "true" && (
           <div
             ref={heroCarouselRef}
             onScroll={handleHeroScroll}
@@ -448,7 +535,7 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {false && heroBook && (
+      {heroCarouselRef.current?.dataset?.legacyHero === "true" && heroBook && (
         <section className="relative min-h-[580px] overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)]">
           <div className="pointer-events-none absolute inset-0">
             <AnimatePresence mode="sync">
@@ -548,6 +635,8 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+
+      <CinematicSpotlight books={latestCinematicBooks} />
 
       <section>
         <header className="max-w-2xl">
