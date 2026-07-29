@@ -87,7 +87,7 @@ export default function CinematicMemoriesPage() {
                 <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[rgb(var(--color-accent-dark))]">{book.genero?.nome ?? "Obra Essência"}</p>
                 <h2 className="mt-2 line-clamp-2 font-display text-2xl font-semibold leading-tight text-[rgb(var(--text-primary))]">{book.titulo}</h2>
                 <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[rgb(var(--text-secondary))]">
-                  {book.descricao_cinematica || narrative?.descricao || "Uma jornada narrada como lembrança — por alguém que esteve lá."}
+                  {book.descricao_cinematica || narrative?.descricao || book.subtitulo || "Uma jornada narrada como lembrança — por alguém que esteve lá."}
                 </p>
                 <div className="mt-5 flex items-center justify-between gap-3 border-t border-[rgba(83,61,42,0.1)] pt-4">
                   <span className="text-xs font-semibold text-[rgb(var(--text-subtle))]">{scenes} {scenes === 1 ? "cena" : "cenas"}</span>
