@@ -16,6 +16,7 @@ import MuralPage from "./pages/Mural.jsx";
 import AcervoPage from "./pages/Acervo.jsx";
 import CinematicMemoriesPage from "./pages/CinematicMemories.jsx";
 import UnexpectedEncounterPage from "./pages/UnexpectedEncounter.jsx";
+import ProfilePage from "./pages/Profile.jsx";
 import EngineSolicitarObra from "./pages/EngineSolicitarObra.jsx";
 import EngineProcessarLote from "./pages/EngineProcessarLote.jsx";
 import EngineCustosIA from "./pages/EngineCustosIA.jsx";
@@ -40,6 +41,7 @@ function AppRoutes() {
             <Route path="acervo" element={<AcervoPage />} />
             <Route path="memorias-cinematicas" element={<CinematicMemoriesPage />} />
             <Route path="encontro-inesperado" element={<UnexpectedEncounterPage />} />
+            <Route path="perfil" element={<ProfilePage />} />
             <Route path="biblioteca" element={<LibraryPage />} />
             <Route path="biblioteca/:bookId" element={<BookDetailsPage />} />
             <Route path="biblioteca/novo" element={<BookCreatePage />} />

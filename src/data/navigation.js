@@ -49,6 +49,13 @@ export const NAV_LINKS = [
     description: "Deixe o acervo escolher você",
   },
   {
+    id: "profile",
+    to: "/perfil",
+    label: "Perfil",
+    shortLabel: "Perfil",
+    description: "Seu museu pessoal de histórias",
+  },
+  {
     id: "colorir",
     to: "/colorir",
     label: "Essência em Cores",
@@ -112,6 +119,7 @@ export const MOBILE_NAV_ALLOWED_PATHS = [
   "/biblioteca",
   "/memorias-cinematicas",
   "/encontro-inesperado",
+  "/perfil",
   "/biblioteca/novo",
   "/engine",
   "/assistente",
@@ -122,6 +130,7 @@ export const DEFAULT_MOBILE_NAV_PATHS = [
   "/",
   "/jornadas",
   "/biblioteca",
+  "/perfil",
   "/assistente",
 ];
 

@@ -20,6 +20,7 @@ import {
   ListChecks,
   DollarSign,
   Palette,
+  UserRound,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu.jsx";
 import ThemeMenu from "../components/ThemeMenu.jsx";
@@ -47,6 +48,7 @@ const ICON_MAP = {
   mural: LayoutGrid,
   archive: LibraryBig,
   "unexpected-encounter": Dices,
+  profile: UserRound,
   colorir: Palette,
   catalog: BookOpen,
   engine: Cpu,
