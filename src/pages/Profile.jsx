@@ -261,13 +261,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="profile-museum relative -mx-4 -mt-6 min-h-full overflow-hidden px-4 pb-20 pt-7 md:-mx-8 md:px-8">
+    <div className="profile-museum relative -mx-4 -mt-6 min-h-full overflow-hidden px-4 pb-20 pt-7 md:-mx-8 md:px-8 2xl:px-10">
       <div className="profile-museum-ambient pointer-events-none absolute inset-0" />
-      <div className="relative mx-auto max-w-[1500px] space-y-7">
+      <div className="relative mx-auto w-full max-w-none space-y-7">
         {error && <div className="rounded-2xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-100">{error}</div>}
 
-        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleSaveProfile} className="profile-museum-panel rounded-[34px] border p-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(430px,0.85fr)] 2xl:grid-cols-[minmax(0,1.28fr)_minmax(520px,0.72fr)]">
+          <form onSubmit={handleSaveProfile} className="profile-museum-panel rounded-[34px] border p-6 2xl:p-8">
             <p className="profile-accent text-[10px] font-bold uppercase tracking-[0.42em]">Essência dos Livros</p>
             <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center">
               <div className="profile-avatar-frame relative h-36 w-36 flex-none rounded-full border p-1">
@@ -321,8 +321,8 @@ export default function ProfilePage() {
             </div>
           </form>
 
-          <MuseumPanel title="Sua jornada em números" className="flex flex-col justify-between">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <MuseumPanel title="Sua jornada em números" className="flex flex-col justify-between 2xl:p-8">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
               {[
                 { label: "Obras exploradas", value: view.exploredIds.size, icon: Sparkles },
                 { label: "Jornadas concluídas", value: view.completedJourneys.length, icon: Trophy },
@@ -342,7 +342,7 @@ export default function ProfilePage() {
           </MuseumPanel>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[1fr_0.9fr_0.8fr]">
+        <section className="grid gap-5 xl:grid-cols-[minmax(420px,1.08fr)_minmax(360px,0.92fr)_minmax(330px,0.78fr)] 2xl:grid-cols-[minmax(520px,1.15fr)_minmax(430px,0.9fr)_minmax(390px,0.82fr)]">
           <MuseumPanel title="Continue de onde parou">
             {view.continueBook ? (
               <div className="grid gap-5 sm:grid-cols-[160px_1fr]">
@@ -395,7 +395,7 @@ export default function ProfilePage() {
           </MuseumPanel>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-3">
+        <section className="grid gap-5 xl:grid-cols-3 2xl:grid-cols-[1fr_1fr_1fr]">
           <MuseumPanel title="Obras que você curtiu" action={<Link to="/mural" className="text-xs text-[#d4a657]">Ver todas</Link>}>
             <div className="flex gap-4 overflow-x-auto pb-2">{(view.likedBooks.length ? view.likedBooks : data.books.slice(0, 5)).slice(0, 8).map((book) => <ProfileBookCard key={book.id} book={book} badge="Curtida" compact />)}</div>
           </MuseumPanel>
@@ -422,7 +422,7 @@ export default function ProfilePage() {
           </div>
         </MuseumPanel>
 
-        <section className="grid gap-5 lg:grid-cols-[0.85fr_1fr_0.85fr]">
+        <section className="grid gap-5 lg:grid-cols-[0.85fr_1fr_0.85fr] 2xl:grid-cols-[0.9fr_1.2fr_0.9fr]">
           <MuseumPanel title="Seus gêneros favoritos">
             <div className="space-y-4">
               {(view.favoriteGenres.length ? view.favoriteGenres : [[view.favoriteGenre, 1]]).map(([genre, count], index) => (

@@ -1,5 +1,12 @@
 export const NAV_LINKS = [
   {
+    id: "profile",
+    to: "/perfil",
+    label: "Perfil",
+    shortLabel: "Perfil",
+    description: "Seu museu pessoal de histórias",
+  },
+  {
     id: "dashboard",
     to: "/",
     label: "Panorama",
@@ -47,13 +54,6 @@ export const NAV_LINKS = [
     label: "Encontro",
     shortLabel: "Encontro",
     description: "Deixe o acervo escolher você",
-  },
-  {
-    id: "profile",
-    to: "/perfil",
-    label: "Perfil",
-    shortLabel: "Perfil",
-    description: "Seu museu pessoal de histórias",
   },
   {
     id: "colorir",
@@ -127,10 +127,10 @@ export const MOBILE_NAV_ALLOWED_PATHS = [
 ];
 
 export const DEFAULT_MOBILE_NAV_PATHS = [
+  "/perfil",
   "/",
   "/jornadas",
   "/biblioteca",
-  "/perfil",
   "/assistente",
 ];
 
