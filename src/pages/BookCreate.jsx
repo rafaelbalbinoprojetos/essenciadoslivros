@@ -511,7 +511,7 @@ export default function BookCreatePage() {
   const hasCollections = useMemo(() => collections.length > 0, [collections]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="book-form mx-auto max-w-5xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-[color:rgba(var(--color-secondary-primary),0.7)]">
