@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import {
   Award,
   BookOpen,
+  Camera,
   Crown,
   Flame,
   Headphones,
@@ -12,6 +14,7 @@ import {
   Sparkles,
   Star,
   Trophy,
+  Save,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -19,6 +22,7 @@ import { getProfileMuseumData } from "../services/profile.js";
 import { ensureCoverSrc } from "../utils/covers.js";
 import { hasCinematicExperience } from "../services/narratives.js";
 import { getBookRatingAverage } from "../utils/bookSorting.js";
+import { BUCKETS, getPublicUrl, uploadToBucket } from "../lib/storage.js";
 
 function formatDate(value) {
   if (!value) return "Data não registrada";
@@ -83,10 +87,14 @@ function MuseumPanel({ title, action, children, className = "" }) {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUserMetadata } = useAuth();
   const [data, setData] = useState({ books: [], journeys: [], progress: [], reviews: [], likes: [], saves: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [profileName, setProfileName] = useState(() => getName(user));
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -107,6 +115,22 @@ export default function ProfilePage() {
       active = false;
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    setProfileName(getName(user));
+    setAvatarFile(null);
+    setAvatarPreview("");
+  }, [user]);
+
+  useEffect(() => {
+    if (!avatarFile) {
+      setAvatarPreview("");
+      return undefined;
+    }
+    const preview = URL.createObjectURL(avatarFile);
+    setAvatarPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [avatarFile]);
 
   const view = useMemo(() => {
     const booksById = new Map(data.books.map((book) => [book.id, book]));
@@ -178,7 +202,9 @@ export default function ProfilePage() {
   const plan = metadata.subscription_tier ?? metadata.plan ?? "free";
   const isPremium = plan === "premium";
   const avatarUrl = metadata.avatar_url || metadata.picture;
+  const currentAvatar = avatarPreview || avatarUrl;
   const initials = displayName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const profileDirty = profileName.trim() !== displayName.trim() || Boolean(avatarFile);
   const completedBooks = view.progressBooks.filter((book) => Number(book.progress?.progresso_percentual) >= 95).length;
   const achievementCount = [
     view.exploredIds.size >= 1,
@@ -188,6 +214,47 @@ export default function ProfilePage() {
     view.completedJourneys.length >= 1,
     view.totalListeningMinutes >= 60,
   ].filter(Boolean).length;
+
+  async function handleSaveProfile(event) {
+    event.preventDefault();
+    if (!profileDirty || !updateUserMetadata || !user?.id) return;
+
+    const nextName = profileName.trim();
+    if (!nextName) {
+      toast.error("Informe um nome para o perfil.");
+      return;
+    }
+
+    try {
+      setProfileSaving(true);
+      let nextAvatarUrl = avatarUrl || null;
+      if (avatarFile) {
+        if (!avatarFile.type?.startsWith("image/")) {
+          throw new Error("Escolha uma imagem válida para a foto de perfil.");
+        }
+        const avatarPath = await uploadToBucket(BUCKETS.capas, avatarFile, {
+          prefix: `avatars/${user.id}/`,
+        });
+        nextAvatarUrl = getPublicUrl(BUCKETS.capas, avatarPath);
+      }
+
+      await updateUserMetadata({
+        display_name: nextName,
+        full_name: nextName,
+        avatar_url: nextAvatarUrl,
+        picture: nextAvatarUrl,
+      });
+
+      setAvatarFile(null);
+      setAvatarPreview("");
+      toast.success("Perfil atualizado com sucesso.");
+    } catch (saveError) {
+      console.error("[Profile] erro ao salvar perfil:", saveError);
+      toast.error(saveError?.message || "Não foi possível atualizar seu perfil.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   if (loading) {
     return <p className="py-20 text-center text-sm text-[rgb(var(--text-secondary))]">Abrindo seu museu pessoal...</p>;
@@ -200,19 +267,37 @@ export default function ProfilePage() {
         {error && <div className="rounded-2xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-100">{error}</div>}
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[34px] border border-[#8b6b32]/30 bg-[linear-gradient(135deg,rgba(255,234,188,0.07),rgba(255,255,255,0.015)),rgba(9,8,6,0.82)] p-6 shadow-[0_38px_100px_-62px_rgba(0,0,0,0.98)]">
+          <form onSubmit={handleSaveProfile} className="rounded-[34px] border border-[#8b6b32]/30 bg-[linear-gradient(135deg,rgba(255,234,188,0.07),rgba(255,255,255,0.015)),rgba(9,8,6,0.82)] p-6 shadow-[0_38px_100px_-62px_rgba(0,0,0,0.98)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-[#d3ac68]">Essência dos Livros</p>
             <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="relative h-36 w-36 flex-none overflow-hidden rounded-full border border-[#d4a657]/55 bg-[#14100b] p-1 shadow-[0_20px_60px_-30px_rgba(212,166,87,0.6)]">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="h-full w-full rounded-full object-cover" />
+              <div className="relative h-36 w-36 flex-none rounded-full border border-[#d4a657]/55 bg-[#14100b] p-1 shadow-[0_20px_60px_-30px_rgba(212,166,87,0.6)]">
+                <div className="h-full w-full overflow-hidden rounded-full">
+                {currentAvatar ? (
+                  <img src={currentAvatar} alt={displayName} className="h-full w-full rounded-full object-cover" />
                 ) : (
                   <div className="grid h-full w-full place-items-center rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.25),rgba(14,10,7,1))] font-display text-4xl text-[#f5ddb0]">{initials}</div>
                 )}
+                </div>
+                <label className="absolute bottom-1 right-1 grid h-11 w-11 cursor-pointer place-items-center rounded-full border border-[#d4a657]/45 bg-[#d4a657] text-[#160f07] shadow-lg transition hover:bg-[#f0c879]" title="Trocar foto">
+                  <Camera className="h-5 w-5" />
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/avif"
+                    className="sr-only"
+                    onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+                  />
+                </label>
               </div>
               <div className="min-w-0">
                 <p className="font-display text-xl text-[#dcc9a9]">Bem-vindo de volta,</p>
-                <h1 className="mt-1 break-words font-display text-5xl font-semibold leading-none text-[#fff1d2] md:text-6xl">{displayName}</h1>
+                <input
+                  type="text"
+                  value={profileName}
+                  onChange={(event) => setProfileName(event.target.value)}
+                  className="mt-1 w-full min-w-0 rounded-2xl border border-[#d4a657]/18 bg-black/22 px-0 py-1 font-display text-5xl font-semibold leading-none text-[#fff1d2] outline-none transition placeholder:text-[#8c785b] focus:border-[#d4a657]/45 focus:bg-black/34 focus:px-4 md:text-6xl"
+                  placeholder="Seu nome"
+                  aria-label="Nome de exibição"
+                />
                 <p className="mt-5 max-w-xl font-display text-lg italic leading-relaxed text-[#c7b596]">
                   "Não contamos a história. Apenas devolvemos a sensação de vivê-la."
                 </p>
@@ -222,9 +307,19 @@ export default function ProfilePage() {
                   </span>
                   <span className="rounded-full border border-[#d4a657]/25 bg-black/24 px-3 py-1.5 text-xs text-[#b9a17a]">Desde {formatDate(user?.created_at)}</span>
                 </div>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={!profileDirty || profileSaving}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#d4a657] px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#160f07] transition hover:bg-[#f0c879] disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    <Save className="h-4 w-4" /> {profileSaving ? "Salvando..." : "Salvar perfil"}
+                  </button>
+                  {avatarFile && <span className="max-w-[220px] truncate text-xs text-[#b8a78b]">{avatarFile.name}</span>}
+                </div>
               </div>
             </div>
-          </div>
+          </form>
 
           <MuseumPanel title="Sua jornada em números" className="flex flex-col justify-between">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
