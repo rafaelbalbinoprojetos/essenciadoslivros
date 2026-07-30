@@ -42,6 +42,9 @@ const BOOK_SELECT_FIELDS = `
     id,
     nome
   ),
+  avaliacoes (
+    nota
+  ),
   narrativa:narrativas (
     id,
     status,

@@ -6,6 +6,8 @@ import { ensureCoverSrc, resolvePlayerHeroSrc } from "../utils/covers.js";
 import BookCard from "../components/BookCard.jsx";
 import { useEngagement } from "../hooks/useEngagement.js";
 import { hasCinematicExperience } from "../services/narratives.js";
+import BookSortSelect from "../components/BookSortSelect.jsx";
+import { DEFAULT_BOOK_SORT, normalizeBookSort, sortBooks } from "../utils/bookSorting.js";
 
 const NEW_DAYS = 14;
 function isRecent(dateStr) {
@@ -39,6 +41,7 @@ export default function MuralPage() {
   const [error, setError] = useState(null);
   const query = searchParams.get("busca") ?? "";
   const genreParam = searchParams.get("genero");
+  const sort = normalizeBookSort(searchParams.get("ordem"));
 
   useEffect(() => {
     let active = true;
@@ -91,11 +94,20 @@ export default function MuralPage() {
     setSearchParams(next, { replace: true });
   }
 
+  function updateSort(value) {
+    const next = new URLSearchParams(searchParams);
+    const normalizedSort = normalizeBookSort(value);
+    if (normalizedSort === DEFAULT_BOOK_SORT) next.delete("ordem");
+    else next.set("ordem", normalizedSort);
+    setSearchParams(next, { replace: true });
+  }
+
   const normalized = query.trim().toLowerCase();
 
   const filtered = useMemo(
     () =>
-      books.filter((b) => {
+      sortBooks(
+        books.filter((b) => {
         const matchGenre = !genreId || b.genero?.id === genreId;
         const matchQuery =
           !normalized ||
@@ -103,7 +115,9 @@ export default function MuralPage() {
           (b.autor?.nome || "").toLowerCase().includes(normalized);
         return matchGenre && matchQuery;
       }),
-    [books, genreId, normalized],
+        sort,
+      ),
+    [books, genreId, normalized, sort],
   );
 
   // Agrupa em seções por gênero.
@@ -150,19 +164,22 @@ export default function MuralPage() {
           )}
         </div>
 
-        {/* Filtro por gênero */}
-        {genresInUse.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <FilterChip active={genreId === null} onClick={() => updateGenre(null)}>
-              Todos
-            </FilterChip>
-            {genresInUse.map((g) => (
-              <FilterChip key={g.id} active={genreId === g.id} onClick={() => updateGenre(g.id)}>
-                {g.nome}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          {/* Filtro por gênero */}
+          {genresInUse.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <FilterChip active={genreId === null} onClick={() => updateGenre(null)}>
+                Todos
               </FilterChip>
-            ))}
-          </div>
-        )}
+              {genresInUse.map((g) => (
+                <FilterChip key={g.id} active={genreId === g.id} onClick={() => updateGenre(g.id)}>
+                  {g.nome}
+                </FilterChip>
+              ))}
+            </div>
+          )}
+          <BookSortSelect value={sort} onChange={updateSort} className="w-full lg:w-72" />
+        </div>
       </header>
 
       {loading ? (

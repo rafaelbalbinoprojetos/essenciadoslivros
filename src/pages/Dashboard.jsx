@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import {
   ArrowRight,
@@ -21,6 +21,8 @@ import { useBooksCatalog } from "../hooks/useBooksCatalog.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { ensureCoverSrc } from "../utils/covers.js";
 import { hasCinematicExperience } from "../services/narratives.js";
+import BookSortSelect from "../components/BookSortSelect.jsx";
+import { DEFAULT_BOOK_SORT, normalizeBookSort, sortBooks } from "../utils/bookSorting.js";
 
 function getNarrative(book) {
   return Array.isArray(book?.narrativa) ? book.narrativa[0] : book?.narrativa;
@@ -184,16 +186,19 @@ function CinematicSpotlight({ books }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sort = normalizeBookSort(searchParams.get("ordem"));
   const { items: books, loading, error, reload } = useBooksCatalog({ limit: 60, status: "ativo" });
+  const orderedBooks = useMemo(() => sortBooks(books, sort), [books, sort]);
 
-  const cinematicBooks = useMemo(() => books.filter(hasCinematicExperience), [books]);
+  const cinematicBooks = useMemo(() => orderedBooks.filter(hasCinematicExperience), [orderedBooks]);
   const latestCinematicBooks = useMemo(
     () => [...cinematicBooks].sort((a, b) => cinematicTimestamp(b) - cinematicTimestamp(a)).slice(0, 4),
     [cinematicBooks],
   );
   const audioBooks = useMemo(() => books.filter((book) => book.audio_url), [books]);
   const guideBooks = useMemo(() => books.filter((book) => book.pdf_url), [books]);
-  const recentBooks = useMemo(() => [...books].sort((a, b) => new Date(b.data_adicao || 0) - new Date(a.data_adicao || 0)).slice(0, 6), [books]);
+  const recentBooks = useMemo(() => orderedBooks.slice(0, 6), [orderedBooks]);
   const heroBooks = useMemo(() => {
     const featured = books.filter((book) => book.destaque);
     const candidates = [...featured, ...cinematicBooks, ...books];
@@ -292,23 +297,23 @@ export default function DashboardPage() {
 
   const genres = useMemo(() => {
     const map = new Map();
-    books.forEach((book) => {
+    orderedBooks.forEach((book) => {
       const name = book.genero?.nome;
       if (name && !map.has(name)) map.set(name, book);
     });
     return [...map.entries()].slice(0, 10);
-  }, [books]);
+  }, [orderedBooks]);
 
   const interestRails = useMemo(() => {
     const groups = new Map();
-    books.forEach((book) => {
+    orderedBooks.forEach((book) => {
       const name = book.genero?.nome;
       if (!name) return;
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name).push(book);
     });
     return [...groups.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 4);
-  }, [books]);
+  }, [orderedBooks]);
 
   const stats = useMemo(() => {
     const collections = new Set(books.map((book) => book.colecao?.id).filter(Boolean)).size;
@@ -328,6 +333,14 @@ export default function DashboardPage() {
 
   const firstName = user?.user_metadata?.name?.split(" ")[0] || user?.email?.split("@")[0] || "leitor";
 
+  function updateSort(value) {
+    const next = new URLSearchParams(searchParams);
+    const normalizedSort = normalizeBookSort(value);
+    if (normalizedSort === DEFAULT_BOOK_SORT) next.delete("ordem");
+    else next.set("ordem", normalizedSort);
+    setSearchParams(next, { replace: true });
+  }
+
   if (loading && !books.length) {
     return <p className="py-20 text-center text-sm text-[rgb(var(--text-secondary))]">Abrindo o acervo Essência...</p>;
   }
@@ -339,6 +352,10 @@ export default function DashboardPage() {
           <span>{error}</span><button type="button" onClick={reload} className="font-semibold underline">Tentar novamente</button>
         </div>
       )}
+
+      <div className="flex justify-end">
+        <BookSortSelect value={sort} onChange={updateSort} className="w-full sm:w-80" />
+      </div>
 
       {heroBook && (
         <section className="relative overflow-hidden rounded-[34px] border border-[#d5b06a]/20 bg-[#090705] pb-4 pt-6 text-white shadow-[0_45px_110px_-55px_rgba(32,19,5,0.95)] md:pb-3 md:pt-6">

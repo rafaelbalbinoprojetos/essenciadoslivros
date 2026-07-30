@@ -39,6 +39,9 @@ export async function listCinematicMemories() {
         descricao_cinematica,
         status,
         data_adicao,
+        avaliacoes (
+          nota
+        ),
         genero:genero_id (
           id,
           nome

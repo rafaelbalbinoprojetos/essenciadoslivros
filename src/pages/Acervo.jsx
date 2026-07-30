@@ -4,13 +4,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { listBooks } from "../services/books.js";
 import { ensureCoverSrc } from "../utils/covers.js";
 import { hasCinematicExperience } from "../services/narratives.js";
-
-const SORT_OPTIONS = [
-  { value: "recentes", label: "Mais recentes" },
-  { value: "antigas", label: "Mais antigas" },
-  { value: "titulo", label: "Título: A–Z" },
-  { value: "autor", label: "Autor: A–Z" },
-];
+import BookSortSelect from "../components/BookSortSelect.jsx";
+import { DEFAULT_BOOK_SORT, normalizeBookSort, sortBooks } from "../utils/bookSorting.js";
 
 const MEDIA_OPTIONS = [
   { value: "todos", label: "Toda mídia" },
@@ -130,7 +125,7 @@ export default function AcervoPage() {
   const genre = searchParams.get("genero") || "todos";
   const type = searchParams.get("tipo") || "todos";
   const media = searchParams.get("midia") || "todos";
-  const sort = searchParams.get("ordem") || "recentes";
+  const sort = normalizeBookSort(searchParams.get("ordem"));
 
   useEffect(() => {
     let active = true;
@@ -182,13 +177,7 @@ export default function AcervoPage() {
       return true;
     });
 
-    return result.sort((a, b) => {
-      if (sort === "titulo") return compareText(a.titulo, b.titulo);
-      if (sort === "autor") return compareText(a.autor?.nome, b.autor?.nome) || compareText(a.titulo, b.titulo);
-      const dateA = new Date(a.data_adicao || 0).getTime();
-      const dateB = new Date(b.data_adicao || 0).getTime();
-      return sort === "antigas" ? dateA - dateB : dateB - dateA;
-    });
+    return sortBooks(result, sort);
   }, [books, genre, media, query, sort, type]);
 
   function setFilter(key, value, defaultValue = "todos") {
@@ -202,7 +191,7 @@ export default function AcervoPage() {
     setSearchParams({}, { replace: true });
   }
 
-  const hasFilters = Boolean(query || genre !== "todos" || type !== "todos" || media !== "todos" || sort !== "recentes");
+  const hasFilters = Boolean(query || genre !== "todos" || type !== "todos" || media !== "todos" || sort !== DEFAULT_BOOK_SORT);
 
   return (
     <div className="relative -mx-4 -mt-6 min-h-full overflow-hidden bg-[#090a08] px-4 pb-20 pt-8 text-[#e7ddc8] md:-mx-8 md:px-8 md:pt-10">
@@ -257,9 +246,7 @@ export default function AcervoPage() {
               {MEDIA_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </SelectFilter>
 
-            <SelectFilter value={sort} onChange={(value) => setFilter("ordem", value, "recentes")} label="Ordenar obras">
-              {SORT_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-            </SelectFilter>
+            <BookSortSelect value={sort} onChange={(value) => setFilter("ordem", value, DEFAULT_BOOK_SORT)} variant="archive" />
           </div>
         </header>
 

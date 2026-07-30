@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { listBooks } from "../services/books.js";
 
-export function useBooksCatalog({ limit = 24, status = "ativo", search = "", offset = 0 } = {}) {
+export function useBooksCatalog({
+  limit = 24,
+  status = "ativo",
+  search = "",
+  offset = 0,
+  orderBy = "data_adicao",
+  ascending = false,
+} = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -12,7 +19,7 @@ export function useBooksCatalog({ limit = 24, status = "ativo", search = "", off
     setLoading(true);
     setError(null);
     try {
-      const { items: data, count } = await listBooks({ limit, status, search, offset });
+      const { items: data, count } = await listBooks({ limit, status, search, offset, orderBy, ascending });
       setItems(data);
       setTotal(typeof count === "number" ? count : (data ?? []).length);
     } catch (err) {
@@ -23,7 +30,7 @@ export function useBooksCatalog({ limit = 24, status = "ativo", search = "", off
     } finally {
       setLoading(false);
     }
-  }, [limit, offset, status, search]);
+  }, [limit, offset, status, search, orderBy, ascending]);
 
   useEffect(() => {
     fetchBooks();

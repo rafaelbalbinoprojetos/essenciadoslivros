@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Film, Play, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { listCinematicMemories } from "../services/narratives.js";
 import { ensureCoverSrc } from "../utils/covers.js";
+import BookSortSelect from "../components/BookSortSelect.jsx";
+import { DEFAULT_BOOK_SORT, normalizeBookSort, sortBooks } from "../utils/bookSorting.js";
 
 function getNarrative(book) {
   return Array.isArray(book?.narrativa) ? book.narrativa[0] : book?.narrativa;
@@ -10,9 +13,11 @@ function getNarrative(book) {
 
 export default function CinematicMemoriesPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const sort = normalizeBookSort(searchParams.get("ordem"));
 
   useEffect(() => {
     let active = true;
@@ -35,6 +40,16 @@ export default function CinematicMemoriesPage() {
     return sum + tracks.filter((track) => track.status === "ativo").length;
   }, 0), [books]);
 
+  const sortedBooks = useMemo(() => sortBooks(books, sort), [books, sort]);
+
+  function updateSort(value) {
+    const next = new URLSearchParams(searchParams);
+    const normalizedSort = normalizeBookSort(value);
+    if (normalizedSort === DEFAULT_BOOK_SORT) next.delete("ordem");
+    else next.set("ordem", normalizedSort);
+    setSearchParams(next, { replace: true });
+  }
+
   return (
     <div className="space-y-8 pb-10">
       <header className="relative overflow-hidden rounded-[32px] border border-[rgba(83,61,42,0.14)] bg-[linear-gradient(125deg,rgba(35,28,43,0.98),rgba(75,53,43,0.94))] px-6 py-10 text-white shadow-[0_30px_70px_-48px_rgba(28,18,12,0.9)] md:px-10">
@@ -55,6 +70,12 @@ export default function CinematicMemoriesPage() {
         </div>
       </header>
 
+      {!loading && !error && books.length > 1 && (
+        <div className="flex justify-end">
+          <BookSortSelect value={sort} onChange={updateSort} className="w-full sm:w-80" />
+        </div>
+      )}
+
       {loading && <p className="py-12 text-center text-sm text-[rgb(var(--text-secondary))]">Preparando a coleção...</p>}
       {error && <p className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">{error}</p>}
       {!loading && !error && books.length === 0 && (
@@ -65,7 +86,7 @@ export default function CinematicMemoriesPage() {
       )}
 
       <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {books.map((book) => {
+        {sortedBooks.map((book) => {
           const narrative = getNarrative(book);
           const scenes = (narrative?.faixas ?? []).filter((track) => track.status === "ativo").length;
           const cover = ensureCoverSrc(book.capa_cinematica_url || book.capa_url);

@@ -20,6 +20,8 @@ import { useAudioPlaylist } from "../context/AudioPlaylistContext.jsx";
 import BookCard from "../components/BookCard.jsx";
 import { useEngagement } from "../hooks/useEngagement.js";
 import { hasCinematicExperience } from "../services/narratives.js";
+import BookSortSelect from "../components/BookSortSelect.jsx";
+import { DEFAULT_BOOK_SORT, getBookServerOrder, normalizeBookSort, sortBooks } from "../utils/bookSorting.js";
 
 const CATEGORY_VISUALS = [
   { icon: Swords, gradient: "linear-gradient(150deg,#c25a4d,#7a2f37)" },
@@ -207,16 +209,30 @@ export default function LibraryPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") ?? "";
+  const sort = normalizeBookSort(searchParams.get("ordem"));
+  const isRatingSort = sort.startsWith("rating_");
+  const serverOrder = useMemo(() => getBookServerOrder(sort), [sort]);
   const rawPageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
   const currentPage = Number.isFinite(rawPageParam) && rawPageParam > 0 ? rawPageParam : 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
   const {
-    items: books,
+    items: catalogBooks,
     total: totalBooks = 0,
     loading: loadingBooks,
     error: booksError,
     reload: reloadBooks,
-  } = useBooksCatalog({ limit: PAGE_SIZE, status: "ativo", search: searchQuery, offset });
+  } = useBooksCatalog({
+    limit: isRatingSort ? 1000 : PAGE_SIZE,
+    status: "ativo",
+    search: searchQuery,
+    offset: isRatingSort ? 0 : offset,
+    orderBy: serverOrder.orderBy,
+    ascending: serverOrder.ascending,
+  });
+  const books = useMemo(
+    () => (isRatingSort ? sortBooks(catalogBooks, sort).slice(offset, offset + PAGE_SIZE) : catalogBooks),
+    [catalogBooks, isRatingSort, offset, sort],
+  );
   const { startPlaylist, addToQueue } = useAudioPlaylist();
   const totalPages = Math.max(1, Math.ceil(totalBooks / PAGE_SIZE) || 1);
   const pageSlots = useMemo(() => buildPaginationSlots(totalPages, currentPage), [totalPages, currentPage]);
@@ -241,6 +257,17 @@ export default function LibraryPage() {
     },
     [searchParams, searchQuery, setSearchParams, totalPages],
   );
+  const handleSortChange = useCallback(
+    (value) => {
+      const next = new URLSearchParams(searchParams);
+      const normalizedSort = normalizeBookSort(value);
+      if (normalizedSort === DEFAULT_BOOK_SORT) next.delete("ordem");
+      else next.set("ordem", normalizedSort);
+      next.delete("page");
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
   const previousSearchRef = useRef(searchQuery);
   useEffect(() => {
     if (previousSearchRef.current !== searchQuery) {
@@ -248,6 +275,13 @@ export default function LibraryPage() {
       handlePageChange(1);
     }
   }, [searchQuery, handlePageChange]);
+  const previousSortRef = useRef(sort);
+  useEffect(() => {
+    if (previousSortRef.current !== sort) {
+      previousSortRef.current = sort;
+      handlePageChange(1);
+    }
+  }, [sort, handlePageChange]);
   useEffect(() => {
     if (!loadingBooks && totalBooks > 0 && currentPage > totalPages) {
       handlePageChange(totalPages);
@@ -478,6 +512,10 @@ export default function LibraryPage() {
             </button>
           </div>
         )}
+
+        <div className="flex justify-end">
+          <BookSortSelect value={sort} onChange={handleSortChange} className="w-full sm:w-80" />
+        </div>
 
         {isEmptyState && (
           <div className="rounded-[32px] border border-dashed border-[rgba(255,255,255,0.25)] bg-[rgba(var(--surface-card),0.6)] p-6 text-center text-sm text-[rgb(var(--text-secondary))]">
