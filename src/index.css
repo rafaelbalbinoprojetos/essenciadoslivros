@@ -648,6 +648,172 @@ a:hover {
   background-color: rgba(239, 68, 68, 0.2) !important;
 }
 
+/* Perfil: museu pessoal premium com superfície adaptada ao tema ativo. */
+.profile-museum {
+  --profile-base: rgb(var(--surface-base));
+  --profile-panel: rgba(var(--surface-card), 0.86);
+  --profile-panel-soft: rgba(var(--surface-muted), 0.58);
+  --profile-border: rgba(var(--color-accent-primary), 0.2);
+  --profile-border-strong: rgba(var(--color-accent-primary), 0.38);
+  --profile-text: rgb(var(--text-primary));
+  --profile-soft-text: rgb(var(--text-secondary));
+  --profile-muted-text: rgb(var(--text-subtle));
+  --profile-accent: rgb(var(--color-accent-primary));
+  --profile-accent-strong: rgb(var(--color-accent-dark));
+  --profile-purple: #8b5cf6;
+  --profile-shadow: var(--shadow-md);
+  background:
+    radial-gradient(circle at 18% 4%, rgba(var(--color-accent-primary), 0.16), transparent 30%),
+    radial-gradient(circle at 84% 8%, rgba(139, 92, 246, 0.1), transparent 28%),
+    rgb(var(--surface-base));
+  color: var(--profile-text);
+}
+
+[data-color-mode="dark"] .profile-museum {
+  --profile-base: #050504;
+  --profile-panel: rgba(10, 9, 7, 0.86);
+  --profile-panel-soft: rgba(255, 255, 255, 0.04);
+  --profile-border: rgba(212, 166, 87, 0.22);
+  --profile-border-strong: rgba(212, 166, 87, 0.42);
+  --profile-text: #fff1d2;
+  --profile-soft-text: #c7b596;
+  --profile-muted-text: #a89678;
+  --profile-accent: #d4a657;
+  --profile-accent-strong: #f0c879;
+  --profile-shadow: 0 30px 70px -55px rgba(0, 0, 0, 0.95);
+  background:
+    radial-gradient(circle at 18% 4%, rgba(207, 157, 74, 0.19), transparent 29%),
+    radial-gradient(circle at 83% 10%, rgba(115, 69, 255, 0.16), transparent 27%),
+    #050504;
+}
+
+.profile-museum-ambient {
+  opacity: 0.58;
+  background-image: linear-gradient(115deg, rgba(var(--color-accent-primary), 0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at 50% 15%, black, transparent 76%);
+}
+
+[data-color-mode="dark"] .profile-museum-ambient {
+  opacity: 0.8;
+  background-image: linear-gradient(115deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+.profile-museum-panel {
+  border-color: var(--profile-border);
+  background:
+    linear-gradient(145deg, rgba(var(--color-accent-primary), 0.07), rgba(255, 255, 255, 0.01)),
+    var(--profile-panel);
+  box-shadow: var(--profile-shadow);
+  color: var(--profile-text);
+}
+
+[data-color-mode="dark"] .profile-museum-panel {
+  background:
+    linear-gradient(145deg, rgba(255, 232, 181, 0.055), rgba(255, 255, 255, 0.012)),
+    var(--profile-panel);
+}
+
+.profile-cover-frame,
+.profile-avatar-frame {
+  border-color: var(--profile-border-strong);
+  background-color: rgba(var(--surface-muted), 0.72);
+}
+
+.profile-avatar-frame {
+  box-shadow: 0 20px 60px -30px rgba(var(--color-accent-primary), 0.58);
+}
+
+.profile-avatar-placeholder {
+  color: var(--profile-text);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22), rgba(var(--surface-muted), 0.92));
+}
+
+.profile-section-title,
+.profile-card-title,
+.profile-name-input {
+  color: var(--profile-text) !important;
+}
+
+.profile-soft {
+  color: var(--profile-soft-text) !important;
+}
+
+.profile-muted {
+  color: var(--profile-muted-text) !important;
+}
+
+.profile-accent,
+.profile-museum a {
+  color: var(--profile-accent-strong);
+}
+
+.profile-name-input {
+  border-color: rgba(var(--color-accent-primary), 0.18);
+  background-color: rgba(var(--surface-base), 0.18);
+}
+
+.profile-name-input::placeholder {
+  color: var(--profile-muted-text);
+}
+
+.profile-name-input:focus {
+  border-color: var(--profile-border-strong);
+  background-color: rgba(var(--surface-card), 0.35);
+}
+
+.profile-primary-button {
+  border-color: rgba(var(--color-accent-primary), 0.45);
+  background-color: var(--profile-accent);
+  color: rgb(var(--surface-base));
+}
+
+.profile-primary-button:hover {
+  background-color: var(--profile-accent-strong);
+}
+
+.profile-premium-badge {
+  border-color: rgba(139, 92, 246, 0.35);
+  background-color: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+}
+
+[data-color-mode="dark"] .profile-premium-badge {
+  color: #d7c3ff;
+}
+
+.profile-chip,
+.profile-badge {
+  border-color: var(--profile-border);
+  background-color: rgba(var(--surface-muted), 0.4);
+  color: var(--profile-soft-text);
+}
+
+.profile-badge {
+  color: var(--profile-accent-strong);
+  background-color: rgba(var(--surface-base), 0.72);
+}
+
+[data-color-mode="light"] .profile-museum [class*="text-[#"] {
+  color: var(--profile-text) !important;
+}
+
+[data-color-mode="light"] .profile-museum [class*="border-white/"],
+[data-color-mode="light"] .profile-museum [class*="border-[#"] {
+  border-color: var(--profile-border) !important;
+}
+
+[data-color-mode="light"] .profile-museum [class*="bg-white/"],
+[data-color-mode="light"] .profile-museum [class*="bg-black/"] {
+  background-color: var(--profile-panel-soft) !important;
+}
+
+[data-color-mode="light"] .profile-museum [class*="bg-[#d4a657]"],
+[data-color-mode="light"] .profile-museum [class*="from-[#d4a657]"],
+[data-color-mode="light"] .profile-museum [class*="to-[#d4a657]"] {
+  color: var(--profile-text) !important;
+}
+
 /* Sala da obra: conserva a atmosfera cinematográfica usando a paleta ativa. */
 .book-exhibition {
   --color-accent-primary: 214 166 87;

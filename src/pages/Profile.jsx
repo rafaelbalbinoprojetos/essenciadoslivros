@@ -59,26 +59,26 @@ function ProfileBookCard({ book, badge, compact = false }) {
   if (!book) return null;
   return (
     <Link to={`/biblioteca/${book.id}`} className={`group block flex-none ${compact ? "w-28" : "w-44"}`}>
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[18px] border border-[#7f612f]/45 bg-[#090806] shadow-[0_20px_48px_-32px_rgba(0,0,0,0.95)]">
+      <div className="profile-cover-frame relative aspect-[3/4] overflow-hidden rounded-[18px] border shadow-[0_20px_48px_-32px_rgba(0,0,0,0.95)]">
         <img src={pickCover(book)} alt={book.titulo} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" />
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/76 via-transparent to-black/10" />
         {badge && (
-          <span className="absolute left-2.5 top-2.5 rounded-full border border-[#d4a657]/35 bg-black/62 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.16em] text-[#f2d08b]">
+          <span className="profile-badge absolute left-2.5 top-2.5 rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-[0.16em]">
             {badge}
           </span>
         )}
       </div>
-      <p className="mt-2 line-clamp-2 font-display text-sm leading-tight text-[#f4dfb9]">{book.titulo}</p>
-      {!compact && <p className="mt-1 truncate text-[11px] text-[#b6a283]">{book.autor?.nome || "Autor não informado"}</p>}
+      <p className="profile-card-title mt-2 line-clamp-2 font-display text-sm leading-tight">{book.titulo}</p>
+      {!compact && <p className="profile-muted mt-1 truncate text-[11px]">{book.autor?.nome || "Autor não informado"}</p>}
     </Link>
   );
 }
 
 function MuseumPanel({ title, action, children, className = "" }) {
   return (
-    <section className={`rounded-[28px] border border-[#7f612f]/28 bg-[linear-gradient(145deg,rgba(255,232,181,0.055),rgba(255,255,255,0.012)),rgba(10,9,7,0.84)] p-5 shadow-[0_30px_70px_-55px_rgba(0,0,0,0.95)] ${className}`}>
+    <section className={`profile-museum-panel rounded-[28px] border p-5 ${className}`}>
       <header className="mb-5 flex items-center justify-between gap-4">
-        <h2 className="font-display text-xl font-semibold text-[#f5ddb0]">{title}</h2>
+        <h2 className="profile-section-title font-display text-xl font-semibold">{title}</h2>
         {action}
       </header>
       {children}
@@ -261,24 +261,24 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="profile-museum relative -mx-4 -mt-6 min-h-full overflow-hidden bg-[#050504] px-4 pb-20 pt-7 text-[#e9dcc4] md:-mx-8 md:px-8">
-      <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:radial-gradient(circle_at_18%_4%,rgba(207,157,74,0.19),transparent_29%),radial-gradient(circle_at_83%_10%,rgba(115,69,255,0.16),transparent_27%),linear-gradient(115deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:auto,auto,42px_42px]" />
+    <div className="profile-museum relative -mx-4 -mt-6 min-h-full overflow-hidden px-4 pb-20 pt-7 md:-mx-8 md:px-8">
+      <div className="profile-museum-ambient pointer-events-none absolute inset-0" />
       <div className="relative mx-auto max-w-[1500px] space-y-7">
         {error && <div className="rounded-2xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-100">{error}</div>}
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleSaveProfile} className="rounded-[34px] border border-[#8b6b32]/30 bg-[linear-gradient(135deg,rgba(255,234,188,0.07),rgba(255,255,255,0.015)),rgba(9,8,6,0.82)] p-6 shadow-[0_38px_100px_-62px_rgba(0,0,0,0.98)]">
-            <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-[#d3ac68]">Essência dos Livros</p>
+          <form onSubmit={handleSaveProfile} className="profile-museum-panel rounded-[34px] border p-6">
+            <p className="profile-accent text-[10px] font-bold uppercase tracking-[0.42em]">Essência dos Livros</p>
             <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="relative h-36 w-36 flex-none rounded-full border border-[#d4a657]/55 bg-[#14100b] p-1 shadow-[0_20px_60px_-30px_rgba(212,166,87,0.6)]">
+              <div className="profile-avatar-frame relative h-36 w-36 flex-none rounded-full border p-1">
                 <div className="h-full w-full overflow-hidden rounded-full">
                 {currentAvatar ? (
                   <img src={currentAvatar} alt={displayName} className="h-full w-full rounded-full object-cover" />
                 ) : (
-                  <div className="grid h-full w-full place-items-center rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.25),rgba(14,10,7,1))] font-display text-4xl text-[#f5ddb0]">{initials}</div>
+                  <div className="profile-avatar-placeholder grid h-full w-full place-items-center rounded-full font-display text-4xl">{initials}</div>
                 )}
                 </div>
-                <label className="absolute bottom-1 right-1 grid h-11 w-11 cursor-pointer place-items-center rounded-full border border-[#d4a657]/45 bg-[#d4a657] text-[#160f07] shadow-lg transition hover:bg-[#f0c879]" title="Trocar foto">
+                <label className="profile-primary-button absolute bottom-1 right-1 grid h-11 w-11 cursor-pointer place-items-center rounded-full border shadow-lg transition" title="Trocar foto">
                   <Camera className="h-5 w-5" />
                   <input
                     type="file"
@@ -289,33 +289,33 @@ export default function ProfilePage() {
                 </label>
               </div>
               <div className="min-w-0">
-                <p className="font-display text-xl text-[#dcc9a9]">Bem-vindo de volta,</p>
+                <p className="profile-soft font-display text-xl">Bem-vindo de volta,</p>
                 <input
                   type="text"
                   value={profileName}
                   onChange={(event) => setProfileName(event.target.value)}
-                  className="mt-1 w-full min-w-0 rounded-2xl border border-[#d4a657]/18 bg-black/22 px-0 py-1 font-display text-5xl font-semibold leading-none text-[#fff1d2] outline-none transition placeholder:text-[#8c785b] focus:border-[#d4a657]/45 focus:bg-black/34 focus:px-4 md:text-6xl"
+                  className="profile-name-input mt-1 w-full min-w-0 rounded-2xl border px-0 py-1 font-display text-5xl font-semibold leading-none outline-none transition focus:px-4 md:text-6xl"
                   placeholder="Seu nome"
                   aria-label="Nome de exibição"
                 />
-                <p className="mt-5 max-w-xl font-display text-lg italic leading-relaxed text-[#c7b596]">
+                <p className="profile-soft mt-5 max-w-xl font-display text-lg italic leading-relaxed">
                   "Não contamos a história. Apenas devolvemos a sensação de vivê-la."
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#8b5cf6]/35 bg-[#8b5cf6]/12 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[#d7c3ff]">
+                  <span className="profile-premium-badge inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em]">
                     <Crown className="h-3.5 w-3.5" /> {isPremium ? "Membro Premium" : "Membro Essência"}
                   </span>
-                  <span className="rounded-full border border-[#d4a657]/25 bg-black/24 px-3 py-1.5 text-xs text-[#b9a17a]">Desde {formatDate(user?.created_at)}</span>
+                  <span className="profile-chip rounded-full border px-3 py-1.5 text-xs">Desde {formatDate(user?.created_at)}</span>
                 </div>
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <button
                     type="submit"
                     disabled={!profileDirty || profileSaving}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#d4a657] px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#160f07] transition hover:bg-[#f0c879] disabled:cursor-not-allowed disabled:opacity-45"
+                    className="profile-primary-button inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     <Save className="h-4 w-4" /> {profileSaving ? "Salvando..." : "Salvar perfil"}
                   </button>
-                  {avatarFile && <span className="max-w-[220px] truncate text-xs text-[#b8a78b]">{avatarFile.name}</span>}
+                  {avatarFile && <span className="profile-muted max-w-[220px] truncate text-xs">{avatarFile.name}</span>}
                 </div>
               </div>
             </div>
